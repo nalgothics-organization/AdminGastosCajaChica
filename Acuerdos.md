@@ -11,3 +11,6 @@ Nomenclatura de ramas: Establecer un estándar estricto para crear ramas, como f
 
 ## Acuerdo número 4
 Asignación de tareas: Para evitar duplicidad de trabajo, nadie debe comenzar a programar una funcionalidad sin antes haberse asignado explícitamente el Issue o la tarea en el tablero del proyecto
+
+## Acuerdo número 5
+Definición de Terminado (DoD): Una tarea solo se considera "lista para revisión" si cumple con los requerimientos, el código base compila sin errores y no rompe el flujo existente de administración de gastos.

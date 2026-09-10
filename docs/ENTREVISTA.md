@@ -19,3 +19,8 @@
 
 ¿Cómo se reabastece la caja chica (monto fijo periódico, reposición contra comprobantes gastados, por obra o centralizada por oficina)? ¿Necesitan alertas cuando el fondo está por agotarse o cuando alguien excede su límite?
 
+
+### Mariano 
+¿Cómo se gestionan y facturan los cambios de alcance o los imprevistos solicitados por el cliente a mitad de la obra que afectan tanto la cotización inicial como el flujo de caja chica?
+
+¿Existe algún registro o mecanismo para auditar las discrepancias entre el costo estimado en la cotización original y el gasto real ejecutado por proyecto, permitiendo detectar desviaciones antes de que se agote el presupuesto?

@@ -1,5 +1,12 @@
 # Preguntas para arquitectos
 
+## Juan Pablo
+
+¿Cómo calculan la tarifa base de una cotizacion? ¿Tienen una matriz interna con un costo estándar por $m^2$ según la tipología del proyecto, o aplican un porcentaje sobre el costo estimado de la construcción? Si es por entregables, ¿Cómo dividen el costo total en la cotización? ¿Por porcentaje según la fase del proyecto (ej. 20% Anteproyecto, 50% Proyecto Ejecutivo, 30% Supervisión) o cada etapa se cotiza de forma independiente?
+
+
+¿Qué rubros quedan fuera de la cotización inicial y se manejan como gastos reembolsables o caja chica? (ej. impresiones de planos, pago de derechos municipales, estudios de topografía/suelos, viáticos).
+
 ## Pau
 
 ¿Cómo es el proceso actual (aunque sea en papel o Excel) desde que alguien solicita un gasto de caja chica hasta que se le reembolsa o se le entrega el efectivo? ¿Quién aprueba en cada nivel y existen montos máximos por rol o por tipo de gasto (materiales vs. viáticos de instaladores vs. herramienta menor)?

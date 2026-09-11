@@ -1,0 +1,10 @@
+# Catálogo de Requerimientos Funcionales 
+
+| ID | Descripción | Prioridad |
+| :--- | :--- | :--- |
+| **RF01** | El sistema debe permitir el registro de una solicitud de fondo especificando folio, obra, solicitante, concepto, monto solicitado, urgencia, partida o categoría de gasto y evidencia de la necesidad. | Alta |
+| **RF02** | El sistema debe obligar a que todo gasto registrado quede asociado a una obra específica y a una categoría; no se permitirá el registro de gastos genéricos. | Alta |
+| **RF03** | El sistema debe gestionar niveles de autorización distintos dependiendo de los montos solicitados y de quién tiene la facultad para aprobarlos. | Alta |
+| **RF04** | El sistema debe bloquear la autorización o entrega de un fondo nuevo si el solicitante tiene comprobaciones pendientes que superen el límite de antigüedad establecido. | Alta |
+| **RF05** | El sistema debe permitir a los roles autorizadores aprobar o rechazar una solicitud, registrando quién autorizó, cuándo lo hizo, el monto autorizado y los comentarios correspondientes. | Alta |
+| **RF06** | El sistema debe permitir el registro de la entrega del recurso, especificando la forma de entrega (efectivo, transferencia o tarjeta), la fecha, la referencia y la persona que entregó el dinero. | Media |

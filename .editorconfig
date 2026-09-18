@@ -18,3 +18,5 @@ end_of_line = lf
 [*.md]
 trim_trailing_whitespace = false
 
+[*.js]
+indent_size = 2

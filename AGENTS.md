@@ -50,3 +50,7 @@ When generating, editing, or refactoring files in this repository, follow these 
 
 ## 11. Security & Constraints
 - **NEVER** expose, commit, or request hardcoded API keys, database credentials, tokens, or environment secrets. Use `.env` variables and verify entries exist in `.gitignore`.
+
+## 12. Editor and IDE Compatibility
+* When modifying or adding .editorconfig rules, agents must verify that the target editor or IDE supports the properties being configured.
+* Do not assume that every .editorconfig property is supported consistently across all development environments; if a property requires a plugin or has limited editor support, this limitation must be documented before relying on it as an enforced repository rule.

@@ -9,3 +9,8 @@ insert_final_newline = true
 
 [*.{py,cs,java,cpp,php}]
 indent_size = 4
+[*]
+end_of_line = lf
+
+[*.{sh,bash}]
+end_of_line = lf

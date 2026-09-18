@@ -34,3 +34,19 @@ When generating, editing, or refactoring files in this repository, follow these 
 - **Immutability & Auditing:** It is strictly forbidden to perform *hard deletes* (physical deletion) in the petty cash transaction, expense, or receipt tables; always implement *soft deletes*.
 - **State Protection:** If an expense record has an `Approved` or `Reconciled` status, never generate code that allows its amounts or details to be updated (UPDATE) directly.
 - **Correction Flow:** Any correction to an already approved transaction must be implemented by creating a new "Reversal" or "Adjustment" record that references the original transaction's UUID, keeping the accounting history intact.
+
+### 9. Commit Messages
+- Use the **Conventional Commits** specification: `<type>(<scope>): <short description>`.
+- Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`.
+- Use the imperative mood in the subject line (e.g., `feat: add user authentication`).
+- Reference related issues where applicable (e.g., `fix(auth): handle expired tokens (#12)`).
+
+### 10. Pull Requests
+- Every PR description must include:
+  1. **Summary:** Concise description of the changes.
+  2. **Type of change:** Bug fix, new feature, or breaking change.
+  3. **Verification:** Steps taken to test the implementation.
+  4. **Linked Issues:** Closes or fixes reference (`Fixes #<issue_number>`).
+
+## 11. Security & Constraints
+- **NEVER** expose, commit, or request hardcoded API keys, database credentials, tokens, or environment secrets. Use `.env` variables and verify entries exist in `.gitignore`.

@@ -17,3 +17,15 @@ When generating, editing, or refactoring files in this repository, follow these 
 ## 4. Insert Final Newline
 * Always ensure every file ends with a single trailing newline (`\n`).
 * Do not leave trailing whitespace on empty lines at the end of files.
+
+## 5. Line Endings (End of Line)
+* **Always use LF (`\n`)** as the end-of-line sequence for all files in this repository.
+* Do not use CRLF (`\r\n`) line breaks under any circumstances, even when working on Windows environments.
+
+## 6. Repository Configuration Consistency
+* The formatting rules defined in `.editorconfig` must be strictly respected across all files.
+* Ensure Git is configured to preserve LF line endings (`git config core.autocrlf input` on Linux/macOS or `false` with explicit `.gitattributes`).
+
+## 7. AI Agent Guidelines
+* When generating or editing code, verify that generated output adheres to the space-indentation, UTF-8 charset, and LF newline requirements.
+* Avoid committing auto-generated configuration files or temporary editor artifacts that violate the structure.

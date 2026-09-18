@@ -29,3 +29,8 @@ When generating, editing, or refactoring files in this repository, follow these 
 ## 7. AI Agent Guidelines
 * When generating or editing code, verify that generated output adheres to the space-indentation, UTF-8 charset, and LF newline requirements.
 * Avoid committing auto-generated configuration files or temporary editor artifacts that violate the structure.
+
+## 8. Business Rules: Expenses and Petty Cash
+- **Immutability & Auditing:** It is strictly forbidden to perform *hard deletes* (physical deletion) in the petty cash transaction, expense, or receipt tables; always implement *soft deletes*.
+- **State Protection:** If an expense record has an `Approved` or `Reconciled` status, never generate code that allows its amounts or details to be updated (UPDATE) directly.
+- **Correction Flow:** Any correction to an already approved transaction must be implemented by creating a new "Reversal" or "Adjustment" record that references the original transaction's UUID, keeping the accounting history intact.

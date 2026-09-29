@@ -25,7 +25,7 @@ Estimación y prioridad: los requerimientos y las historias de usuario se estima
 
 # Definición de Terminado (DoD)
 
-Una tarea del tablero (requerimiento o historia de usuario) solo puede moverse al estado **Terminado** cuando cumple **todos** los criterios aplicables.
+Una tarea del tablero (requerimiento o historia de usuario) solo puede moverse al estado **Done** (Terminado) cuando cumple **todos** los criterios aplicables.
 
 ## 1. Criterios generales (toda tarea)
 - [ ] La tarea tiene título, descripción, iteración, estimación en horas, prioridad y estado en el tablero.
@@ -46,7 +46,7 @@ Una tarea del tablero (requerimiento o historia de usuario) solo puede moverse a
 - [ ] La documentación afectada (`docs/HISTORIAS.md`, `README.md`) está actualizada.
 
 ## 3. Requerimientos funcionales (RF)
-- [ ] Todas las historias de usuario asociadas al requerimiento están en estado **Terminado**.
+- [ ] Todas las historias de usuario asociadas al requerimiento están en estado **Done**.
 - [ ] Se respetan las reglas de negocio de caja chica:
   - No existen borrados físicos (*hard delete*) en solicitudes, gastos o comprobantes; solo borrado lógico (*soft delete*).
   - Un gasto con estado `Aprobado` o `Conciliado` no puede modificar sus montos ni detalles.
@@ -56,12 +56,11 @@ Una tarea del tablero (requerimiento o historia de usuario) solo puede moverse a
 ## 4. Requerimientos no funcionales (RNF)
 - [ ] El indicador definido en `docs/REQUERIMIENTOS.md` fue medido y cumple la meta establecida.
 - [ ] La evidencia de la medición (capturas, tiempos, resultados de importación) está adjunta en el PR o en el issue.
-- [ ] Todas las historias de usuario asociadas al requerimiento están en estado **Terminado**.
+- [ ] Todas las historias de usuario asociadas al requerimiento están en estado **Done**.
 
 ## 5. Estados del tablero
 | Estado | Significado |
 | :--- | :--- |
-| **Pendiente** (estado inicial) | La tarea está en el backlog, priorizada y estimada, pero nadie trabaja en ella. |
-| **En progreso** | Un integrante se la asignó y está trabajando en ella. |
-| **En revisión** | Existe un Pull Request abierto esperando revisión. |
-| **Terminado** | Cumple todos los criterios de esta Definición de Terminado. |
+| **Todo** (Pendiente, estado inicial) | La tarea está en el backlog, priorizada y estimada, pero nadie trabaja en ella. |
+| **In Progress** (En progreso) | Un integrante se la asignó y está trabajando en ella, o su Pull Request está en revisión. |
+| **Done** (Terminado) | Cumple todos los criterios de esta Definición de Terminado. |

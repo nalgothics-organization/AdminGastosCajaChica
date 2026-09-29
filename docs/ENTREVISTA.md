@@ -24,3 +24,40 @@
 ¿Cómo se gestionan y facturan los cambios de alcance o los imprevistos solicitados por el cliente a mitad de la obra que afectan tanto la cotización inicial como el flujo de caja chica?
 
 ¿Existe algún registro o mecanismo para auditar las discrepancias entre el costo estimado en la cotización original y el gasto real ejecutado por proyecto, permitiendo detectar desviaciones antes de que se agote el presupuesto?
+
+# Respuestas del cliente
+
+Resumen de la entrevista (transcripción en `entrevista.txt`). Las preguntas que no se abordaron quedan marcadas como pendientes.
+
+## Cotización y presupuesto
+* El presupuesto se arma **por partidas** (cimentación, obra gris, etc.) usando tablas tabuladas por m² y m³; no se cotiza por entregables.
+* El cliente paga conforme hay **avance de obra**. El anteproyecto se cobra aunque el cliente no continúe.
+* El presupuesto incluye un **porcentaje extra de contingencia** para cubrir errores de proyecto o de ejecución sin que salgan del bolsillo del despacho.
+
+## Rubros fuera de la cotización
+* **Todo** se registra: impresiones de planos, trámites, horas extras, renta de maquinaria, etc. "No hay gasto que no se registre".
+* Los trámites tienen un impacto fuerte en tiempo y ese tiempo también se cobra.
+
+## Proceso actual de caja chica
+* Cada supervisor o residente tiene una caja chica para **eventualidades** (por ejemplo, rentar una retroexcavadora por hora y media).
+* Hay gastos con **factura** de proveedores y otros respaldados solo con una **nota de libreta**.
+* Las notas y tickets se entregan a contabilidad, que los **identifica a mano por obra**. Esos gastos se cobran al cliente, salvo que sean errores propios, que se cargan al fondo de contingencia.
+
+## Mejoras deseadas
+* Relacionar el **avance físico** de cada partida con su **presupuesto**: saber si se lleva 40 % de avance pero 50 % gastado, considerando la volatilidad de materiales (acero, PVC).
+* Tener toda la información de obra **en un solo lugar**, en lugar de múltiples grupos de mensajería.
+
+## Pendientes (no se abordaron)
+* Niveles y montos de autorización por rol.
+* Forma de reabastecer la caja chica y alertas de fondo agotado.
+* Límite de gasto aceptado sin comprobante.
+* Flujo de pago a subcontratistas.
+
+## Impacto en requerimientos e historias
+* **RF02 / HU02:** la obra, la etapa y la partida son obligatorias, porque hoy contabilidad asigna la obra a mano.
+* **RF07 / HU07:** se agrega la nota simple como tipo de comprobante, con concepto y horas de maquinaria o de trabajo.
+* **RF08 / HU08:** la nota simple se acepta pero queda en revisión de contabilidad; solo se bloquea el cierre sin ningún comprobante.
+* **RF13 / HU14 (nuevos):** comparación de gasto real contra avance por partida.
+* **RF14 / HU15 (nuevos):** clasificación del gasto como cobrable al cliente o con cargo al fondo de contingencia.
+* **HU18 (nueva):** historia de usuario para RNF03 (exportación contable).
+* **Renumeración:** para mantener el backlog ordenado por identificador, las historias de RNF01 y RNF02 (antes HU14 y HU15) pasan a ser HU16 y HU17.

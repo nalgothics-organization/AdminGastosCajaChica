@@ -7,12 +7,14 @@
         *   **Dado** que necesito un material urgente, **cuando** ingreso una solicitud, **entonces** el sistema me pide adjuntar una evidencia de la necesidad.
         *   **Dado** que completo la solicitud, **cuando** la envío, **entonces** se genera un folio único y se notifica al nivel de autorización correspondiente.
 
-*   **HU02: Clasificación forzosa del gasto**
+*   **HU02: Clasificación obligatoria del gasto por obra y etapa de construcción**
     *   **Requerimiento:** RF02
-    *   **Descripción:** Como **contabilidad**, necesito que todo gasto esté asociado obligatoriamente a una obra y partida, para poder clasificar correctamente el gasto y evitar fugas.
+    *   **Descripción:** Como **contabilidad**, necesito que todo gasto esté asociado obligatoriamente a una obra, una etapa de construcción y una partida o categoría de gasto, para poder clasificar, controlar y registrar los costos de cada actividad y evitar fugas de dinero.
     *   **Criterios de aceptación:**
         *   **Dado** que el residente registra una solicitud, **cuando** intenta omitir la obra, **entonces** el sistema bloquea el envío y exige seleccionar una obra activa.
-        *   **Dado** que se registra un monto, **cuando** se elige la obra, **entonces** se debe elegir obligatoriamente una categoría de gasto.
+        *   **Dado** que se registra un gasto, **cuando** se elige la obra, entonces se debe elegir obligatoriamente una etapa de construcción y una categoría de gasto.
+        *   **Dado** que se selecciona una etapa de construcción, **cuando** se registra una actividad, **entonces** el sistema permite especificar el concepto, el costo estimado y el monto solicitado.
+        *   **Dado** que se registra un gasto, **cuando** se guarda la solicitud, **entonces** el sistema debe asociar el costo a la obra, la etapa y la partida seleccionadas para facilitar el seguimiento del presupuesto.
 
 *   **HU03: Niveles de autorización escalonados**
     *   **Requerimiento:** RF03

@@ -16,7 +16,7 @@
 **Regla de bloqueos de 24 horas:** Si un integrante lleva más de un día atascado en un problema técnico o de lógica de negocio, tiene la obligación de avisar y pedir ayuda al equipo.
 
 ## Acuerdo número 6
-**Estimación y priorización:** Requerimientos e historias de usuario se estiman en **horas**, con la misma escala para ambos tipos de tarea. La prioridad se expresa como Alta, Media o Baja. El backlog se ordena por identificador numérico (RF, RNF y HU) y por iteración.
+**Estimación y priorización:** Requerimientos e historias de usuario se estiman en **horas**, con la misma escala para ambos tipos de tarea. La estimación de un requerimiento es la suma de las estimaciones de sus historias de usuario (sub-issues). La prioridad se expresa como Alta, Media o Baja. El backlog se ordena por identificador numérico (RF, RNF y HU) y por iteración.
 
 ---
 

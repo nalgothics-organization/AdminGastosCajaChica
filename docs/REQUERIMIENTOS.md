@@ -1,6 +1,7 @@
 # Catálogo de Requerimientos Funcionales (RF)
 
 > Estimación en horas, con la misma escala usada en las historias de usuario (`docs/HISTORIAS.md`).
+> La estimación de cada requerimiento es la suma de las estimaciones de sus historias de usuario.
 > Cambios derivados de la entrevista con el cliente: ver `docs/ENTREVISTA.md`.
 
 | ID | Descripción | Prioridad | Estimación (h) |

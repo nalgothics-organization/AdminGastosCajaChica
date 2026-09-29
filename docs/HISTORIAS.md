@@ -1,11 +1,12 @@
 # Historias de Usuario
 
 > Estimación en horas, con la misma escala usada en los requerimientos (`docs/REQUERIMIENTOS.md`).
+> La estimación de cada requerimiento es la suma de las estimaciones de sus historias de usuario.
 
 *   **HU01: Registro de solicitud de caja chica**
     *   **Requerimiento:** RF01
     *   **Prioridad:** Alta
-    *   **Estimación:** 8 h
+    *   **Estimación:** 12 h
     *   **Descripción:** Como **residente de obra**, necesito solicitar fondos detallando el concepto, urgencia y monto, para poder realizar compras urgentes necesarias en el frente de obra (ej. refacciones, renta de maquinaria, comidas de cuadrilla).
     *   **Criterios de aceptación:**
         *   **Dado** que necesito un material urgente, **cuando** ingreso una solicitud, **entonces** el sistema me pide adjuntar una evidencia de la necesidad.
@@ -14,7 +15,7 @@
 *   **HU02: Clasificación obligatoria del gasto por obra y etapa de construcción**
     *   **Requerimiento:** RF02
     *   **Prioridad:** Alta
-    *   **Estimación:** 6 h
+    *   **Estimación:** 8 h
     *   **Descripción:** Como **contabilidad**, necesito que todo gasto esté asociado obligatoriamente a una obra, una etapa de construcción y una partida o categoría de gasto, para poder clasificar, controlar y registrar los costos de cada actividad sin tener que identificar a mano a qué obra pertenece cada nota.
     *   **Criterios de aceptación:**
         *   **Dado** que el residente registra una solicitud, **cuando** intenta omitir la obra, **entonces** el sistema bloquea el envío y exige seleccionar una obra activa.
@@ -25,7 +26,7 @@
 *   **HU03: Niveles de autorización escalonados**
     *   **Requerimiento:** RF03
     *   **Prioridad:** Alta
-    *   **Estimación:** 6 h
+    *   **Estimación:** 10 h
     *   **Descripción:** Como **dirección**, necesito que los montos altos pasen por mi validación, para tener control sobre fugas de presupuesto que rebasen los límites preestablecidos.
     *   **Criterios de aceptación:**
         *   **Dado** que los montos tienen diferentes niveles de aprobación, **cuando** un residente pide un monto menor al límite, **entonces** la solicitud se asigna a administración.
@@ -34,7 +35,7 @@
 *   **HU04: Bloqueo por antigüedad de adeudo**
     *   **Requerimiento:** RF04
     *   **Prioridad:** Alta
-    *   **Estimación:** 4 h
+    *   **Estimación:** 6 h
     *   **Descripción:** Como **administración**, necesito bloquear la entrega de fondos nuevos a residentes con comprobaciones vencidas, para forzarlos a entregar los comprobantes pendientes antes de recibir más dinero.
     *   **Criterios de aceptación:**
         *   **Dado** que un residente tiene comprobaciones vencidas, **cuando** pide un nuevo fondo, **entonces** el sistema rechaza la solicitud automáticamente.
@@ -43,7 +44,7 @@
 *   **HU05: Autorización de caja chica**
     *   **Requerimiento:** RF05
     *   **Prioridad:** Alta
-    *   **Estimación:** 6 h
+    *   **Estimación:** 8 h
     *   **Descripción:** Como **dirección**, necesito autorizar o rechazar solicitudes dejando comentarios, para dar trazabilidad a las decisiones de gasto.
     *   **Criterios de aceptación:**
         *   **Dado** que tengo una solicitud pendiente, **cuando** la apruebo, **entonces** queda registrado mi nombre, la fecha y el monto final.
@@ -52,7 +53,7 @@
 *   **HU06: Registro de entrega física o digital**
     *   **Requerimiento:** RF06
     *   **Prioridad:** Media
-    *   **Estimación:** 4 h
+    *   **Estimación:** 6 h
     *   **Descripción:** Como **administración**, necesito registrar si entregué el dinero en efectivo, tarjeta o transferencia, para rastrear de dónde salió el recurso hacia la obra.
     *   **Criterios de aceptación:**
         *   **Dado** que una solicitud está autorizada, **cuando** entrego el recurso, **entonces** el sistema me permite añadir la referencia bancaria o marcar efectivo.
@@ -61,7 +62,7 @@
 *   **HU07: Captura de comprobante en campo**
     *   **Requerimiento:** RF07
     *   **Prioridad:** Alta
-    *   **Estimación:** 8 h
+    *   **Estimación:** 10 h
     *   **Descripción:** Como **residente de obra**, necesito fotografiar la factura, ticket o nota de libreta en el momento, para no perderla en el transcurso de los días y poder comprobar mi gasto.
     *   **Criterios de aceptación:**
         *   **Dado** que acabo de pagar, **cuando** abro la comprobación, **entonces** puedo tomar una foto directa desde el celular.
@@ -71,7 +72,7 @@
 *   **HU08: Exigencia de comprobante válido**
     *   **Requerimiento:** RF08
     *   **Prioridad:** Alta
-    *   **Estimación:** 6 h
+    *   **Estimación:** 8 h
     *   **Descripción:** Como **contabilidad**, necesito que toda comprobación cuente con un comprobante válido, para asegurar la deducibilidad y cuadrar el sistema contable.
     *   **Criterios de aceptación:**
         *   **Dado** que un gasto no tiene ningún comprobante adjunto, **cuando** el residente intenta cerrarlo como comprobado, **entonces** el sistema se lo impide.
@@ -81,7 +82,7 @@
 *   **HU09: Conciliación de faltantes y sobrantes**
     *   **Requerimiento:** RF09
     *   **Prioridad:** Alta
-    *   **Estimación:** 8 h
+    *   **Estimación:** 12 h
     *   **Descripción:** Como **administración**, necesito conciliar lo entregado contra lo comprobado, para gestionar las diferencias sin que se olviden o se pierdan reembolsos.
     *   **Criterios de aceptación:**
         *   **Dado** que lo gastado es menor a lo entregado, **cuando** se cierra la comprobación, **entonces** se genera un registro de "sobrante a devolver".
@@ -90,7 +91,7 @@
 *   **HU10: Visualización de saldos en tiempo real**
     *   **Requerimiento:** RF10
     *   **Prioridad:** Media
-    *   **Estimación:** 8 h
+    *   **Estimación:** 12 h
     *   **Descripción:** Como **dirección**, necesito ver cuánto se lleva gastado por obra en el momento, para no enterarme a fin de mes cuando ya no hay margen de maniobra.
     *   **Criterios de aceptación:**
         *   **Dado** que consulto el tablero de una obra, **cuando** reviso la caja chica, **entonces** veo desglosado lo gastado y lo pendiente por reponer.
@@ -99,7 +100,7 @@
 *   **HU11: Extracción automática de datos fotográficos (OCR)**
     *   **Requerimiento:** RF11
     *   **Prioridad:** Baja
-    *   **Estimación:** 12 h
+    *   **Estimación:** 20 h
     *   **Descripción:** Como **residente de obra**, necesito que el sistema lea los datos del comprobante por mí, para ahorrar tiempo de captura manual que compite con mis actividades urgentes.
     *   **Criterios de aceptación:**
         *   **Dado** que subo la fotografía de una factura, **cuando** el sistema la procesa, **entonces** extrae automáticamente el monto y el proveedor.
@@ -108,7 +109,7 @@
 *   **HU12: Alertas de gastos sospechosos**
     *   **Requerimiento:** RF12
     *   **Prioridad:** Baja
-    *   **Estimación:** 8 h
+    *   **Estimación:** 6 h
     *   **Descripción:** Como **administración**, necesito recibir notificaciones sobre gastos fuera de patrón, para detectar errores o abusos en la caja chica.
     *   **Criterios de aceptación:**
         *   **Dado** que un comprobante se ingresa dos veces, **cuando** el sistema procesa el folio, **entonces** lanza una alerta de "gasto repetido".
@@ -126,7 +127,7 @@
 *   **HU14: Seguimiento de gasto contra avance por partida**
     *   **Requerimiento:** RF13
     *   **Prioridad:** Media
-    *   **Estimación:** 8 h
+    *   **Estimación:** 12 h
     *   **Descripción:** Como **dirección**, necesito comparar cuánto se ha gastado de cada partida contra su avance de obra, para detectar desviaciones antes de que se agote el presupuesto.
     *   **Criterios de aceptación:**
         *   **Dado** que una partida tiene un monto cotizado, **cuando** consulto la obra, **entonces** veo el porcentaje gastado y el porcentaje de avance de esa partida.
@@ -135,7 +136,7 @@
 *   **HU15: Distinción entre gasto cobrable y fondo de contingencia**
     *   **Requerimiento:** RF14
     *   **Prioridad:** Media
-    *   **Estimación:** 4 h
+    *   **Estimación:** 6 h
     *   **Descripción:** Como **administración**, necesito indicar si un gasto se cobra al cliente o sale del fondo de contingencia por un error propio, para saber cuánto facturar al cliente y cuánto colchón queda en la obra.
     *   **Criterios de aceptación:**
         *   **Dado** que registro un gasto, **cuando** lo clasifico, **entonces** debo elegir entre "cobrable al cliente" o "fondo de contingencia".
@@ -144,7 +145,7 @@
 *   **HU16: Captura en condiciones adversas**
     *   **Requerimiento:** RNF01
     *   **Prioridad:** Alta
-    *   **Estimación:** 6 h
+    *   **Estimación:** 8 h
     *   **Descripción:** Como **residente de obra**, necesito una interfaz extremadamente simple, para poder registrar rápidamente el comprobante mientras trabajo con prisas y manos sucias.
     *   **Criterios de aceptación:**
         *   **Dado** que estoy a mitad de un colado, **cuando** abro la app, **entonces** encuentro un botón visible de "Fotografiar comprobante" en la pantalla principal.
@@ -153,7 +154,7 @@
 *   **HU17: Resiliencia en sótanos y zonas sin red**
     *   **Requerimiento:** RNF02
     *   **Prioridad:** Alta
-    *   **Estimación:** 12 h
+    *   **Estimación:** 16 h
     *   **Descripción:** Como **residente de obra**, necesito guardar fotos de mis comprobantes aunque no tenga señal, para evitar perder evidencias que capturo en sótanos o zonas alejadas.
     *   **Criterios de aceptación:**
         *   **Dado** que mi celular no tiene conexión, **cuando** capturo un gasto, **entonces** la app lo guarda en la memoria local.
@@ -162,7 +163,7 @@
 *   **HU18: Exportación de gastos al sistema contable**
     *   **Requerimiento:** RNF03
     *   **Prioridad:** Media
-    *   **Estimación:** 6 h
+    *   **Estimación:** 10 h
     *   **Descripción:** Como **contabilidad**, necesito exportar los gastos comprobados de un periodo en el formato de nuestro sistema contable, para no volver a capturarlos a mano.
     *   **Criterios de aceptación:**
         *   **Dado** que selecciono una obra y un periodo, **cuando** genero la exportación, **entonces** obtengo un archivo con el formato que acepta el sistema contable actual.

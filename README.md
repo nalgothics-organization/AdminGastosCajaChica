@@ -14,3 +14,4 @@ JARA VILLASANA, MARIANO — 80547: Facilitador del trabajo y responsable de la d
 
 CASILLAS RAMÍREZ, STELLA ISABEL — 38919: Responsable del producto y análisis
 
+OROZCO DE ALBA, PAULINA — 79849: Equipo de desarrollo.

@@ -1,7 +1,11 @@
-## Administracion de riesgos 
 
+=======
+# Registro de Riesgos
 
-| ID | RIESGO | PROBABILIDAD | IMPACTO | RESPUESTA | RESPONSABLE |
-| --- | --- | --- | --- | --- | --- |
-| **R-01** | El proveedor del servicio OCR de facturas modifica la API o suspende el servicio, provocando fallos en la extracción automática de datos de comprobantes. | Media | Alto | **Reducir:** Implementar una capa de abstracción con un proveedor secundario (fallback) y validación manual de respaldo. | MATA AGUIRRE, JUAN PABLO (80446) |
+> Cada riesgo indica su causa y la consecuencia que tendría sobre la aplicación.
+> Probabilidad e impacto se califican como Baja/Media/Alta; la respuesta indica la estrategia (Evitar, Reducir, Transferir o Aceptar) y la acción concreta.
 
+| ID | Riesgo | Probabilidad | Impacto | Respuesta | Responsable |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **R-01** | Los comprobantes que se fotografían en obra son notas simples escritas a mano, así que la extracción automática devuelve montos o proveedores incorrectos y la conciliación marca diferencias falsas. | Alta | Alto | *Reducir:* Mostrar los datos extraídos para que el usuario los confirme o corrija antes de guardar. | MATA AGUIRRE, JUAN PABLO (80446) |
+| **R-02** | Los requerimientos de flujos de aprobación de gastos cambian durante las demostraciones del producto, causando retrasos en las entregas planificadas. | Alta | Media | *Aceptar:* Bajar el alcance del ciclo actual y redefinir los entregables clave para la siguiente demostración. | JARA VILLASANA, MARIANO (80547) |

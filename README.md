@@ -17,3 +17,5 @@ CASILLAS RAMÍREZ, STELLA ISABEL — 38919: Responsable del producto y análisis
 OROZCO DE ALBA, PAULINA — 79849: Equipo de desarrollo.
 
 MATA AGUIRRE, JUAN PABLO — 79849: Equipo de desarrollo.
+
+MORRISON RAMÍREZ, CARLOS JAASIEL — 80702: Equipo de desarrollo.

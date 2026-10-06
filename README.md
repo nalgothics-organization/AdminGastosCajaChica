@@ -11,3 +11,5 @@ Prototipo de módulo de Administración de Gastos y Caja Chica
 
 ## Roles del equipo 
 JARA VILLASANA, MARIANO — 80547: Facilitador del trabajo y responsable de la demostración del producto.
+
+

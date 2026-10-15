@@ -63,6 +63,11 @@ class SolicitudFondoService:
         if not data.evidencia_url or not data.evidencia_url.strip():
             raise ValueError("Es obligatorio adjuntar una evidencia de la necesidad.")
 
+        # Validar nivel de autorización y requerir firma de dirección (HU03)
+        rol_autorizador = self.determinar_nivel_autorizacion(data.monto_solicitado)
+        if rol_autorizador == "Dirección" and not data.firma_digital_direccion:
+            raise ValueError("Se requiere la firma digital de dirección para montos que exceden el límite de administración.")
+
         folio = self.generar_folio_unico(data.obra_id)
 
         nueva_solicitud = SolicitudFondo(
@@ -76,14 +81,14 @@ class SolicitudFondoService:
             costo_estimado=data.costo_estimado,
             urgencia=data.urgencia,
             evidencia_url=data.evidencia_url,
+            firma_digital_direccion=data.firma_digital_direccion,  # Guardar firma
             estado=EstadoSolicitud.PENDIENTE,
             activo=True,
         )
 
         self._db[nueva_solicitud.id] = nueva_solicitud
 
-        # Notificación al nivel autorizador correspondiente (Criterio 2 HU01)
-        rol_autorizador = self.determinar_nivel_autorizacion(data.monto_solicitado)
+        # Notificación al nivel autorizador correspondiente
         notificacion = self.emitir_notificacion(folio, data.monto_solicitado, rol_autorizador)
 
         return SolicitudFondoResponse(

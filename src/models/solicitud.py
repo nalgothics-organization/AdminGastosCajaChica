@@ -54,7 +54,10 @@ class SolicitudFondoBase(BaseModel):
 
 
 class SolicitudFondoCreate(SolicitudFondoBase):
-    pass
+    firma_digital_direccion: Optional[str] = Field(
+        default=None,
+        description="Firma digital obligatoria si el monto requiere aprobación de Dirección"
+    )
 
 
 class NotificacionNivelAutorizacion(BaseModel):
@@ -68,6 +71,7 @@ class NotificacionNivelAutorizacion(BaseModel):
 class SolicitudFondo(SolicitudFondoBase):
     id: UUID = Field(default_factory=uuid4, description="UUID identificador del registro")
     folio: str = Field(..., description="Folio único y legible generado automáticamente")
+    firma_digital_direccion: Optional[str] = Field(default=None, description="Firma digital proporcionada para montos altos")
     estado: EstadoSolicitud = Field(default=EstadoSolicitud.PENDIENTE, description="Estado de la solicitud")
     activo: bool = Field(default=True, description="Indicador para borrado lógico (soft delete)")
     deleted_at: Optional[datetime] = Field(default=None, description="Fecha de borrado lógico")

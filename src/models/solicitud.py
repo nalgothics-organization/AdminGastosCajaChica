@@ -10,6 +10,8 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, field_validator
 
+from src.models.obra import es_partida_generica
+
 
 class EtapaConstruccion(str, Enum):
     CIMENTACION = "cimentación"
@@ -35,7 +37,7 @@ class EstadoSolicitud(str, Enum):
 
 
 class SolicitudFondoBase(BaseModel):
-    obra_id: str = Field(..., description="Identificador de la obra activa")
+    obra_id: str = Field(..., min_length=1, description="Identificador de la obra activa")
     solicitante_id: str = Field(..., description="Identificador del residente de obra solicitante")
     etapa_construccion: EtapaConstruccion = Field(..., description="Etapa constructiva")
     partida_categoria: str = Field(..., min_length=1, description="Partida o categoría del gasto")
@@ -44,6 +46,20 @@ class SolicitudFondoBase(BaseModel):
     costo_estimado: Decimal = Field(..., gt=0, description="Costo estimado de la actividad")
     urgencia: UrgenciaSolicitud = Field(..., description="Nivel de urgencia")
     evidencia_url: str = Field(..., min_length=5, description="URL o ruta de la evidencia que justifica la necesidad")
+
+    @field_validator("obra_id")
+    @classmethod
+    def validar_obra_obligatoria(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Es obligatorio seleccionar una obra activa.")
+        return v.strip()
+
+    @field_validator("partida_categoria")
+    @classmethod
+    def validar_partida_no_generica(cls, v: str) -> str:
+        if not v or not v.strip() or es_partida_generica(v):
+            raise ValueError("No se permiten gastos genéricos; seleccione una partida presupuestal.")
+        return v.strip()
 
     @field_validator("evidencia_url")
     @classmethod

@@ -2,6 +2,7 @@
 Implementa:
 - Generación automática de folio único (RF01/HU01).
 - Reglas de notificación al nivel correspondiente (HU01).
+- Asociación obligatoria a obra activa, etapa y partida presupuestal (RF02/HU02).
 - Soft delete e inmutabilidad según AGENTS.md.
 """
 
@@ -17,10 +18,13 @@ from src.models.solicitud import (
     SolicitudFondoCreate,
     SolicitudFondoResponse,
 )
+from src.services.obra_service import ObraService, obra_service as obra_service_default
 
 
 class SolicitudFondoService:
-    def __init__(self):
+    def __init__(self, obra_service: Optional[ObraService] = None):
+        # Catálogo de obras para validar obra activa y partida presupuestal (RF02)
+        self._obra_service = obra_service or obra_service_default
         # Almacén en memoria simulado para persistencia
         self._db: Dict[UUID, SolicitudFondo] = {}
         self._secuencia_folio: int = 1000
@@ -59,6 +63,10 @@ class SolicitudFondoService:
 
     def crear_solicitud(self, data: SolicitudFondoCreate) -> SolicitudFondoResponse:
         """Registra una solicitud de fondo, valida evidencia, genera folio y notifica."""
+        # Asociación obligatoria a obra activa y partida presupuestal de esa obra
+        obra = self._obra_service.obtener_obra_activa(data.obra_id)
+        partida = self._obra_service.obtener_partida(obra.id, data.partida_categoria)
+
         # Validación de evidencia requerida (Criterio 1 HU01)
         if not data.evidencia_url or not data.evidencia_url.strip():
             raise ValueError("Es obligatorio adjuntar una evidencia de la necesidad.")
@@ -68,14 +76,14 @@ class SolicitudFondoService:
         if rol_autorizador == "Dirección" and not data.firma_digital_direccion:
             raise ValueError("Se requiere la firma digital de dirección para montos que exceden el límite de administración.")
 
-        folio = self.generar_folio_unico(data.obra_id)
+        folio = self.generar_folio_unico(obra.id)
 
         nueva_solicitud = SolicitudFondo(
             folio=folio,
-            obra_id=data.obra_id,
+            obra_id=obra.id,
             solicitante_id=data.solicitante_id,
             etapa_construccion=data.etapa_construccion,
-            partida_categoria=data.partida_categoria,
+            partida_categoria=partida.nombre,
             concepto=data.concepto,
             monto_solicitado=data.monto_solicitado,
             costo_estimado=data.costo_estimado,

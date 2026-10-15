@@ -1,66 +1,65 @@
 # Acuerdos del equipo
 
 ## Acuerdo número 1
-Mensajes de commit estructurados: adoptar Conventional Commits (`<tipo>(<alcance>): <descripción>`) para facilitar la lectura del historial del proyecto.
+**Mensajes de commit estructurados:** Adoptar Conventional Commits (`<tipo>(<alcance>): <descripción>`) para facilitar la lectura del historial del proyecto.
 
 ## Acuerdo número 2
-Gestión de secretos y seguridad: está estrictamente prohibido subir archivos `.env`, contraseñas o tokens al repositorio. Cualquier configuración de entorno requerida debe documentarse únicamente en un archivo `.env.example`.
+**Gestión de secretos y seguridad:** Está estrictamente prohibido subir archivos `.env`, contraseñas o tokens al repositorio. Cualquier configuración de entorno requerida debe documentarse únicamente en un archivo `.env.example`.
 
 ## Acuerdo número 3
-Nomenclatura de ramas: establecer un estándar estricto para crear ramas, como `feat/nombre-tarea`, `fix/bug-detectado` o `hotfix/error-urgente`. Esto mantiene el repositorio organizado cuando los 5 integrantes trabajan en paralelo.
+**Nomenclatura de ramas:** Las ramas siguen el estándar `feat/nombre-tarea`, `fix/bug-detectado` o `hotfix/error-urgente`. Esto mantiene el repositorio organizado cuando los 5 integrantes trabajan en paralelo.
 
 ## Acuerdo número 4
-Asignación de tareas: para evitar duplicidad de trabajo, nadie debe comenzar a programar una funcionalidad sin antes haberse asignado explícitamente el issue o la tarea en el tablero del proyecto.
+**Asignación de tareas:** Para evitar duplicidad de trabajo, nadie debe comenzar una tarea sin antes haberse asignado explícitamente el Issue o la tarjeta en el tablero del proyecto.
 
 ## Acuerdo número 5
-Definición de Terminado (DoD): una tarea solo se considera terminada cuando cumple todos los criterios de la sección [Definición de Terminado](#definición-de-terminado-dod) de este documento.
+**Regla de bloqueos de 24 horas:** Si un integrante lleva más de un día atascado en un problema técnico o de lógica de negocio, tiene la obligación de avisar y pedir ayuda al equipo.
 
 ## Acuerdo número 6
-Regla de bloqueos de 24 horas: si un integrante lleva más de un día atascado en un problema técnico o de lógica de negocio, tiene la obligación de pedir ayuda al equipo.
-
-## Acuerdo número 7
-Estimación y prioridad: los requerimientos y las historias de usuario se estiman en **horas** con la misma escala (2, 4, 8, 12, 16, 24). La estimación de un requerimiento es la suma de las historias que lo componen. La prioridad se expresa como Alta, Media o Baja; una historia hereda la prioridad de su requerimiento.
+**Estimación y priorización:** Requerimientos e historias de usuario se estiman en **horas**, con la misma escala para ambos tipos de tarea. La estimación de un requerimiento es la suma de las estimaciones de sus historias de usuario (sub-issues). La prioridad se expresa como Alta, Media o Baja. El backlog se ordena por identificador numérico (RF, RNF y HU) y por iteración.
 
 ---
 
 # Definición de Terminado (DoD)
 
-Una tarea del tablero (requerimiento o historia de usuario) solo puede moverse al estado **Done** (Terminado) cuando cumple **todos** los criterios aplicables.
+Una tarea del tablero solo puede moverse al estado **Terminado** cuando cumple **todos** los criterios que le aplican. Si falta alguno, la tarea permanece en su estado actual.
 
-## 1. Criterios generales (toda tarea)
-- [ ] La tarea tiene título, descripción, iteración, estimación en horas, prioridad y estado en el tablero.
-- [ ] La tarea está asignada a al menos un integrante del equipo.
-- [ ] El trabajo se realizó en una rama con la nomenclatura acordada (`feat/`, `fix/`, `hotfix/`).
-- [ ] Los commits siguen Conventional Commits y referencian el issue (`#<número>`).
-- [ ] Existe un Pull Request con Resumen, Tipo de cambio, Verificación e Issue vinculado (`Closes #<número>`).
-- [ ] El Pull Request fue revisado y aprobado por al menos un integrante distinto al autor.
-- [ ] Los archivos respetan `.editorconfig`: indentación con espacios, UTF-8 sin BOM, fin de línea LF y salto de línea final.
-- [ ] No se incluyen secretos, credenciales ni archivos `.env` en el repositorio.
-- [ ] El código compila/ejecuta sin errores y no rompe el flujo existente de administración de gastos.
-- [ ] Los cambios están integrados en la rama `main`.
+## Criterios generales (aplican a toda tarea)
 
-## 2. Historias de usuario
-- [ ] Se cumplen **todos** los criterios de aceptación (Dado / Cuando / Entonces) de la historia.
-- [ ] Cada criterio de aceptación fue verificado con una prueba (automatizada o manual documentada en el PR).
-- [ ] El comportamiento fue demostrado al equipo (o al cliente) y aceptado.
-- [ ] La documentación afectada (`docs/HISTORIAS.md`, `README.md`) está actualizada.
+1. La tarjeta tiene título, descripción, iteración, estimación en horas, prioridad y estado.
+2. La tarea está asignada a un responsable (Acuerdo 4).
+3. El trabajo se desarrolló en una rama con la nomenclatura acordada (Acuerdo 3) y se integró a `main` mediante Pull Request.
+4. El Pull Request incluye resumen, tipo de cambio, pasos de verificación y referencia al Issue (`Closes #<número>`).
+5. El Pull Request fue revisado y aprobado por al menos **un** integrante distinto al autor.
+6. Los commits siguen Conventional Commits (Acuerdo 1).
+7. Los archivos respetan `.editorconfig`: UTF-8 sin BOM, finales de línea LF, sangría con espacios y salto de línea final.
+8. No se incluyen secretos, credenciales ni archivos `.env` (Acuerdo 2).
+9. El código compila / se ejecuta sin errores y no rompe el flujo existente de administración de gastos.
+10. Se registraron en la tarjeta las horas reales invertidas.
 
-## 3. Requerimientos funcionales (RF)
-- [ ] Todas las historias de usuario asociadas al requerimiento están en estado **Done**.
-- [ ] Se respetan las reglas de negocio de caja chica:
-  - No existen borrados físicos (*hard delete*) en solicitudes, gastos o comprobantes; solo borrado lógico (*soft delete*).
-  - Un gasto con estado `Aprobado` o `Conciliado` no puede modificar sus montos ni detalles.
-  - Las correcciones a gastos aprobados se registran como un nuevo movimiento de "Reverso" o "Ajuste" que referencia el UUID del original.
-- [ ] Las acciones relevantes (autorización, entrega, comprobación, conciliación) quedan registradas con usuario y fecha para auditoría.
+## Requerimiento funcional (RF)
 
-## 4. Requerimientos no funcionales (RNF)
-- [ ] El indicador definido en `docs/REQUERIMIENTOS.md` fue medido y cumple la meta establecida.
-- [ ] La evidencia de la medición (capturas, tiempos, resultados de importación) está adjunta en el PR o en el issue.
-- [ ] Todas las historias de usuario asociadas al requerimiento están en estado **Done**.
+1. Todas las historias de usuario ligadas al requerimiento están en **Terminado**.
+2. La funcionalidad descrita en el catálogo (`docs/REQUERIMIENTOS.md`) está implementada completa.
+3. Se respetan las reglas de negocio de caja chica:
+   - No existen borrados físicos en transacciones, gastos o comprobantes; solo borrado lógico.
+   - Un gasto `Aprobado` o `Conciliado` no puede modificarse; las correcciones se hacen con un registro de **Reverso** o **Ajuste** que referencia el UUID original.
+4. Se verificó el requerimiento de extremo a extremo (captura → autorización → comprobación, según aplique).
 
-## 5. Estados del tablero
-| Estado | Significado |
-| :--- | :--- |
-| **Todo** (Pendiente, estado inicial) | La tarea está en el backlog, priorizada y estimada, pero nadie trabaja en ella. |
-| **In Progress** (En progreso) | Un integrante se la asignó y está trabajando en ella, o su Pull Request está en revisión. |
-| **Done** (Terminado) | Cumple todos los criterios de esta Definición de Terminado. |
+## Requerimiento no funcional (RNF)
+
+1. El indicador definido en el catálogo se midió y cumple con la meta establecida (por ejemplo: máximo 3 toques para capturar un ticket; sincronización offline en menos de 60 segundos).
+2. La evidencia de la medición (capturas, tiempos, bitácora de prueba) está adjunta a la tarjeta o al Pull Request.
+3. Sus historias de usuario asociadas están en **Terminado**.
+
+## Historia de usuario (HU)
+
+1. Todos los criterios de aceptación (Dado / Cuando / Entonces) se probaron y se cumplen.
+2. Existen pruebas (automatizadas o manuales documentadas) que cubren cada criterio de aceptación.
+3. El rol de la historia (residente de obra, administración, contabilidad o dirección) puede completar el flujo sin ayuda del equipo de desarrollo.
+4. La historia fue demostrada al equipo y validada por el responsable de producto.
+
+## Documentación
+
+1. Si la tarea cambió el alcance, se actualizaron `docs/REQUERIMIENTOS.md` y `docs/HISTORIAS.md`.
+2. Los cambios de configuración o de entorno quedaron documentados en `README.md` o en `.env.example`.

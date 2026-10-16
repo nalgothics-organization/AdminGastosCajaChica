@@ -87,6 +87,57 @@ class TestRegistrarSolicitudEndpoint(BaseApiTestCase):
 
         self.assertEqual(response.status_code, 422)
 
+    def test_post_sin_obra_bloquea_el_envio(self):
+        """HU02 Criterio 1: si se omite la obra, se bloquea el envío."""
+        for obra in ("", "   "):
+            with self.subTest(obra=repr(obra)):
+                response = self.crear_solicitud(obra_id=obra)
+
+                self.assertEqual(response.status_code, 422)
+                self.assertIn("obra activa", response.text)
+
+    def test_post_campos_de_clasificacion_vacios_devuelven_422(self):
+        """RF02: partida, concepto y solicitante no pueden quedar en blanco."""
+        for campo in ("partida_categoria", "concepto", "solicitante_id"):
+            with self.subTest(campo=campo):
+                self.assertEqual(self.crear_solicitud(**{campo: "   "}).status_code, 422)
+
+    def test_post_asocia_costo_a_obra_etapa_y_partida(self):
+        """HU02 Criterio 4: la solicitud guarda obra, etapa, partida y costos."""
+        solicitud = self.crear_solicitud().json()["solicitud"]
+
+        self.assertEqual(solicitud["obra_id"], "OBRA-NORTE-01")
+        self.assertEqual(solicitud["etapa_construccion"], "cimentación")
+        self.assertEqual(solicitud["partida_categoria"], "Renta de Maquinaria")
+        self.assertEqual(solicitud["costo_estimado"], "4000.00")
+        self.assertEqual(solicitud["monto_solicitado"], "3500.00")
+
+    def test_post_acepta_todas_las_etapas_de_construccion(self):
+        """RF01: cimentación, estructura, albañilería, instalaciones, acabados y entrega."""
+        etapas = ("cimentación", "estructura", "albañilería", "instalaciones", "acabados", "entrega")
+        for etapa in etapas:
+            with self.subTest(etapa=etapa):
+                self.assertEqual(self.crear_solicitud(etapa_construccion=etapa).status_code, 201)
+
+    def test_post_firma_en_blanco_no_cuenta_como_firma(self):
+        """HU03 Criterio 2: una firma vacía no autoriza montos mayores al límite."""
+        response = self.crear_solicitud(monto_solicitado="18000.00", firma_digital_direccion="   ")
+
+        self.assertEqual(response.status_code, 422)
+
+    def test_post_guarda_nivel_de_autorizacion_asignado(self):
+        """HU03 Criterio 1: la solicitud queda asignada al nivel correspondiente."""
+        baja = self.crear_solicitud().json()["solicitud"]
+        alta = self.crear_solicitud(
+            monto_solicitado="18000.00",
+            firma_digital_direccion="FIRMA-DIR-001",
+        ).json()["solicitud"]
+
+        self.assertEqual(baja["nivel_autorizacion"], "Administración")
+        self.assertEqual(alta["nivel_autorizacion"], "Dirección")
+        consultada = self.client.get(f"/api/solicitudes/{baja['id']}").json()
+        self.assertEqual(consultada["nivel_autorizacion"], "Administración")
+
     def test_post_folios_son_unicos(self):
         folio_1 = self.crear_solicitud().json()["solicitud"]["folio"]
         folio_2 = self.crear_solicitud().json()["solicitud"]["folio"]

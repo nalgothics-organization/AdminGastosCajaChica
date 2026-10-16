@@ -5,7 +5,7 @@ Implementa:
 - Soft delete e inmutabilidad según AGENTS.md.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Dict, List, Optional
 from uuid import UUID
@@ -30,7 +30,7 @@ class SolicitudFondoService:
         """Genera un folio único, legible y trazable por obra."""
         self._secuencia_folio += 1
         prefijo_obra = obra_id.strip().upper().replace(" ", "")[:4]
-        timestamp = datetime.utcnow().strftime("%Y%m")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m")
         return f"SOL-{prefijo_obra}-{timestamp}-{self._secuencia_folio}"
 
     def determinar_nivel_autorizacion(self, monto: Decimal) -> str:
@@ -82,6 +82,7 @@ class SolicitudFondoService:
             urgencia=data.urgencia,
             evidencia_url=data.evidencia_url,
             firma_digital_direccion=data.firma_digital_direccion,  # Guardar firma
+            nivel_autorizacion=rol_autorizador,
             estado=EstadoSolicitud.PENDIENTE,
             activo=True,
         )
@@ -118,8 +119,8 @@ class SolicitudFondoService:
             return False
 
         solicitud.activo = False
-        solicitud.deleted_at = datetime.utcnow()
-        solicitud.updated_at = datetime.utcnow()
+        solicitud.deleted_at = datetime.now(timezone.utc)
+        solicitud.updated_at = datetime.now(timezone.utc)
         return True
 
 

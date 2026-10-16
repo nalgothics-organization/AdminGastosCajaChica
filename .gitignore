@@ -37,6 +37,7 @@ ENV/
 .vscode/
 .idea/
 .DS_Store
+.pytest_cache/
 Thumbs.db
 
 # Databases & local logs

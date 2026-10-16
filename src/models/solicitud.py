@@ -2,13 +2,17 @@
 Reglas de codificación: UTF-8, LF, 4 espacios de indentación.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import Optional
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
+
+
+def _ahora_utc() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class EtapaConstruccion(str, Enum):
@@ -34,11 +38,21 @@ class EstadoSolicitud(str, Enum):
     RECONCILIADO = "Reconciliado"
 
 
+CAMPOS_OBLIGATORIOS = {
+    "obra_id": "Debe seleccionar una obra activa; no se permiten gastos sin obra.",
+    "solicitante_id": "El solicitante es obligatorio.",
+    "partida_categoria": "Debe seleccionar una partida o categoría de gasto.",
+}
+
+
 class SolicitudFondoBase(BaseModel):
+    # Los textos se recortan antes de validar para que "   " cuente como vacío
+    model_config = ConfigDict(str_strip_whitespace=True)
+
     obra_id: str = Field(..., description="Identificador de la obra activa")
     solicitante_id: str = Field(..., description="Identificador del residente de obra solicitante")
     etapa_construccion: EtapaConstruccion = Field(..., description="Etapa constructiva")
-    partida_categoria: str = Field(..., min_length=1, description="Partida o categoría del gasto")
+    partida_categoria: str = Field(..., description="Partida o categoría del gasto")
     concepto: str = Field(..., min_length=3, description="Concepto detallado de la compra o servicio")
     monto_solicitado: Decimal = Field(..., gt=0, description="Monto solicitado en moneda local")
     costo_estimado: Decimal = Field(..., gt=0, description="Costo estimado de la actividad")
@@ -51,6 +65,13 @@ class SolicitudFondoBase(BaseModel):
         if not v or not v.strip():
             raise ValueError("La evidencia de la necesidad es obligatoria para registrar la solicitud.")
         return v.strip()
+
+    @field_validator(*CAMPOS_OBLIGATORIOS)
+    @classmethod
+    def validar_campos_obligatorios(cls, v: str, info: ValidationInfo) -> str:
+        if not v:
+            raise ValueError(CAMPOS_OBLIGATORIOS[info.field_name])
+        return v
 
 
 class SolicitudFondoCreate(SolicitudFondoBase):
@@ -84,18 +105,19 @@ class NotificacionNivelAutorizacion(BaseModel):
     mensaje: str
     folio: str
     monto: Decimal
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=_ahora_utc)
 
 
 class SolicitudFondo(SolicitudFondoBase):
     id: UUID = Field(default_factory=uuid4, description="UUID identificador del registro")
     folio: str = Field(..., description="Folio único y legible generado automáticamente")
     firma_digital_direccion: Optional[str] = Field(default=None, description="Firma digital proporcionada para montos altos")
+    nivel_autorizacion: str = Field(..., description="Nivel asignado según el monto: Administración o Dirección")
     estado: EstadoSolicitud = Field(default=EstadoSolicitud.PENDIENTE, description="Estado de la solicitud")
     activo: bool = Field(default=True, description="Indicador para borrado lógico (soft delete)")
     deleted_at: Optional[datetime] = Field(default=None, description="Fecha de borrado lógico")
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="Fecha de creación")
-    updated_at: datetime = Field(default_factory=datetime.utcnow, description="Fecha de última actualización")
+    created_at: datetime = Field(default_factory=_ahora_utc, description="Fecha de creación")
+    updated_at: datetime = Field(default_factory=_ahora_utc, description="Fecha de última actualización")
 
 
 class SolicitudFondoResponse(BaseModel):

@@ -14,6 +14,11 @@ app = FastAPI(
 app.include_router(solicitudes_router, prefix="/api", tags=["Solicitudes"])
 
 
-@app.get("/")
+@app.get(
+    "/",
+    tags=["Health"],
+    summary="Verificar estado del servicio",
+    description="Confirma que la API está en línea.",
+)
 def health_check():
     return {"status": "ok", "app": "Admin Gastos y Caja Chica API"}

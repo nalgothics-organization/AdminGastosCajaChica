@@ -80,12 +80,35 @@ class TestHU01RegistroSolicitudFondo(unittest.TestCase):
         """
         payload_monto_alto = self.payload_valido.copy()
         payload_monto_alto["monto_solicitado"] = Decimal("18000.00")
+        payload_monto_alto["firma_digital_direccion"] = "FIRMA-DIR-001"
 
         data_create = SolicitudFondoCreate(**payload_monto_alto)
         resultado = self.service.crear_solicitud(data_create)
 
         self.assertEqual(resultado.notificacion_enviada.destinatario_rol, "Dirección")
         self.assertIn("Dirección", resultado.notificacion_enviada.mensaje)
+        self.assertEqual(resultado.solicitud.firma_digital_direccion, "FIRMA-DIR-001")
+
+    def test_monto_alto_sin_firma_de_direccion_es_rechazado(self):
+        """Niveles escalonados: montos mayores a 5,000 MXN requieren firma digital de Dirección."""
+        payload_monto_alto = self.payload_valido.copy()
+        payload_monto_alto["monto_solicitado"] = Decimal("18000.00")
+
+        data_create = SolicitudFondoCreate(**payload_monto_alto)
+        with self.assertRaises(ValueError):
+            self.service.crear_solicitud(data_create)
+
+        self.assertEqual(self.service.listar_solicitudes_activas(), [])
+        self.assertEqual(self.service.notificaciones_enviadas, [])
+
+    def test_monto_en_el_limite_se_notifica_a_administracion(self):
+        """Exactamente 5,000 MXN sigue dentro del límite de Administración."""
+        payload_limite = self.payload_valido.copy()
+        payload_limite["monto_solicitado"] = Decimal("5000.00")
+
+        resultado = self.service.crear_solicitud(SolicitudFondoCreate(**payload_limite))
+
+        self.assertEqual(resultado.notificacion_enviada.destinatario_rol, "Administración")
 
     def test_regla_negocio_soft_delete(self):
         """Regla de negocio AGENTS.md Sección 8:

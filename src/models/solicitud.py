@@ -8,7 +8,7 @@ from enum import Enum
 from typing import Optional
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class EtapaConstruccion(str, Enum):
@@ -54,6 +54,25 @@ class SolicitudFondoBase(BaseModel):
 
 
 class SolicitudFondoCreate(SolicitudFondoBase):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "obra_id": "OBRA-NORTE-01",
+                    "solicitante_id": "RESIDENTE-PAU",
+                    "etapa_construccion": "cimentación",
+                    "partida_categoria": "Renta de Maquinaria",
+                    "concepto": "Renta de retroexcavadora para sondeo",
+                    "monto_solicitado": "3500.00",
+                    "costo_estimado": "4000.00",
+                    "urgencia": "urgente",
+                    "evidencia_url": "https://storage.empresa.com/evidencias/fuga_tubo_01.jpg",
+                    "firma_digital_direccion": None,
+                }
+            ]
+        }
+    )
+
     firma_digital_direccion: Optional[str] = Field(
         default=None,
         description="Firma digital obligatoria si el monto requiere aprobación de Dirección"

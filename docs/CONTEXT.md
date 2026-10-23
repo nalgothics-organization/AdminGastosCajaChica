@@ -75,10 +75,10 @@ _Pendiente._ Qué información recibe y en qué formato (ver RNF03).
 
 **Responsable:** @PauAlba
 
-_Pendiente._ Qué datos extrae del comprobante y qué pasa si falla (ver RF11).
+Servicio externo que recibe la fotografía del comprobante y devuelve el monto, el proveedor y la fecha para no capturarlos a mano. Si la lectura falla o es parcial, el residente completa los campos manualmente. Se integrará en una iteración futura (RF11).
 
 ### Servicio de correo
 
 **Responsable:** @PauAlba
 
-_Pendiente._ Qué notificaciones y alertas se envían y a quién (ver HU01, RF04 y RF12).
+Envía las notificaciones del sistema: aviso al autorizador cuando llega una solicitud nueva, aviso al residente cuando su solicitud se aprueba, se rechaza o se bloquea por comprobaciones vencidas, y alertas a contabilidad sobre comprobaciones próximas a vencer o gastos repetidos.

@@ -58,7 +58,8 @@ PostgreSQL ejecutándose en un contenedor de Docker, levantado con `docker compo
 
 **Responsable:** @PauAlba
 
-_Pendiente._ Dónde se guardan las imágenes, cómo se relacionan con el gasto y qué pasa con las capturas sin conexión (RNF02).
+Las fotografías de comprobantes y evidencias se guardan como archivos en un volumen de Docker, y en la base de datos solo se guarda la ruta del archivo asociada al gasto. Así la base de datos no crece con imágenes. Las fotos capturadas sin señal se guardarán primero en el celular y se enviarán al recuperar la conexión
+(RNF02, iteración futura).
 
 ## Decisiones de arquitectura
 

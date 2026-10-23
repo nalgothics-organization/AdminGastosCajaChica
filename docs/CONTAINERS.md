@@ -52,7 +52,7 @@ _Pendiente._ Qué expone (endpoints principales, Swagger en `/docs`) y qué regl
 
 **Responsable:** @bladeRunner08
 
-_Pendiente._ Cómo se levanta el contenedor, qué tablas principales tiene y cómo se cumple el borrado lógico.
+PostgreSQL ejecutándose en un contenedor de Docker, levantado con `docker compose up -d` y con un volumen para no perder los datos. Guarda obras, solicitudes, autorizaciones, entregas, gastos y comprobantes. Ningún registro se borra físicamente: se usa borrado lógico con una fecha de eliminación, y las correcciones a gastos aprobados se hacen con registros de ajuste que referencian el original.
 
 ### Almacenamiento de comprobantes
 

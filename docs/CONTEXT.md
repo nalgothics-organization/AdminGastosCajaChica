@@ -43,7 +43,7 @@ _Pendiente._ Describir en un párrafo qué problema resuelve el módulo para la 
 
 **Responsable:** @bladeRunner08
 
-_Pendiente._ Qué hace en el sistema, desde dónde lo usa y qué necesita (ver RF01, RF07, RNF01 y RNF02).
+El residente usa el sistema desde el navegador de su celular en el frente de obra. Solicita fondos con el concepto, el monto, la urgencia y la evidencia de la necesidad, y después comprueba sus gastos tomando una foto del comprobante. Captura con prisa y a veces sin señal, por eso la interfaz debe requerir máximo 3 toques para registrar un ticket.
 
 ### Administración
 

@@ -49,13 +49,13 @@ El residente usa el sistema desde el navegador de su celular en el frente de obr
 
 **Responsable:** @juanpismata11
 
-_Pendiente._ Qué autoriza, cuándo entrega el recurso y cómo concilia (ver RF03, RF05, RF06 y RF09).
+Administración recibe las solicitudes cuyo monto no supera los $5,000 y las aprueba o rechaza dejando comentarios. Después registra la entrega del recurso (efectivo, transferencia o tarjeta) con su referencia, y al final concilia lo entregado contra lo comprobado para registrar sobrantes, faltantes o reembolsos.
 
 ### Dirección
 
 **Responsable:** @juanpismata11
 
-_Pendiente._ Qué montos autoriza y qué información consulta (ver RF03, RF05 y RF10).
+Dirección autoriza las solicitudes que superan los $5,000; el sistema registra quién autorizó, cuándo y por qué monto. También consulta el tablero de saldos por obra para detectar a tiempo si el gasto se está saliendo del presupuesto.
 
 ### Contabilidad
 

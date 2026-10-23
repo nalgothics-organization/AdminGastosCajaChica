@@ -46,7 +46,7 @@ _Pendiente._ Tecnología elegida, qué interfaces incluye (`docs/diseno`) y cóm
 
 **Responsable:** @juanpismata11
 
-_Pendiente._ Qué expone (endpoints principales, Swagger en `/docs`) y qué reglas de negocio aplica.
+Construida en Python con FastAPI. Expone los endpoints de solicitudes (POST /api/solicitudes, GET /api/solicitudes, GET /api/solicitudes/{id} y DELETE /api/solicitudes/{id} con borrado lógico) y su documentación en Swagger en /docs. Aplica las reglas de negocio: clasificación obligatoria por obra, etapa y partida, asignación del nivel de autorización según el monto, y la prohibición de borrar o modificar gastos aprobados.
 
 ### Base de datos
 

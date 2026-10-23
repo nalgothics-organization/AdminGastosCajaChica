@@ -61,7 +61,7 @@ Dirección autoriza las solicitudes que superan los $5,000; el sistema registra 
 
 **Responsable:** @jaaaaaaaaasiel
 
-_Pendiente._ Qué revisa y qué obtiene del sistema (ver RF08 y RNF03).
+Contabilidad revisa los comprobantes: los gastos con factura se cierran directamente y los respaldados con ticket o nota simple quedan en revisión para que los valide. También vigila las comprobaciones próximas a vencer y obtiene del sistema los gastos comprobados de cada obra y periodo.
 
 ## Sistemas externos
 
@@ -69,8 +69,7 @@ _Pendiente._ Qué revisa y qué obtiene del sistema (ver RF08 y RNF03).
 
 **Responsable:** @jaaaaaaaaasiel
 
-_Pendiente._ Qué información recibe y en qué formato (ver RNF03).
-
+Es el sistema que la empresa ya tiene en operación. Recibe un archivo con los gastos comprobados de una obra y un periodo, con el formato que acepta para importarlos sin errores ni recaptura (RNF03, iteración futura).
 ### Servicio OCR
 
 **Responsable:** @PauAlba

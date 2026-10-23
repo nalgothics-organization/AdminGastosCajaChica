@@ -64,4 +64,5 @@ _Pendiente._ Dónde se guardan las imágenes, cómo se relacionan con el gasto y
 
 **Responsable:** @casizzy
 
-_Pendiente._ Por qué se eligió esta separación y estas tecnologías, y qué queda para iteraciones futuras (OCR, exportación contable, modo sin conexión).
+Se separó el sistema en aplicación web, API y base de datos para que cada parte se desarrolle y despliegue por separado y el equipo trabaje en paralelo. Se eligió FastAPI porque la API ya estaba construida en Python desde la Iteración 3, PostgreSQL en Docker para que todos tengan la misma base de datos sin instalarla, y una aplicación web que funcione desde el celular porque el residente captura en obra. El OCR, la exportación al sistema contable y el modo sin conexión quedan para iteraciones futuras.
+

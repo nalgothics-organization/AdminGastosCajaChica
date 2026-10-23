@@ -35,7 +35,7 @@ C4Context
 
 **Responsable:** @casizzy
 
-_Pendiente._ Describir en un párrafo qué problema resuelve el módulo para la constructora y qué queda fuera de su alcance.
+El módulo controla el ciclo completo de la caja chica en las obras de la constructora: solicitud del fondo, autorización según el monto, entrega del recurso, comprobación del gasto y conciliación de diferencias. Reemplaza el control manual con notas y hojas de cálculo, y asocia cada gasto a una obra, etapa de construcción y partida. Queda fuera de su alcance la nómina, las compras mayores con orden de compra y la contabilidad general, que siguen en el sistema contable de la empresa.
 
 ## Personas
 

@@ -40,7 +40,7 @@ C4Container
 
 **Responsable:** @jaaaaaaaaasiel
 
-_Pendiente._ Tecnología elegida, qué interfaces incluye (`docs/diseno`) y cómo se comunica con la API.
+Construida con React y Vite, y pensada para usarse desde el celular en obra. Incluye las pantallas de docs/diseno: inicio del residente, captura de comprobante, bandeja de autorización, tablero de saldos y registro de solicitud. Se comunica con la API por HTTP intercambiando JSON; la dirección de la API se configura con una variable de entorno.
 
 ### API REST
 

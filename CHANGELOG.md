@@ -7,11 +7,20 @@
 
   ## [Unreleased]
 
+  ## [0.1.0] - 2026-10-29
+
+  Primera versión documentada del prototipo.
+
   ### Added
 
-  - Configuración `.github/release.yml` para agrupar las notas de versión por etiqueta.
-  - Sección "Instalación y uso" en el README.
-  - Sección "Versionado" en el README.
-  - Este archivo CHANGELOG.md.
+  - Configuración `.github/release.yml` con categorías por etiqueta, incluida la de cambios incompatibles (#56, #57).
+  - Sección "Versionado" en el README (#58).
+  - Sección "Instalación y uso" en el README (#61).
+  - Este archivo CHANGELOG.md (#59).
 
-  [unreleased]: https://github.com/nalgothics-organization/AdminGastosCajaChica/commits/main
+  ### Fixed
+
+  - Título de la categoría "Otros cambios" en `.github/release.yml` (#62).
+
+  [unreleased]: https://github.com/nalgothics-organization/AdminGastosCajaChica/compare/v0.1.0...HEAD
+  [0.1.0]: https://github.com/nalgothics-organization/AdminGastosCajaChica/releases/tag/v0.1.0

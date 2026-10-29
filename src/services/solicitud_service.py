@@ -112,6 +112,15 @@ class SolicitudFondoService:
     def listar_solicitudes_activas(self) -> List[SolicitudFondo]:
         return [s for s in self._db.values() if s.activo]
 
+    def obtener_solicitud_por_comprobar(self, solicitante_id: str) -> Optional[SolicitudFondo]:
+        """Devuelve la solicitud aprobada más reciente del residente (vinculado automático HU16)."""
+        candidatas = [
+            s for s in self._db.values()
+            if s.activo and s.solicitante_id == solicitante_id and s.estado == EstadoSolicitud.APROBADO
+        ]
+        # El almacén conserva el orden de inserción; created_at puede empatar en registros consecutivos
+        return candidatas[-1] if candidatas else None
+
     def soft_delete(self, solicitud_id: UUID) -> bool:
         """Regla de Negocio Sección 8: Prohibido hard delete, solo soft delete."""
         solicitud = self._db.get(solicitud_id)

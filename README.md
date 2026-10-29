@@ -61,8 +61,19 @@ Abre http://127.0.0.1:8000/docs para probar los endpoints desde Swagger.
 | GET | /api/solicitudes | Listar solicitudes activas |
 | GET | /api/solicitudes/{id} | Obtener una solicitud por UUID |
 | DELETE | /api/solicitudes/{id} | Borrado lógico (soft delete) |
+| POST | /api/comprobantes/captura | Captura rápida: solo la foto del comprobante |
+| GET | /api/comprobantes | Listar comprobantes (filtros `solicitante_id`, `estado`) |
+| GET | /api/comprobantes/{id} | Obtener un comprobante por UUID |
+| PUT | /api/comprobantes/{id}/datos | Completar datos (horas obligatorias en maquinaria y mano de obra) |
+| POST | /api/comprobantes/{id}/cerrar | Cerrar: factura → Comprobado; ticket o nota → Revisión contabilidad |
+| POST | /api/comprobantes/{id}/ajustes | Ajuste o reverso de un comprobante cerrado |
+| DELETE | /api/comprobantes/{id} | Descartar un borrador (soft delete) |
 
-Los datos se guardan en memoria, así que se pierden al detener el servidor.
+Los datos se guardan en memoria, así que se pierden al detener el servidor. Las imágenes de comprobantes se guardan en la carpeta `UPLOADS_DIR` (por defecto `./uploads`, ver `.env.example`).
+
+### Captura en obra desde el celular
+
+Con la API levantada en la red local (`python -m uvicorn src.main:app --host 0.0.0.0`), abre `http://<IP-de-tu-equipo>:8000/app/` en el celular. La primera vez pide el ID del residente; después, la captura toma 3 toques: **Fotografiar comprobante**, obturador y **Usar foto**. Los datos del comprobante se completan después desde la lista *Por completar*.
 
 ## Demostración
 

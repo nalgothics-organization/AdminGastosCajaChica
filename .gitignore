@@ -44,3 +44,6 @@ Thumbs.db
 *.sqlite3
 *.db
 *.log
+
+# Imágenes de comprobantes capturadas localmente
+uploads/

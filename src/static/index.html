@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Caja chica · Captura en obra</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main>
+    <h1>Caja chica</h1>
+
+    <section id="config" hidden>
+      <label for="residente">¿Quién captura? (solo la primera vez)</label>
+      <input id="residente" type="text" placeholder="ID de residente" autocomplete="off">
+      <button id="guardar-residente" type="button">Guardar</button>
+    </section>
+
+    <section id="captura" hidden>
+      <!-- RNF01: toque 1 abre la cámara, toque 2 es el obturador, toque 3 "Usar foto" sube sin más pasos -->
+      <label id="boton-foto" class="boton-foto" for="foto">Fotografiar comprobante</label>
+      <input id="foto" type="file" accept="image/*" capture="environment" hidden>
+      <p id="residente-actual" class="nota"></p>
+    </section>
+
+    <p id="aviso" class="aviso" role="status" aria-live="polite" hidden></p>
+
+    <section id="pendientes" hidden>
+      <h2>Por completar</h2>
+      <ul id="lista-pendientes"></ul>
+    </section>
+
+    <section id="formulario" hidden>
+      <h2>Datos del comprobante</h2>
+      <form id="form-datos" novalidate>
+        <fieldset>
+          <legend>Tipo</legend>
+          <label><input type="radio" name="tipo" value="factura" required> Factura</label>
+          <label><input type="radio" name="tipo" value="ticket"> Ticket</label>
+          <label><input type="radio" name="tipo" value="nota_simple"> Nota simple</label>
+        </fieldset>
+
+        <div id="campo-solicitud" hidden>
+          <label for="solicitud">Solicitud de fondo</label>
+          <select id="solicitud" name="solicitud_id"></select>
+        </div>
+
+        <label for="monto">Monto pagado</label>
+        <input id="monto" name="monto_comprobado" type="number" inputmode="decimal" min="0.01" step="0.01" required>
+
+        <label for="fecha">Fecha del gasto</label>
+        <input id="fecha" name="fecha_gasto" type="date" required>
+
+        <label for="proveedor">Proveedor</label>
+        <input id="proveedor" name="proveedor" type="text" required>
+
+        <label for="concepto">Concepto</label>
+        <input id="concepto" name="concepto" type="text" required>
+
+        <div id="campo-horas" hidden>
+          <label for="unidad">Horas de</label>
+          <select id="unidad" name="unidad_horas">
+            <option value="maquinaria">Maquinaria</option>
+            <option value="trabajo">Trabajo</option>
+          </select>
+          <label for="horas">Horas</label>
+          <input id="horas" name="horas" type="number" inputmode="decimal" min="0.1" step="0.1">
+        </div>
+
+        <div class="acciones">
+          <button type="submit" data-accion="guardar">Guardar</button>
+          <button type="submit" data-accion="cerrar">Guardar y cerrar</button>
+          <button type="button" id="descartar" class="secundario">Descartar</button>
+          <button type="button" id="volver" class="secundario">Volver</button>
+        </div>
+      </form>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

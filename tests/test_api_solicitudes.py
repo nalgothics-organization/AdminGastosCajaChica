@@ -217,6 +217,13 @@ class TestSwaggerDocumentacion(BaseApiTestCase):
         ("get", "/api/solicitudes"),
         ("get", "/api/solicitudes/{solicitud_id}"),
         ("delete", "/api/solicitudes/{solicitud_id}"),
+        ("post", "/api/comprobantes/captura"),
+        ("get", "/api/comprobantes"),
+        ("get", "/api/comprobantes/{comprobante_id}"),
+        ("put", "/api/comprobantes/{comprobante_id}/datos"),
+        ("post", "/api/comprobantes/{comprobante_id}/cerrar"),
+        ("post", "/api/comprobantes/{comprobante_id}/ajustes"),
+        ("delete", "/api/comprobantes/{comprobante_id}"),
     }
 
     def setUp(self):

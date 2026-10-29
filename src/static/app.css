@@ -1,0 +1,136 @@
+:root {
+  --fondo: #f6f5f2;
+  --texto: #1d1d1b;
+  --primario: #e8590c;
+  --primario-texto: #ffffff;
+  --borde: #c9c6bf;
+  --exito: #2b8a3e;
+  --error: #c92a2a;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #1b1b1a;
+    --texto: #f1f0ec;
+    --borde: #4a4844;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font: 18px/1.4 system-ui, sans-serif;
+}
+
+main {
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* Botón principal pensado para manos sucias: ocupa casi media pantalla */
+.boton-foto {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 45vh;
+  border-radius: 1rem;
+  background: var(--primario);
+  color: var(--primario-texto);
+  font-size: 1.75rem;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.boton-foto:active {
+  filter: brightness(0.9);
+}
+
+.nota {
+  font-size: 0.9rem;
+  opacity: 0.75;
+}
+
+.aviso {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  color: #ffffff;
+  background: var(--exito);
+}
+
+.aviso.error {
+  background: var(--error);
+}
+
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+li button {
+  width: 100%;
+  text-align: left;
+}
+
+label,
+legend {
+  display: block;
+  margin-top: 0.75rem;
+}
+
+fieldset label {
+  display: inline-block;
+  margin-right: 1rem;
+}
+
+input,
+select,
+button {
+  font: inherit;
+  min-height: 3rem;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--borde);
+  border-radius: 0.5rem;
+}
+
+button {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: var(--primario);
+  color: var(--primario-texto);
+}
+
+button.secundario {
+  background: transparent;
+  color: var(--texto);
+  border: 1px solid var(--borde);
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}

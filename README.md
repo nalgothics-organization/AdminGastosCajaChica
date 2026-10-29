@@ -20,6 +20,50 @@ MATA AGUIRRE, JUAN PABLO — 79849: Equipo de desarrollo.
 
 MORRISON RAMÍREZ, CARLOS JAASIEL — 80702: Equipo de desarrollo.
 
+## Instalación y uso
+
+### Requisitos
+
+- Python 3.10 o superior (probado con 3.13)
+- Git
+
+### Instalación
+
+bash
+git clone https://github.com/nalgothics-organization/AdminGastosCajaChica.git
+cd AdminGastosCajaChica
+python -m venv .venv
+.venv\Scripts\Activate.ps1   # Windows (PowerShell)
+source .venv/bin/activate    # Linux / macOS
+pip install -r requirements.txt
+
+
+### Ejecutar pruebas
+
+bash
+python -m pytest tests -v
+
+
+### Levantar la API
+
+bash
+python -m uvicorn src.main:app --reload
+
+
+Abre http://127.0.0.1:8000/docs para probar los endpoints desde Swagger.
+
+### Endpoints
+
+| Método | Ruta | Descripción |
+| --- | --- | --- |
+| GET | / | Estado del servicio |
+| POST | /api/solicitudes | Registrar solicitud de fondo |
+| GET | /api/solicitudes | Listar solicitudes activas |
+| GET | /api/solicitudes/{id} | Obtener una solicitud por UUID |
+| DELETE | /api/solicitudes/{id} | Borrado lógico (soft delete) |
+
+Los datos se guardan en memoria, así que se pierden al detener el servidor.
+
 ## Demostración
 
 Desde la raíz del proyecto, en PowerShell:

@@ -217,6 +217,8 @@ class TestSwaggerDocumentacion(BaseApiTestCase):
         ("get", "/api/solicitudes"),
         ("get", "/api/solicitudes/{solicitud_id}"),
         ("delete", "/api/solicitudes/{solicitud_id}"),
+        ("post", "/api/solicitudes/{solicitud_id}/aprobar"),
+        ("post", "/api/solicitudes/{solicitud_id}/rechazar"),
         ("post", "/api/comprobantes/captura"),
         ("get", "/api/comprobantes"),
         ("get", "/api/comprobantes/{comprobante_id}"),

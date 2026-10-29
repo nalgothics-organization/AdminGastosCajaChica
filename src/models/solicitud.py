@@ -108,12 +108,100 @@ class NotificacionNivelAutorizacion(BaseModel):
     timestamp: datetime = Field(default_factory=_ahora_utc)
 
 
+class RolAutorizador(str, Enum):
+    ADMINISTRACION = "Administración"
+    DIRECCION = "Dirección"
+
+
+class DecisionAutorizacion(str, Enum):
+    APROBADA = "Aprobada"
+    RECHAZADA = "Rechazada"
+
+
+LONGITUD_MINIMA_COMENTARIO_RECHAZO = 5
+
+
+class DecisionBase(BaseModel):
+    """Datos del autorizador que toma la decisión (RF05/HU05)."""
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    autorizador_id: str = Field(..., min_length=1, description="Identificador del usuario autorizador")
+    autorizador_nombre: str = Field(..., min_length=3, description="Nombre de quien autoriza o rechaza")
+    rol_autorizador: RolAutorizador = Field(..., description="Rol con el que se toma la decisión")
+
+
+class AprobacionCreate(DecisionBase):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "autorizador_id": "ADMIN-LAURA",
+                    "autorizador_nombre": "Laura Méndez",
+                    "rol_autorizador": "Administración",
+                    "monto_autorizado": "3000.00",
+                    "comentario": "Se autoriza el monto cotizado por el proveedor.",
+                }
+            ]
+        }
+    )
+
+    monto_autorizado: Optional[Decimal] = Field(
+        default=None,
+        gt=0,
+        description="Monto final autorizado; si se omite se autoriza el monto solicitado",
+    )
+    comentario: Optional[str] = Field(default=None, description="Comentario opcional de la aprobación")
+
+
+class RechazoCreate(DecisionBase):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "autorizador_id": "DIR-CARLOS",
+                    "autorizador_nombre": "Carlos Ruiz",
+                    "rol_autorizador": "Dirección",
+                    "comentario": "El gasto no corresponde a la etapa actual de la obra.",
+                }
+            ]
+        }
+    )
+
+    # validate_default para que la ausencia del comentario también dé el mensaje de negocio
+    comentario: Optional[str] = Field(
+        default=None,
+        validate_default=True,
+        description="Justificación obligatoria del rechazo",
+    )
+
+    @field_validator("comentario")
+    @classmethod
+    def validar_comentario_obligatorio(cls, v: Optional[str]) -> str:
+        if not v or len(v) < LONGITUD_MINIMA_COMENTARIO_RECHAZO:
+            raise ValueError("Es obligatorio ingresar un comentario que justifique el rechazo.")
+        return v
+
+
+class Autorizacion(BaseModel):
+    """Registro inmutable de quién decidió, cuándo, por cuánto y por qué."""
+
+    decision: DecisionAutorizacion
+    autorizador_id: str
+    autorizador_nombre: str
+    rol_autorizador: RolAutorizador
+    monto_autorizado: Optional[Decimal] = Field(default=None, description="Monto final; vacío si se rechazó")
+    comentario: Optional[str] = Field(default=None)
+    fecha_decision: datetime = Field(default_factory=_ahora_utc)
+
+
 class SolicitudFondo(SolicitudFondoBase):
     id: UUID = Field(default_factory=uuid4, description="UUID identificador del registro")
     folio: str = Field(..., description="Folio único y legible generado automáticamente")
     firma_digital_direccion: Optional[str] = Field(default=None, description="Firma digital proporcionada para montos altos")
     nivel_autorizacion: str = Field(..., description="Nivel asignado según el monto: Administración o Dirección")
     estado: EstadoSolicitud = Field(default=EstadoSolicitud.PENDIENTE, description="Estado de la solicitud")
+    autorizacion: Optional[Autorizacion] = Field(default=None, description="Decisión de aprobación o rechazo (RF05)")
     activo: bool = Field(default=True, description="Indicador para borrado lógico (soft delete)")
     deleted_at: Optional[datetime] = Field(default=None, description="Fecha de borrado lógico")
     created_at: datetime = Field(default_factory=_ahora_utc, description="Fecha de creación")

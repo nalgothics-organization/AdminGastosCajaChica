@@ -7,6 +7,10 @@
 
   ## [Unreleased]
 
+  ### Added
+
+  - Aprobación y rechazo de solicitudes de fondo (RF05/HU05): `POST /api/solicitudes/{id}/aprobar` y `POST /api/solicitudes/{id}/rechazar` registran quién decidió, cuándo, el monto autorizado y el comentario, obligatorio al rechazar.
+
   ## [0.1.0] - 2026-10-29
 
   Primera versión documentada del prototipo.

@@ -61,6 +61,8 @@ Abre http://127.0.0.1:8000/docs para probar los endpoints desde Swagger.
 | GET | /api/solicitudes | Listar solicitudes activas |
 | GET | /api/solicitudes/{id} | Obtener una solicitud por UUID |
 | DELETE | /api/solicitudes/{id} | Borrado lógico (soft delete) |
+| POST | /api/solicitudes/{id}/aprobar | Aprobar: registra autorizador, fecha y monto final |
+| POST | /api/solicitudes/{id}/rechazar | Rechazar con comentario obligatorio |
 | POST | /api/comprobantes/captura | Captura rápida: solo la foto del comprobante |
 | GET | /api/comprobantes | Listar comprobantes (filtros `solicitante_id`, `estado`) |
 | GET | /api/comprobantes/{id} | Obtener un comprobante por UUID |

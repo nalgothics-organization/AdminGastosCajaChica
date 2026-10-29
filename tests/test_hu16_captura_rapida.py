@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from fastapi.testclient import TestClient
 
 from src.main import app
-from src.models.solicitud import EstadoSolicitud, SolicitudFondoCreate
+from src.models.solicitud import AprobacionCreate, SolicitudFondoCreate
 from src.services.comprobante_service import comprobante_service
 from src.services.solicitud_service import solicitud_service
 
@@ -37,9 +37,14 @@ def crear_solicitud_aprobada(partida="Renta de Maquinaria", solicitante=RESIDENT
             evidencia_url="https://storage.empresa.com/evidencias/fuga_tubo_01.jpg",
         )
     )
-    # RF05 aún no expone la aprobación; se simula directamente en el servicio
-    respuesta.solicitud.estado = EstadoSolicitud.APROBADO
-    return respuesta.solicitud
+    return solicitud_service.aprobar_solicitud(
+        respuesta.solicitud.id,
+        AprobacionCreate(
+            autorizador_id="ADMIN-LAURA",
+            autorizador_nombre="Laura Méndez",
+            rol_autorizador="Administración",
+        ),
+    )
 
 
 class BaseComprobanteTestCase(unittest.TestCase):

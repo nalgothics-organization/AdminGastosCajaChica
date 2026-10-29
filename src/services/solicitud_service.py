@@ -2,6 +2,7 @@
 Implementa:
 - Generación automática de folio único (RF01/HU01).
 - Reglas de notificación al nivel correspondiente (HU01).
+- Aprobación y rechazo con trazabilidad del autorizador (RF05/HU05).
 - Soft delete e inmutabilidad según AGENTS.md.
 """
 
@@ -11,12 +12,30 @@ from typing import Dict, List, Optional
 from uuid import UUID
 
 from src.models.solicitud import (
+    AprobacionCreate,
+    Autorizacion,
+    DecisionAutorizacion,
+    DecisionBase,
     EstadoSolicitud,
     NotificacionNivelAutorizacion,
+    RechazoCreate,
+    RolAutorizador,
     SolicitudFondo,
     SolicitudFondoCreate,
     SolicitudFondoResponse,
 )
+
+
+class SolicitudNoEncontradaError(LookupError):
+    pass
+
+
+class SolicitudNoPendienteError(Exception):
+    """La solicitud ya fue decidida; las correcciones se registran como ajuste (AGENTS.md §8)."""
+
+
+class AutorizadorNoPermitidoError(Exception):
+    """El rol del autorizador no alcanza el nivel que exige el monto de la solicitud."""
 
 
 class SolicitudFondoService:
@@ -120,6 +139,66 @@ class SolicitudFondoService:
         ]
         # El almacén conserva el orden de inserción; created_at puede empatar en registros consecutivos
         return candidatas[-1] if candidatas else None
+
+    def _obtener_pendiente(self, solicitud_id: UUID, data: DecisionBase) -> SolicitudFondo:
+        """Valida que la solicitud exista, siga pendiente y que el rol pueda decidirla (RF05)."""
+        solicitud = self.obtener_por_id(solicitud_id)
+        if not solicitud:
+            raise SolicitudNoEncontradaError(f"Solicitud con ID {solicitud_id} no encontrada.")
+
+        if solicitud.estado != EstadoSolicitud.PENDIENTE:
+            raise SolicitudNoPendienteError(
+                f"La solicitud {solicitud.folio} ya está en estado {solicitud.estado.value} y no puede decidirse de nuevo."
+            )
+
+        # Dirección puede decidir cualquier nivel; Administración solo los de su límite
+        if solicitud.nivel_autorizacion == RolAutorizador.DIRECCION.value and data.rol_autorizador != RolAutorizador.DIRECCION:
+            raise AutorizadorNoPermitidoError(
+                f"La solicitud {solicitud.folio} excede el límite de Administración y solo puede decidirla Dirección."
+            )
+        return solicitud
+
+    def _registrar_decision(
+        self,
+        solicitud: SolicitudFondo,
+        estado: EstadoSolicitud,
+        autorizacion: Autorizacion,
+    ) -> SolicitudFondo:
+        solicitud.estado = estado
+        solicitud.autorizacion = autorizacion
+        solicitud.updated_at = autorizacion.fecha_decision
+        return solicitud
+
+    def aprobar_solicitud(self, solicitud_id: UUID, data: AprobacionCreate) -> SolicitudFondo:
+        """Aprueba la solicitud registrando autorizador, fecha y monto final (HU05 criterio 1)."""
+        solicitud = self._obtener_pendiente(solicitud_id, data)
+
+        monto_autorizado = data.monto_autorizado if data.monto_autorizado is not None else solicitud.monto_solicitado
+        if monto_autorizado > solicitud.monto_solicitado:
+            raise ValueError("El monto autorizado no puede ser mayor al monto solicitado.")
+
+        autorizacion = Autorizacion(
+            decision=DecisionAutorizacion.APROBADA,
+            autorizador_id=data.autorizador_id,
+            autorizador_nombre=data.autorizador_nombre,
+            rol_autorizador=data.rol_autorizador,
+            monto_autorizado=monto_autorizado,
+            comentario=data.comentario or None,
+        )
+        return self._registrar_decision(solicitud, EstadoSolicitud.APROBADO, autorizacion)
+
+    def rechazar_solicitud(self, solicitud_id: UUID, data: RechazoCreate) -> SolicitudFondo:
+        """Rechaza la solicitud; el comentario justificativo es obligatorio (HU05 criterio 2)."""
+        solicitud = self._obtener_pendiente(solicitud_id, data)
+
+        autorizacion = Autorizacion(
+            decision=DecisionAutorizacion.RECHAZADA,
+            autorizador_id=data.autorizador_id,
+            autorizador_nombre=data.autorizador_nombre,
+            rol_autorizador=data.rol_autorizador,
+            comentario=data.comentario,
+        )
+        return self._registrar_decision(solicitud, EstadoSolicitud.RECHAZADO, autorizacion)
 
     def soft_delete(self, solicitud_id: UUID) -> bool:
         """Regla de Negocio Sección 8: Prohibido hard delete, solo soft delete."""

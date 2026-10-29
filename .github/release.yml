@@ -19,6 +19,6 @@ changelog:
     - title: Documentación
       labels:
         - documentation
-    - title: Otros cambiosgit add .github/release.yml
+    - title: Otros cambios
       labels:
         - "*"

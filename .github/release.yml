@@ -1,0 +1,18 @@
+# Configuración de las notas de versión generadas automáticamente.
+# Fuente: https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
+# Cada pull request cae en la primera categoría cuya etiqueta coincida.
+
+changelog:
+  categories:
+    - title: Nuevas funciones
+      labels:
+        - enhancement
+    - title: Correcciones
+      labels:
+        - bug
+    - title: Documentación
+      labels:
+        - documentation
+    - title: Otros cambios
+      labels:
+        - "*"

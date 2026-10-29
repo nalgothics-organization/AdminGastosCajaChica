@@ -31,3 +31,16 @@ powershell -ExecutionPolicy Bypass -File .\demo.ps1
 El script instala las dependencias, ejecuta los tests, levanta la API, carga dos solicitudes de ejemplo (una para Administración y otra para Dirección) y abre Swagger en `http://127.0.0.1:8000/docs`. Presiona `Ctrl+C` para detener el servidor.
 
 Opciones: `-SinDatos` para iniciar sin solicitudes de ejemplo y `-Puerto 8001` si el puerto 8000 está ocupado.
+
+  ## Versionado
+
+  El proyecto sigue [Semantic Versioning](https://semver.org/lang/es/) con el formato MAJOR.MINOR.PATCH:
+
+  - *MAJOR*: cambios incompatibles (PR con etiqueta breaking-change).
+  - *MINOR*: funciones nuevas compatibles (etiqueta enhancement).
+  - *PATCH*: correcciones compatibles (etiqueta bug).
+
+  Cada versión publicada tiene un tag vX.Y.Z y una [release en GitHub](https://github.com/nalgothics-organization/AdminGastosCajaChica/releases) con notas generadas automáticamente y revisadas a mano. El
+  historial completo está en [CHANGELOG.md](CHANGELOG.md).
+
+  Mientras el proyecto esté en 0.y.z es un prototipo y la API puede cambiar.

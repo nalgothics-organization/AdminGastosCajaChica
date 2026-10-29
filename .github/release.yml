@@ -3,7 +3,13 @@
 # Cada pull request cae en la primera categoría cuya etiqueta coincida.
 
 changelog:
+  exclude:
+    labels:
+      - ignore-for-release
   categories:
+    - title: Cambios incompatibles
+      labels:
+        - breaking-change
     - title: Nuevas funciones
       labels:
         - enhancement
@@ -13,6 +19,6 @@ changelog:
     - title: Documentación
       labels:
         - documentation
-    - title: Otros cambios
+    - title: Otros cambiosgit add .github/release.yml
       labels:
         - "*"

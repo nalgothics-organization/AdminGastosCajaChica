@@ -2,13 +2,14 @@
 Implementa:
 - Captura rápida con solo la fotografía y vinculado automático a la solicitud (RNF01/HU16).
 - Formulario de comprobación con horas de maquinaria o de trabajo condicionales (RF07/HU07).
+- Gasto por cuenta del residente: se puede comprobar sin solicitud previa y queda en revisión.
 - Inmutabilidad de comprobantes cerrados y correcciones por Ajuste/Reverso (AGENTS.md §8).
 """
 
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List, Optional
 from uuid import UUID, uuid4
 
 from src.models.comprobante import (
@@ -22,6 +23,7 @@ from src.models.comprobante import (
     partida_requiere_horas,
 )
 from src.models.solicitud import EstadoSolicitud
+from src.repositories import ComprobanteRepositorio
 from src.services.solicitud_service import SolicitudFondoService, solicitud_service
 
 # Firmas binarias de los formatos aceptados; no se confía solo en el content-type del cliente
@@ -49,8 +51,7 @@ class ComprobanteService:
         solicitudes: SolicitudFondoService = solicitud_service,
         uploads_dir: Optional[str] = None,
     ):
-        # Almacén en memoria simulado para persistencia
-        self._db: Dict[UUID, Comprobante] = {}
+        self._db = ComprobanteRepositorio()
         self._solicitudes = solicitudes
         self.uploads_dir = Path(uploads_dir or os.getenv("UPLOADS_DIR", "./uploads"))
         self.tamano_maximo_bytes = int(os.getenv("MAX_IMAGEN_MB", "10")) * 1024 * 1024
@@ -87,6 +88,9 @@ class ComprobanteService:
             solicitante_id=solicitante_id,
             solicitud_id=solicitud.id if solicitud else None,
             requiere_horas=partida_requiere_horas(solicitud.partida_categoria) if solicitud else None,
+            obra_id=solicitud.obra_id if solicitud else None,
+            etapa_construccion=solicitud.etapa_construccion if solicitud else None,
+            partida_categoria=solicitud.partida_categoria if solicitud else None,
             imagen_ruta=str(ruta),
         )
         self._db[comprobante.id] = comprobante
@@ -117,10 +121,19 @@ class ComprobanteService:
         return comprobante
 
     def _resolver_solicitud(self, comprobante: Comprobante, datos: ComprobanteDatos):
-        """Devuelve la solicitud vinculada o la que indica el formulario, validando pertenencia."""
+        """Devuelve la solicitud vinculada o la que indica el formulario, validando pertenencia.
+
+        Devuelve None cuando el residente comprueba un gasto por su cuenta, sin solicitud previa:
+        en ese caso el formulario debe traer la obra, la etapa y la partida (RF02).
+        """
         solicitud_id = comprobante.solicitud_id or datos.solicitud_id
         if solicitud_id is None:
-            raise ValueError("Debe seleccionar la solicitud de fondo que respalda este gasto.")
+            if not (datos.obra_id and datos.etapa_construccion and datos.partida_categoria):
+                raise ValueError(
+                    "Seleccione la solicitud de fondo que respalda este gasto o indique la obra, "
+                    "la etapa y la partida si lo pagó por su cuenta."
+                )
+            return None
         if comprobante.solicitud_id and datos.solicitud_id and datos.solicitud_id != comprobante.solicitud_id:
             raise ValueError("El comprobante ya está vinculado a otra solicitud.")
 
@@ -144,14 +157,30 @@ class ComprobanteService:
         """Registra los datos del formulario de RF07; solo se permite en estado Borrador."""
         comprobante = self._obtener_editable(comprobante_id)
         solicitud = self._resolver_solicitud(comprobante, datos)
-        requiere_horas = partida_requiere_horas(solicitud.partida_categoria)
+        partida = solicitud.partida_categoria if solicitud else datos.partida_categoria
+        requiere_horas = partida_requiere_horas(partida)
         self._validar_horas(datos, requiere_horas)
 
-        comprobante.solicitud_id = solicitud.id
+        if solicitud:
+            comprobante.solicitud_id = solicitud.id
+            comprobante.obra_id = solicitud.obra_id
+            comprobante.etapa_construccion = solicitud.etapa_construccion
+            comprobante.partida_categoria = solicitud.partida_categoria
+            # La clasificación ya la aporta la solicitud; los datos no la repiten
+            comprobante.datos = datos.model_copy(update={
+                "solicitud_id": solicitud.id,
+                "obra_id": None,
+                "etapa_construccion": None,
+                "partida_categoria": None,
+            })
+        else:
+            comprobante.obra_id = datos.obra_id
+            comprobante.etapa_construccion = datos.etapa_construccion
+            comprobante.partida_categoria = datos.partida_categoria
+            comprobante.datos = datos
         comprobante.requiere_horas = requiere_horas
-        comprobante.datos = datos.model_copy(update={"solicitud_id": solicitud.id})
         comprobante.updated_at = datetime.now(timezone.utc)
-        return comprobante
+        return self._db.guardar(comprobante)
 
     def cerrar(self, comprobante_id: UUID) -> Comprobante:
         """Cierra la comprobación: factura queda comprobada, ticket o nota pasa a revisión (RF08)."""
@@ -159,12 +188,13 @@ class ComprobanteService:
         if comprobante.datos is None:
             raise ValueError("Complete los datos del comprobante antes de cerrarlo.")
 
-        if comprobante.datos.tipo == TipoComprobante.FACTURA:
+        # Un gasto sin solicitud no tuvo autorización previa: contabilidad lo revisa aunque tenga factura
+        if comprobante.datos.tipo == TipoComprobante.FACTURA and comprobante.solicitud_id is not None:
             comprobante.estado = EstadoComprobante.COMPROBADO
         else:
             comprobante.estado = EstadoComprobante.REVISION_CONTABILIDAD
         comprobante.updated_at = datetime.now(timezone.utc)
-        return comprobante
+        return self._db.guardar(comprobante)
 
     def crear_ajuste(self, comprobante_id: UUID, correccion: AjusteCreate) -> Comprobante:
         """Crea un registro de Ajuste o Reverso que referencia al original sin modificarlo."""
@@ -185,12 +215,17 @@ class ComprobanteService:
         if correccion.tipo_registro == TipoRegistro.AJUSTE:
             self._validar_horas(datos, bool(original.requiere_horas))
             datos = datos.model_copy(update={"solicitud_id": original.solicitud_id})
+            if original.solicitud_id is not None:
+                datos = datos.model_copy(update={"obra_id": None, "etapa_construccion": None, "partida_categoria": None})
 
         # Toda corrección pasa por revisión de contabilidad
         registro = Comprobante(
             solicitante_id=original.solicitante_id,
             solicitud_id=original.solicitud_id,
             requiere_horas=original.requiere_horas,
+            obra_id=original.obra_id,
+            etapa_construccion=original.etapa_construccion,
+            partida_categoria=original.partida_categoria,
             imagen_ruta=original.imagen_ruta,
             estado=EstadoComprobante.REVISION_CONTABILIDAD,
             tipo_registro=correccion.tipo_registro,
@@ -207,6 +242,7 @@ class ComprobanteService:
         comprobante.activo = False
         comprobante.deleted_at = datetime.now(timezone.utc)
         comprobante.updated_at = datetime.now(timezone.utc)
+        self._db.guardar(comprobante)
         return True
 
 

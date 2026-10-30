@@ -10,6 +10,8 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from src.models.solicitud import EtapaConstruccion
+
 
 def _ahora_utc() -> datetime:
     return datetime.now(timezone.utc)
@@ -81,6 +83,14 @@ class ComprobanteDatos(BaseModel):
         default=None,
         description="Solicitud a la que se vincula; solo se usa si la captura rápida no encontró una",
     )
+    # Gasto por cuenta del residente: sin solicitud previa la clasificación (RF02) se captura aquí
+    obra_id: Optional[str] = Field(default=None, description="Obra del gasto; obligatoria si no hay solicitud")
+    etapa_construccion: Optional[EtapaConstruccion] = Field(
+        default=None, description="Etapa del gasto; obligatoria si no hay solicitud"
+    )
+    partida_categoria: Optional[str] = Field(
+        default=None, description="Partida del gasto; obligatoria si no hay solicitud"
+    )
 
     @field_validator("fecha_gasto")
     @classmethod
@@ -125,6 +135,9 @@ class Comprobante(BaseModel):
         default=None,
         description="Si la partida de la solicitud exige horas; None mientras no haya solicitud vinculada",
     )
+    obra_id: Optional[str] = Field(default=None, description="Obra a la que se carga el gasto (RF02)")
+    etapa_construccion: Optional[EtapaConstruccion] = Field(default=None, description="Etapa del gasto (RF02)")
+    partida_categoria: Optional[str] = Field(default=None, description="Partida del gasto (RF02)")
     imagen_ruta: str = Field(..., description="Ruta de la imagen almacenada")
     estado: EstadoComprobante = Field(default=EstadoComprobante.BORRADOR)
     tipo_registro: TipoRegistro = Field(default=TipoRegistro.ORIGINAL)

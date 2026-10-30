@@ -8,7 +8,7 @@ Implementa:
 
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import List, Optional
 from uuid import UUID
 
 from src.models.solicitud import (
@@ -24,6 +24,7 @@ from src.models.solicitud import (
     SolicitudFondoCreate,
     SolicitudFondoResponse,
 )
+from src.repositories import SolicitudRepositorio
 
 
 class SolicitudNoEncontradaError(LookupError):
@@ -40,17 +41,16 @@ class AutorizadorNoPermitidoError(Exception):
 
 class SolicitudFondoService:
     def __init__(self):
-        # Almacén en memoria simulado para persistencia
-        self._db: Dict[UUID, SolicitudFondo] = {}
-        self._secuencia_folio: int = 1000
+        self._db = SolicitudRepositorio()
         self.notificaciones_enviadas: List[NotificacionNivelAutorizacion] = []
 
     def generar_folio_unico(self, obra_id: str) -> str:
         """Genera un folio único, legible y trazable por obra."""
-        self._secuencia_folio += 1
+        # Las solicitudes nunca se borran físicamente, así que el total solo crece y el folio no se repite
+        secuencia = 1001 + self._db.total()
         prefijo_obra = obra_id.strip().upper().replace(" ", "")[:4]
         timestamp = datetime.now(timezone.utc).strftime("%Y%m")
-        return f"SOL-{prefijo_obra}-{timestamp}-{self._secuencia_folio}"
+        return f"SOL-{prefijo_obra}-{timestamp}-{secuencia}"
 
     def determinar_nivel_autorizacion(self, monto: Decimal) -> str:
         """Determina el nivel autorizador requerido según el monto (HU03/HU01).
@@ -167,7 +167,7 @@ class SolicitudFondoService:
         solicitud.estado = estado
         solicitud.autorizacion = autorizacion
         solicitud.updated_at = autorizacion.fecha_decision
-        return solicitud
+        return self._db.guardar(solicitud)
 
     def aprobar_solicitud(self, solicitud_id: UUID, data: AprobacionCreate) -> SolicitudFondo:
         """Aprueba la solicitud registrando autorizador, fecha y monto final (HU05 criterio 1)."""
@@ -209,6 +209,7 @@ class SolicitudFondoService:
         solicitud.activo = False
         solicitud.deleted_at = datetime.now(timezone.utc)
         solicitud.updated_at = datetime.now(timezone.utc)
+        self._db.guardar(solicitud)
         return True
 
 

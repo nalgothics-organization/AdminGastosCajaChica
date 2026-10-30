@@ -12,10 +12,14 @@
   - Base de datos PostgreSQL en Docker (`docker compose up -d db`) con tablas `solicitudes`, `autorizaciones` y `comprobantes`; los datos ya no se pierden al reiniciar la API.
   - Saldos por obra en tiempo real (RF10/HU10): `GET /api/saldos` y pantalla `/app/saldos.html`.
   - Pantallas de solicitud de fondo y bandeja de autorización, y datos de ejemplo con `python -m src.seed`.
+  - Fotografía de evidencia en la solicitud de fondo: `POST /api/solicitudes/evidencia` y `GET /api/evidencias/{nombre}`; la bandeja de autorización muestra la foto.
+  - Tablero de inicio con indicadores, movimientos y pendientes calculados con los datos de la API.
   - Aprobación y rechazo de solicitudes de fondo (RF05/HU05): `POST /api/solicitudes/{id}/aprobar` y `POST /api/solicitudes/{id}/rechazar` registran quién decidió, cuándo, el monto autorizado y el comentario, obligatorio al rechazar.
 
   ### Changed
 
+  - Las pantallas del prototipo siguen el diseño de `docs/diseno` (barra lateral, barra superior, pestañas y tablas).
+  - Los datos de ejemplo (`python -m src.seed`) generan fotos reales de evidencia en lugar de enlaces inexistentes; usa `demo.ps1 -Reiniciar` para recargarlos.
   - La comprobación admite gastos sin solicitud previa (RF07/HU07): el residente indica obra, etapa y partida, el comprobante queda en revisión de contabilidad y el saldo lo muestra como reembolso pendiente.
 
   ## [0.1.0] - 2026-10-29

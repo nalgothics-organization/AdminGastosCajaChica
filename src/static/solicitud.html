@@ -24,7 +24,10 @@
       <p id="residente-actual" class="nota"></p>
       <form id="form-solicitud" novalidate>
         <label for="obra">Obra</label>
-        <input id="obra" name="obra_id" type="text" placeholder="OBRA-NORTE-01" required>
+        <select id="obra" name="obra_id" required>
+          <option value="">Selecciona una obra</option>
+        </select>
+        <p id="presupuesto-obra" class="nota" hidden></p>
 
         <div class="cuadricula-2">
           <div>

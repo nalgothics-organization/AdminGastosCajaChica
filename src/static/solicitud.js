@@ -17,6 +17,24 @@
     }
   }
 
+  // Obras existentes (su alta y presupuesto viven en otro módulo); se elige, no se escribe
+  async function cargarObras() {
+    try {
+      const obras = await llamar("/catalogo/obras");
+      const select = $("obra");
+      obras.forEach((o) => select.append(el("option", { value: o.id, texto: o.nombre + " · " + o.id })));
+      select.addEventListener("change", () => {
+        const elegida = obras.find((o) => o.id === select.value);
+        $("presupuesto-obra").hidden = !elegida;
+        if (elegida) {
+          $("presupuesto-obra").textContent = "Presupuesto de la obra: " + dinero(elegida.presupuesto);
+        }
+      });
+    } catch (e) {
+      avisar(e.message, true);
+    }
+  }
+
   function crearTarjeta(solicitud) {
     const decision = solicitud.autorizacion;
     return el("li", {},
@@ -74,6 +92,7 @@
       $("form-solicitud").reset();
       $("vista-evidencia").hidden = true;
       $("campo-firma").hidden = true;
+      $("presupuesto-obra").hidden = true;
       cargarSolicitudes();
     } catch (e) {
       avisar(e.message, true);
@@ -116,5 +135,6 @@
   $("foto-evidencia").addEventListener("change", subirEvidencia);
   $("archivo-evidencia").addEventListener("change", subirEvidencia);
 
+  cargarObras();
   mostrar();
 })();

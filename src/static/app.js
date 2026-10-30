@@ -105,6 +105,7 @@
   }
 
   async function abrirFormulario(comprobante) {
+    await obrasListas;
     comprobanteActual = comprobante;
     const form = $("form-datos");
     form.reset();
@@ -256,5 +257,21 @@
   $("descartar").addEventListener("click", descartar);
   $("volver").addEventListener("click", mostrarPantalla);
 
+  // Obras existentes para el gasto sin solicitud; se elige, no se escribe
+  async function cargarObras() {
+    try {
+      const obras = await llamar("/catalogo/obras");
+      $("obra-gasto").append(...obras.map((o) => {
+        const opcion = document.createElement("option");
+        opcion.value = o.id;
+        opcion.textContent = o.nombre + " · " + o.id;
+        return opcion;
+      }));
+    } catch (e) {
+      avisar(e.message, true);
+    }
+  }
+
+  const obrasListas = cargarObras();
   mostrarPantalla();
 })();

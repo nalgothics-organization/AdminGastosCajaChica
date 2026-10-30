@@ -45,6 +45,18 @@
     }
   }
 
+  // La foto subida desde la solicitud se muestra en línea; cualquier otro enlace se ofrece como vínculo
+  function crearEvidencia(url) {
+    if (url.startsWith("/api/evidencias/")) {
+      return el("a", { href: url, target: "_blank", rel: "noopener" },
+        el("img", { className: "evidencia-autorizacion", src: url, alt: "Evidencia de la necesidad", loading: "lazy" }));
+    }
+    if (/^https?:\/\//.test(url)) {
+      return el("a", { className: "enlace-evidencia", href: url, target: "_blank", rel: "noopener noreferrer", texto: "Ver evidencia" });
+    }
+    return el("p", { className: "nota", texto: "Evidencia: " + url });
+  }
+
   function crearTarjeta(solicitud) {
     const monto = el("input", { type: "number", min: "0.01", step: "0.01", value: solicitud.monto_solicitado });
     const comentario = el("input", { type: "text", placeholder: "Comentario (obligatorio al rechazar)" });
@@ -70,6 +82,7 @@
         el("dt", { texto: "Costo estimado" }), el("dd", { texto: dinero(solicitud.costo_estimado) }),
         el("dt", { texto: "Solicitado" }), el("dd", { texto: dinero(solicitud.monto_solicitado) })
       ),
+      crearEvidencia(solicitud.evidencia_url),
       sinPermiso ? el("p", { className: "nota", texto: "Excede el límite de Administración: solo Dirección decide." }) : null,
       el("label", { texto: "Monto a autorizar" }), monto,
       el("label", { texto: "Comentario" }), comentario,

@@ -8,35 +8,34 @@
 </head>
 <body>
   <main>
-    <nav class="menu">
-      <a href="index.html">Captura</a>
-      <a href="solicitud.html">Solicitar fondo</a>
-      <a href="autorizacion.html">Autorización</a>
-      <a href="saldos.html">Saldos</a>
-    </nav>
-    <h1>Caja chica</h1>
-
-    <section id="config" hidden>
+    <section id="config" class="panel" hidden>
       <label for="residente">¿Quién captura? (solo la primera vez)</label>
       <input id="residente" type="text" placeholder="ID de residente" autocomplete="off">
       <button id="guardar-residente" type="button">Guardar</button>
     </section>
 
-    <section id="captura" hidden>
+    <section id="captura" class="hero">
+      <div>
+        <span class="insignia">Captura en obra</span>
+        <h1>Caja chica</h1>
+        <p>Fotografía el comprobante ahora; los datos se completan después desde la lista Por completar.</p>
+        <p id="residente-actual" class="nota"></p>
+      </div>
       <!-- RNF01: toque 1 abre la cámara, toque 2 es el obturador, toque 3 "Usar foto" sube sin más pasos -->
       <label id="boton-foto" class="boton-foto" for="foto">Fotografiar comprobante</label>
       <input id="foto" type="file" accept="image/*" capture="environment" hidden>
-      <p id="residente-actual" class="nota"></p>
     </section>
+
+    <section id="tablero" class="tablero"></section>
 
     <p id="aviso" class="aviso" role="status" aria-live="polite" hidden></p>
 
-    <section id="pendientes" hidden>
+    <section id="pendientes" class="panel" hidden>
       <h2>Por completar</h2>
       <ul id="lista-pendientes"></ul>
     </section>
 
-    <section id="formulario" hidden>
+    <section id="formulario" class="panel" hidden>
       <h2>Datos del comprobante</h2>
       <form id="form-datos" novalidate>
         <fieldset>
@@ -107,6 +106,8 @@
       </form>
     </section>
   </main>
+  <script src="shell.js"></script>
+  <script src="panel.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

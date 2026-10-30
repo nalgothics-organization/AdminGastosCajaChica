@@ -8,19 +8,19 @@
 </head>
 <body>
   <main class="ancho">
-    <nav class="menu">
-      <a href="index.html">Captura</a>
-      <a href="solicitud.html">Solicitar fondo</a>
-      <a href="autorizacion.html">Autorización</a>
-      <a href="saldos.html">Saldos</a>
-    </nav>
-    <h1>Saldos por obra</h1>
-    <p class="nota">Se actualiza solo cada 10 segundos. <span id="actualizado"></span></p>
+    <section class="hero">
+      <div>
+        <span class="insignia">Saldos en tiempo real</span>
+        <h1>Saldos por obra</h1>
+        <p class="nota">Se actualiza solo cada 10 segundos. <span id="actualizado"></span></p>
+      </div>
+    </section>
 
     <p id="aviso" class="aviso" role="status" aria-live="polite" hidden></p>
     <p id="vacio" class="nota" hidden>Todavía no hay movimientos en ninguna obra.</p>
     <div id="obras" class="rejilla"></div>
   </main>
+  <script src="shell.js"></script>
   <script src="comun.js"></script>
   <script src="saldos.js"></script>
 </body>

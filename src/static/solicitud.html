@@ -8,24 +8,19 @@
 </head>
 <body>
   <main>
-    <nav class="menu">
-      <a href="index.html">Captura</a>
-      <a href="solicitud.html">Solicitar fondo</a>
-      <a href="autorizacion.html">Autorización</a>
-      <a href="saldos.html">Saldos</a>
-    </nav>
-    <h1>Solicitar fondo</h1>
-    <p class="nota">Úsalo cuando puedas planear el gasto. Si ya lo pagaste, ve a Captura y comprueba sin solicitud.</p>
+    <h1>Nueva solicitud de fondo</h1>
+    <p class="nota">Úsalo cuando puedas planear el gasto. Si ya lo pagaste, ve a Mi caja chica y comprueba sin solicitud.</p>
 
     <p id="aviso" class="aviso" role="status" aria-live="polite" hidden></p>
 
-    <section id="config" hidden>
+    <section id="config" class="panel" hidden>
       <label for="residente">¿Quién solicita? (solo la primera vez)</label>
       <input id="residente" type="text" placeholder="ID de residente" autocomplete="off">
       <button id="guardar-residente" type="button">Guardar</button>
     </section>
 
-    <section id="registro" hidden>
+    <div class="dos-columnas">
+    <section id="registro" class="panel" hidden>
       <p id="residente-actual" class="nota"></p>
       <form id="form-solicitud" novalidate>
         <label for="obra">Obra</label>
@@ -77,8 +72,18 @@
           <option value="urgente">Urgente</option>
         </select>
 
-        <label for="evidencia">Evidencia de la necesidad (enlace o ruta)</label>
-        <input id="evidencia" name="evidencia_url" type="text" required>
+        <label for="evidencia">Evidencia de la necesidad</label>
+        <div class="evidencia">
+          <p class="nota">Fotografía lo que falta o lo que se dañó. Se guarda con la solicitud para que quien autoriza la vea.</p>
+          <div class="acciones inicio">
+            <label class="boton" for="foto-evidencia">Tomar fotografía</label>
+            <input id="foto-evidencia" type="file" accept="image/*" capture="environment" hidden>
+            <label class="boton secundario" for="archivo-evidencia">Subir archivo</label>
+            <input id="archivo-evidencia" type="file" accept="image/*" hidden>
+          </div>
+          <img id="vista-evidencia" class="vista-evidencia" alt="Vista previa de la evidencia" hidden>
+          <input id="evidencia" name="evidencia_url" type="text" placeholder="La foto llena este campo; también puedes pegar un enlace" required>
+        </div>
 
         <div id="campo-firma" hidden>
           <label for="firma">Firma digital de Dirección (el monto supera $5,000)</label>
@@ -91,11 +96,19 @@
       </form>
     </section>
 
+    <aside class="panel">
+      <h2>Ruta de autorización</h2>
+      <p><strong>Administración</strong><br><span class="nota">Hasta $5,000</span></p>
+      <p><strong>Dirección</strong><br><span class="nota">Más de $5,000 · firma digital</span></p>
+    </aside>
+    </div>
+
     <section id="mis-solicitudes" hidden>
       <h2>Mis solicitudes</h2>
       <ul id="lista-solicitudes"></ul>
     </section>
   </main>
+  <script src="shell.js"></script>
   <script src="comun.js"></script>
   <script src="solicitud.js"></script>
 </body>

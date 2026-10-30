@@ -8,17 +8,11 @@
 </head>
 <body>
   <main class="ancho">
-    <nav class="menu">
-      <a href="index.html">Captura</a>
-      <a href="solicitud.html">Solicitar fondo</a>
-      <a href="autorizacion.html">Autorización</a>
-      <a href="saldos.html">Saldos</a>
-    </nav>
     <h1>Bandeja de autorización</h1>
 
     <p id="aviso" class="aviso" role="status" aria-live="polite" hidden></p>
 
-    <section>
+    <section class="panel">
       <div class="cuadricula-2">
         <div>
           <label for="rol">Rol</label>
@@ -41,6 +35,7 @@
     <h2>Decididas recientemente</h2>
     <ul id="decididas"></ul>
   </main>
+  <script src="shell.js"></script>
   <script src="comun.js"></script>
   <script src="autorizacion.js"></script>
 </body>

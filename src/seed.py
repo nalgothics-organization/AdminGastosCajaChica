@@ -11,6 +11,7 @@ import sys
 import zlib
 from datetime import date, timedelta
 from decimal import Decimal
+from uuid import uuid4
 
 from src.database import crear_tablas, reiniciar_tablas
 from src.models.comprobante import ComprobanteDatos
@@ -18,13 +19,12 @@ from src.models.solicitud import AprobacionCreate, RechazoCreate, SolicitudFondo
 from src.services.comprobante_service import comprobante_service
 from src.services.solicitud_service import solicitud_service
 
-EVIDENCIA = "https://storage.empresa.com/evidencias/"
 
-
-def imagen_demo() -> bytes:
-    """PNG válido de ~30 KB (ruido aleatorio) para cumplir el tamaño mínimo de legibilidad."""
-    ancho = alto = 100
-    filas = b"".join(b"\x00" + os.urandom(ancho * 3) for _ in range(alto))
+def _png(ancho: int, alto: int, pixel) -> bytes:
+    """PNG RGB sin compresión; `pixel(x, y)` devuelve la tupla (r, g, b) de cada punto."""
+    filas = b"".join(
+        b"\x00" + b"".join(bytes(pixel(x, y)) for x in range(ancho)) for y in range(alto)
+    )
 
     def bloque(tipo: bytes, datos: bytes) -> bytes:
         crc = zlib.crc32(tipo + datos) & 0xFFFFFFFF
@@ -39,6 +39,28 @@ def imagen_demo() -> bytes:
     )
 
 
+def imagen_demo() -> bytes:
+    """PNG válido de ~30 KB (ruido aleatorio) para cumplir el tamaño mínimo de legibilidad."""
+    return _png(100, 100, lambda x, y: os.urandom(3))
+
+
+def evidencia_demo(nombre: str) -> str:
+    """Guarda una foto de ejemplo (franjas de color distintas por nombre) y devuelve su URL."""
+    semilla = zlib.crc32(nombre.encode())
+    base = ((semilla >> 16) & 0xFF, (semilla >> 8) & 0xFF, semilla & 0xFF)
+
+    def pixel(x, y):
+        franja = ((x + y) // 24) % 2
+        brillo = 0.55 + 0.45 * (y / 180) if franja else 0.3 + 0.3 * (x / 320)
+        return tuple(min(255, int(canal * brillo + 40)) for canal in base)
+
+    carpeta = comprobante_service.uploads_dir / "evidencias"
+    carpeta.mkdir(parents=True, exist_ok=True)
+    archivo = f"{uuid4()}.png"
+    (carpeta / archivo).write_bytes(_png(320, 180, pixel))
+    return f"/api/evidencias/{archivo}"
+
+
 def solicitar(obra, residente, etapa, partida, concepto, monto, costo, urgencia, evidencia, firma=None):
     return solicitud_service.crear_solicitud(
         SolicitudFondoCreate(
@@ -50,7 +72,7 @@ def solicitar(obra, residente, etapa, partida, concepto, monto, costo, urgencia,
             monto_solicitado=Decimal(monto),
             costo_estimado=Decimal(costo),
             urgencia=urgencia,
-            evidencia_url=EVIDENCIA + evidencia,
+            evidencia_url=evidencia_demo(evidencia),
             firma_digital_direccion=firma,
         )
     ).solicitud

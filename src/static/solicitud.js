@@ -72,6 +72,7 @@
       const respuesta = await llamar("/solicitudes", enviarJson("POST", leerFormulario()));
       avisar(respuesta.solicitud.folio + " enviada. " + respuesta.notificacion_enviada.mensaje);
       $("form-solicitud").reset();
+      $("vista-evidencia").hidden = true;
       $("campo-firma").hidden = true;
       cargarSolicitudes();
     } catch (e) {
@@ -91,6 +92,29 @@
     $("campo-firma").hidden = Number($("monto").value) <= LIMITE_ADMINISTRACION;
   });
   $("form-solicitud").addEventListener("submit", enviar);
+
+  // La foto se sube al elegirla y su URL queda como evidencia de la solicitud
+  async function subirEvidencia(evento) {
+    const archivo = evento.target.files[0];
+    evento.target.value = "";
+    if (!archivo) {
+      return;
+    }
+    const datos = new FormData();
+    datos.append("imagen", archivo);
+    try {
+      const respuesta = await llamar("/solicitudes/evidencia", { method: "POST", body: datos });
+      $("evidencia").value = respuesta.evidencia_url;
+      $("vista-evidencia").src = URL.createObjectURL(archivo);
+      $("vista-evidencia").hidden = false;
+      avisar("Fotografía adjuntada como evidencia.");
+    } catch (e) {
+      avisar(e.message, true);
+    }
+  }
+
+  $("foto-evidencia").addEventListener("change", subirEvidencia);
+  $("archivo-evidencia").addEventListener("change", subirEvidencia);
 
   mostrar();
 })();

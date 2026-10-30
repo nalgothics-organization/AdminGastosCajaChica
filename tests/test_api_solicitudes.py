@@ -214,6 +214,8 @@ class TestSwaggerDocumentacion(BaseApiTestCase):
     ENDPOINTS_ESPERADOS = {
         ("get", "/"),
         ("post", "/api/solicitudes"),
+        ("post", "/api/solicitudes/evidencia"),
+        ("get", "/api/evidencias/{nombre}"),
         ("get", "/api/solicitudes"),
         ("get", "/api/solicitudes/{solicitud_id}"),
         ("delete", "/api/solicitudes/{solicitud_id}"),

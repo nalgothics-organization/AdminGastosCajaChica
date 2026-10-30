@@ -8,6 +8,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from src.api.comprobantes import router as comprobantes_router
+from src.api.evidencias import router as evidencias_router
 from src.api.saldos import router as saldos_router
 from src.api.solicitudes import router as solicitudes_router
 from src.database import crear_tablas
@@ -29,6 +30,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.include_router(evidencias_router, prefix="/api", tags=["Solicitudes"])
 app.include_router(solicitudes_router, prefix="/api", tags=["Solicitudes"])
 app.include_router(comprobantes_router, prefix="/api", tags=["Comprobantes"])
 app.include_router(saldos_router, prefix="/api", tags=["Saldos"])

@@ -69,11 +69,22 @@ class ComprobanteService:
             raise ValueError("La imagen excede el tamaño máximo permitido.")
         return formato[1]
 
-    def capturar_rapido(self, solicitante_id: str, contenido: bytes, content_type: str) -> Comprobante:
-        """Guarda la foto sin pedir ningún dato adicional (HU16: máximo 3 toques)."""
+    def capturar_rapido(
+        self,
+        solicitante_id: str,
+        contenido: bytes,
+        content_type: str,
+        solicitud_id: Optional[UUID] = None,
+    ) -> Comprobante:
+        """Guarda la foto sin pedir ningún dato adicional (HU16: máximo 3 toques).
+
+        Si el residente ya eligió la solicitud a la que corresponde el gasto, la foto queda vinculada
+        a ella; si no, se elige al completar los datos.
+        """
         solicitante_id = solicitante_id.strip()
         if not solicitante_id:
             raise ValueError("El residente que captura es obligatorio.")
+        solicitud = self._solicitud_del_residente(solicitud_id, solicitante_id) if solicitud_id else None
         extension = self.validar_imagen(contenido, content_type)
 
         comprobante_id = uuid4()
@@ -81,10 +92,14 @@ class ComprobanteService:
         ruta = self.uploads_dir / f"{comprobante_id}{extension}"
         ruta.write_bytes(contenido)
 
-        # La foto no se vincula a nada: el residente elige la solicitud al completar la comprobación
         comprobante = Comprobante(
             id=comprobante_id,
             solicitante_id=solicitante_id,
+            solicitud_id=solicitud.id if solicitud else None,
+            requiere_horas=partida_requiere_horas(solicitud.partida_categoria) if solicitud else None,
+            obra_id=solicitud.obra_id if solicitud else None,
+            etapa_construccion=solicitud.etapa_construccion if solicitud else None,
+            partida_categoria=solicitud.partida_categoria if solicitud else None,
             imagen_ruta=str(ruta),
         )
         self._db[comprobante.id] = comprobante
@@ -128,10 +143,14 @@ class ComprobanteService:
                     "la etapa y la partida si lo pagó por su cuenta."
                 )
             return None
+        return self._solicitud_del_residente(solicitud_id, comprobante.solicitante_id)
+
+    def _solicitud_del_residente(self, solicitud_id: UUID, solicitante_id: str):
+        """La solicitud debe existir, ser del residente y estar aprobada."""
         solicitud = self._solicitudes.obtener_por_id(solicitud_id)
         if not solicitud:
             raise ValueError(f"La solicitud {solicitud_id} no existe o fue eliminada.")
-        if solicitud.solicitante_id != comprobante.solicitante_id:
+        if solicitud.solicitante_id != solicitante_id:
             raise ValueError("La solicitud no pertenece al residente que capturó el comprobante.")
         if solicitud.estado != EstadoSolicitud.APROBADO:
             raise ValueError("Solo se pueden comprobar gastos de solicitudes aprobadas.")

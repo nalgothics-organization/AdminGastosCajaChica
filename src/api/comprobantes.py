@@ -60,8 +60,8 @@ def _ejecutar(operacion, *args):
     summary="Captura rápida de comprobante (solo fotografía)",
     description=(
         "Guarda la fotografía del comprobante sin pedir ningún otro dato (RNF01/HU16). "
-        "Se vincula automáticamente a la solicitud aprobada más reciente del residente; "
-        "si no tiene ninguna, queda en borrador y se vincula al completar los datos."
+        "Si se indica la solicitud aprobada a la que corresponde el gasto, la foto queda vinculada a ella; "
+        "si no, se elige al completar los datos."
     ),
     response_description="Comprobante guardado en estado Borrador.",
     responses=RESPUESTA_422,
@@ -69,9 +69,12 @@ def _ejecutar(operacion, *args):
 async def capturar_comprobante(
     solicitante_id: str = Form(..., description="Residente que captura"),
     imagen: UploadFile = File(..., description="Fotografía del comprobante (JPEG, PNG o WEBP)"),
+    solicitud_id: Optional[UUID] = Form(default=None, description="Solicitud aprobada a la que corresponde el gasto"),
 ):
     contenido = await imagen.read()
-    return _ejecutar(comprobante_service.capturar_rapido, solicitante_id, contenido, imagen.content_type or "")
+    return _ejecutar(
+        comprobante_service.capturar_rapido, solicitante_id, contenido, imagen.content_type or "", solicitud_id
+    )
 
 
 @router.get(

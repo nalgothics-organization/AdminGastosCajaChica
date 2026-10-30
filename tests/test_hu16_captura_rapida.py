@@ -58,10 +58,13 @@ class BaseComprobanteTestCase(unittest.TestCase):
     def tearDown(self):
         self._tmp.cleanup()
 
-    def capturar(self, contenido=JPEG_VALIDO, content_type="image/jpeg", solicitante=RESIDENTE):
+    def capturar(self, contenido=JPEG_VALIDO, content_type="image/jpeg", solicitante=RESIDENTE, solicitud_id=None):
+        datos = {"solicitante_id": solicitante}
+        if solicitud_id:
+            datos["solicitud_id"] = str(solicitud_id)
         return self.client.post(
             "/api/comprobantes/captura",
-            data={"solicitante_id": solicitante},
+            data=datos,
             files={"imagen": ("ticket.jpg", contenido, content_type)},
         )
 
@@ -96,6 +99,24 @@ class TestHU16CapturaRapida(BaseComprobanteTestCase):
 
         self.assertIsNone(body["solicitud_id"])
         self.assertIsNone(body["requiere_horas"])
+
+    def test_la_foto_se_vincula_a_la_solicitud_que_el_residente_eligio(self):
+        elegida = crear_solicitud_aprobada(partida="Renta de Maquinaria")
+        crear_solicitud_aprobada(partida="Materiales")
+
+        body = self.capturar(solicitud_id=elegida.id).json()
+
+        self.assertEqual(body["solicitud_id"], str(elegida.id))
+        self.assertEqual(body["obra_id"], "OBRA-NORTE-01")
+        self.assertTrue(body["requiere_horas"])
+
+    def test_no_se_captura_contra_la_solicitud_de_otro_residente(self):
+        ajena = crear_solicitud_aprobada(solicitante="OTRO-RESIDENTE")
+
+        response = self.capturar(solicitud_id=ajena.id)
+
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(comprobante_service.listar(), [])
 
     def test_sin_solicitud_aprobada_la_foto_se_guarda_igual(self):
         body = self.capturar().json()

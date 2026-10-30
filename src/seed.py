@@ -91,8 +91,12 @@ def aprobar(solicitud, nombre, rol, comentario=None, monto=None):
     )
 
 
-def comprobar(residente, datos: ComprobanteDatos, cerrar=True):
-    comprobante = comprobante_service.capturar_rapido(residente, imagen_demo(), "image/png")
+def comprobar(residente, datos: ComprobanteDatos, solicitud=None, cerrar=True):
+    """Captura la foto (vinculada a la solicitud elegida, si hay) y completa los datos."""
+    comprobante = comprobante_service.capturar_rapido(
+        residente, imagen_demo(), "image/png", solicitud.id if solicitud else None
+    )
+    datos = datos.model_copy(update={"solicitud_id": solicitud.id if solicitud else None})
     comprobante_service.completar_datos(comprobante.id, datos)
     if cerrar:
         comprobante_service.cerrar(comprobante.id)
@@ -112,7 +116,7 @@ def cargar() -> None:
         tipo="nota_simple", monto_comprobado=Decimal("3200.00"), fecha_gasto=hoy - timedelta(days=1),
         proveedor="Maquinaria El Güero", concepto="Renta de retroexcavadora",
         horas=Decimal("4.5"), unidad_horas="maquinaria",
-    ))
+    ), maquinaria)
 
     pintura = solicitar(
         "OBRA-SUR-02", "RESIDENTE-JP", "acabados", "Materiales",
@@ -123,7 +127,7 @@ def cargar() -> None:
     comprobar("RESIDENTE-JP", ComprobanteDatos(
         tipo="factura", monto_comprobado=Decimal("12400.00"), fecha_gasto=hoy - timedelta(days=2),
         proveedor="Pinturas del Centro", concepto="Pintura vinílica y sellador",
-    ))
+    ), pintura)
     # Una foto tomada en obra que todavía no se completa
     comprobante_service.capturar_rapido("RESIDENTE-JP", imagen_demo(), "image/png")
 

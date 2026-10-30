@@ -14,26 +14,43 @@
       <button id="guardar-residente" type="button">Guardar</button>
     </section>
 
-    <section id="captura" class="hero">
-      <div>
-        <span class="insignia">Captura en obra</span>
-        <h1>Caja chica</h1>
-        <p>Fotografía el comprobante ahora; los datos se completan después desde la lista Por completar.</p>
-        <p id="residente-actual" class="nota"></p>
+    <section id="mi-caja" hidden>
+      <div class="hero">
+        <div>
+          <span class="insignia">Mi caja chica</span>
+          <h1>Comprobar un gasto</h1>
+          <p>Elige la solicitud aprobada, revisa su resumen y sube el comprobante para su revisión.</p>
+          <p id="residente-actual" class="nota"></p>
+        </div>
       </div>
-      <!-- RNF01: toque 1 abre la cámara, toque 2 es el obturador, toque 3 "Usar foto" sube sin más pasos -->
-      <label id="boton-foto" class="boton-foto" for="foto">Fotografiar comprobante</label>
-      <input id="foto" type="file" accept="image/*" capture="environment" hidden>
-    </section>
 
-    <section id="tablero" class="tablero"></section>
+      <div class="panel paso">
+        <h2>1. Elige la solicitud</h2>
+        <p id="sin-solicitudes" class="nota" hidden>Todavía no tienes solicitudes aprobadas. Si pagaste un gasto por tu cuenta, regístralo abajo.</p>
+        <ul id="lista-solicitudes" class="selector"></ul>
+      </div>
+
+      <div id="resumen" class="panel paso" hidden>
+        <h2 id="resumen-titulo"></h2>
+        <div id="resumen-detalle" class="dos-columnas"></div>
+
+        <h2>2. Sube el comprobante</h2>
+        <p class="nota">Toma la foto ahora; los datos se completan después y el comprobante pasa a revisión.</p>
+        <div class="acciones inicio">
+          <!-- RNF01: toque 1 abre la cámara, toque 2 es el obturador, toque 3 "Usar foto" sube sin más pasos -->
+          <label id="boton-foto" class="boton-foto" for="foto">Fotografiar comprobante</label>
+          <input id="foto" type="file" accept="image/*" capture="environment" hidden>
+          <label class="boton secundario" for="archivo">Subir archivo</label>
+          <input id="archivo" type="file" accept="image/*" hidden>
+        </div>
+
+        <h3>Comprobantes de esta solicitud</h3>
+        <p id="sin-comprobantes" class="nota" hidden>Aún no hay comprobantes.</p>
+        <ul id="lista-comprobantes"></ul>
+      </div>
+    </section>
 
     <p id="aviso" class="aviso" role="status" aria-live="polite" hidden></p>
-
-    <section id="pendientes" class="panel" hidden>
-      <h2>Por completar</h2>
-      <ul id="lista-pendientes"></ul>
-    </section>
 
     <section id="formulario" class="panel" hidden>
       <h2>Datos del comprobante</h2>
@@ -45,11 +62,7 @@
           <label><input type="radio" name="tipo" value="nota_simple"> Nota simple</label>
         </fieldset>
 
-        <div id="campo-solicitud">
-          <label for="solicitud">¿A qué solicitud corresponde este gasto?</label>
-          <select id="solicitud" name="solicitud_id" required></select>
-          <p id="detalle-solicitud" class="nota" hidden></p>
-        </div>
+        <p id="formulario-solicitud" class="nota"></p>
 
         <!-- Gasto pagado por el residente sin solicitud previa: la clasificación (RF02) se captura aquí -->
         <div id="campo-clasificacion" hidden>
@@ -110,7 +123,6 @@
     </section>
   </main>
   <script src="shell.js"></script>
-  <script src="panel.js"></script>
-  <script src="app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>

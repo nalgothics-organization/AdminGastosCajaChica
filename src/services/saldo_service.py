@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from src.models.comprobante import ESTADOS_CERRADOS, Comprobante, TipoRegistro
 from src.models.solicitud import EstadoSolicitud
 from src.services.comprobante_service import ComprobanteService, comprobante_service
+from src.services.obra_catalogo import OBRAS
 from src.services.solicitud_service import SolicitudFondoService, solicitud_service
 
 CERO = Decimal("0.00")
@@ -20,9 +21,15 @@ CERO = Decimal("0.00")
 
 class SaldoObra(BaseModel):
     obra_id: str
+    nombre: str = ""
+    presupuesto_caja_chica: Decimal = Field(default=CERO, description="Fondo de caja chica asignado a la obra")
     autorizado: Decimal = Field(default=CERO, description="Suma de los montos autorizados de solicitudes aprobadas")
+    disponible_caja_chica: Decimal = Field(
+        default=CERO, description="Fondo de caja chica menos lo autorizado; negativo si se excedió"
+    )
+    porcentaje_autorizado: Decimal = Field(default=CERO, description="Autorizado entre el fondo, de 0 a 100 o más")
     comprobado: Decimal = Field(default=CERO, description="Gasto comprobado contra solicitudes aprobadas")
-    saldo_disponible: Decimal = Field(default=CERO, description="Autorizado menos comprobado; negativo si se excedió")
+    por_comprobar: Decimal = Field(default=CERO, description="Autorizado menos comprobado; negativo si se excedió")
     gasto_sin_solicitud: Decimal = Field(
         default=CERO, description="Gasto pagado por el residente sin solicitud previa; es un reembolso pendiente"
     )
@@ -56,10 +63,14 @@ class SaldoService:
         ]
 
     def por_obra(self) -> List[SaldoObra]:
-        saldos: Dict[str, SaldoObra] = {}
+        # Todas las obras del catálogo aparecen aunque no tengan movimientos
+        saldos: Dict[str, SaldoObra] = {
+            o.id: SaldoObra(obra_id=o.id, nombre=o.nombre, presupuesto_caja_chica=o.presupuesto_caja_chica)
+            for o in OBRAS
+        }
 
         def saldo_de(obra_id: str) -> SaldoObra:
-            return saldos.setdefault(obra_id, SaldoObra(obra_id=obra_id))
+            return saldos.setdefault(obra_id, SaldoObra(obra_id=obra_id, nombre=obra_id))
 
         for solicitud in self._solicitudes.listar_solicitudes_activas():
             saldo = saldo_de(solicitud.obra_id)
@@ -85,7 +96,12 @@ class SaldoService:
                 saldo_de(comprobante.obra_id).comprobantes_en_revision += 1
 
         for saldo in saldos.values():
-            saldo.saldo_disponible = saldo.autorizado - saldo.comprobado
+            saldo.por_comprobar = saldo.autorizado - saldo.comprobado
+            saldo.disponible_caja_chica = saldo.presupuesto_caja_chica - saldo.autorizado
+            if saldo.presupuesto_caja_chica > 0:
+                saldo.porcentaje_autorizado = (
+                    saldo.autorizado * 100 / saldo.presupuesto_caja_chica
+                ).quantize(Decimal("0.1"))
             if saldo.autorizado > 0:
                 saldo.porcentaje_gastado = (saldo.comprobado * 100 / saldo.autorizado).quantize(Decimal("0.1"))
         return sorted(saldos.values(), key=lambda s: s.obra_id)

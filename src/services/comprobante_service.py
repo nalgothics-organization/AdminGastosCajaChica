@@ -81,16 +81,10 @@ class ComprobanteService:
         ruta = self.uploads_dir / f"{comprobante_id}{extension}"
         ruta.write_bytes(contenido)
 
-        # Si no hay solicitud aprobada, la foto se guarda igual y se vincula al completar los datos
-        solicitud = self._solicitudes.obtener_solicitud_por_comprobar(solicitante_id)
+        # La foto no se vincula a nada: el residente elige la solicitud al completar la comprobación
         comprobante = Comprobante(
             id=comprobante_id,
             solicitante_id=solicitante_id,
-            solicitud_id=solicitud.id if solicitud else None,
-            requiere_horas=partida_requiere_horas(solicitud.partida_categoria) if solicitud else None,
-            obra_id=solicitud.obra_id if solicitud else None,
-            etapa_construccion=solicitud.etapa_construccion if solicitud else None,
-            partida_categoria=solicitud.partida_categoria if solicitud else None,
             imagen_ruta=str(ruta),
         )
         self._db[comprobante.id] = comprobante
@@ -121,12 +115,12 @@ class ComprobanteService:
         return comprobante
 
     def _resolver_solicitud(self, comprobante: Comprobante, datos: ComprobanteDatos):
-        """Devuelve la solicitud vinculada o la que indica el formulario, validando pertenencia.
+        """Devuelve la solicitud que el residente eligió en el formulario, validando pertenencia.
 
         Devuelve None cuando el residente comprueba un gasto por su cuenta, sin solicitud previa:
         en ese caso el formulario debe traer la obra, la etapa y la partida (RF02).
         """
-        solicitud_id = comprobante.solicitud_id or datos.solicitud_id
+        solicitud_id = datos.solicitud_id
         if solicitud_id is None:
             if not (datos.obra_id and datos.etapa_construccion and datos.partida_categoria):
                 raise ValueError(
@@ -134,9 +128,6 @@ class ComprobanteService:
                     "la etapa y la partida si lo pagó por su cuenta."
                 )
             return None
-        if comprobante.solicitud_id and datos.solicitud_id and datos.solicitud_id != comprobante.solicitud_id:
-            raise ValueError("El comprobante ya está vinculado a otra solicitud.")
-
         solicitud = self._solicitudes.obtener_por_id(solicitud_id)
         if not solicitud:
             raise ValueError(f"La solicitud {solicitud_id} no existe o fue eliminada.")
@@ -174,6 +165,7 @@ class ComprobanteService:
                 "partida_categoria": None,
             })
         else:
+            comprobante.solicitud_id = None
             comprobante.obra_id = datos.obra_id
             comprobante.etapa_construccion = datos.etapa_construccion
             comprobante.partida_categoria = datos.partida_categoria

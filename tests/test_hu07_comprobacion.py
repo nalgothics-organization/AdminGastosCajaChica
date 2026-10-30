@@ -27,11 +27,16 @@ DATOS_MAQUINARIA = {
 
 class BaseHU07TestCase(BaseComprobanteTestCase):
     def capturar_vinculado(self, partida="Renta de Maquinaria"):
+        """Crea una solicitud aprobada y captura una foto; `completar` la vincula a esa solicitud."""
         self.solicitud = crear_solicitud_aprobada(partida=partida)
         return self.capturar().json()["id"]
 
     def completar(self, comprobante_id, **cambios):
         datos = {**DATOS_MAQUINARIA, **cambios}
+        # El residente elige la solicitud al comprobar; por defecto la que creó capturar_vinculado
+        solicitud = getattr(self, "solicitud", None)
+        if solicitud and "solicitud_id" not in datos:
+            datos["solicitud_id"] = str(solicitud.id)
         return self.client.put(f"/api/comprobantes/{comprobante_id}/datos", json=datos)
 
     def cerrar(self, comprobante_id):

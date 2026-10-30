@@ -131,15 +131,6 @@ class SolicitudFondoService:
     def listar_solicitudes_activas(self) -> List[SolicitudFondo]:
         return [s for s in self._db.values() if s.activo]
 
-    def obtener_solicitud_por_comprobar(self, solicitante_id: str) -> Optional[SolicitudFondo]:
-        """Devuelve la solicitud aprobada más reciente del residente (vinculado automático HU16)."""
-        candidatas = [
-            s for s in self._db.values()
-            if s.activo and s.solicitante_id == solicitante_id and s.estado == EstadoSolicitud.APROBADO
-        ]
-        # El almacén conserva el orden de inserción; created_at puede empatar en registros consecutivos
-        return candidatas[-1] if candidatas else None
-
     def _obtener_pendiente(self, solicitud_id: UUID, data: DecisionBase) -> SolicitudFondo:
         """Valida que la solicitud exista, siga pendiente y que el rol pueda decidirla (RF05)."""
         solicitud = self.obtener_por_id(solicitud_id)

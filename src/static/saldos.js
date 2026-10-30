@@ -7,24 +7,30 @@
   const $ = (id) => document.getElementById(id);
 
   function crearTarjeta(saldo) {
-    const porcentaje = Number(saldo.porcentaje_gastado);
+    // La barra muestra cuánto del fondo de caja chica ya está autorizado
+    const porcentaje = Number(saldo.porcentaje_autorizado);
     const claseBarra = porcentaje > 100 ? "excedido" : porcentaje >= 80 ? "alerta" : "";
-    const disponible = Number(saldo.saldo_disponible);
+    const disponible = Number(saldo.disponible_caja_chica);
+    const porComprobar = Number(saldo.por_comprobar);
     const sinSolicitud = Number(saldo.gasto_sin_solicitud);
 
     return el("div", { className: "tarjeta" },
-      el("h3", { texto: saldo.obra_id }),
+      el("h3", { texto: saldo.nombre }),
+      el("p", { className: "nota", texto: saldo.obra_id }),
+      el("p", { className: "cifra" + (disponible < 0 ? " negativo" : ""), texto: dinero(saldo.disponible_caja_chica) }),
+      el("p", { className: "nota", texto: "disponible de " + dinero(saldo.presupuesto_caja_chica) + " de caja chica" }),
       el("div", { className: "barra " + claseBarra },
         el("span", { style: "width:" + Math.min(porcentaje, 100) + "%" })),
-      el("p", { className: "nota", texto: porcentaje + "% de lo autorizado ya está comprobado" }),
+      el("p", { className: "nota", texto: porcentaje + "% del fondo ya está autorizado" }),
       el("dl", {},
+        el("dt", { texto: "Fondo de caja chica" }), el("dd", { texto: dinero(saldo.presupuesto_caja_chica) }),
         el("dt", { texto: "Autorizado" }), el("dd", { texto: dinero(saldo.autorizado) }),
         el("dt", { texto: "Comprobado" }), el("dd", { texto: dinero(saldo.comprobado) }),
-        el("dt", { texto: "Saldo disponible" }),
-        el("dd", { className: disponible < 0 ? "negativo" : "", texto: dinero(saldo.saldo_disponible) }),
+        el("dt", { texto: "Por comprobar" }),
+        el("dd", { className: porComprobar < 0 ? "negativo" : "", texto: dinero(saldo.por_comprobar) }),
         el("dt", { texto: "Pendiente de autorizar" }),
         el("dd", { texto: dinero(saldo.pendiente_autorizacion) + " (" + saldo.solicitudes_pendientes + ")" }),
-        el("dt", { texto: "Pagado sin solicitud" }),
+        el("dt", { texto: "Pagado sin solicitud (por reponer)" }),
         el("dd", { className: sinSolicitud > 0 ? "negativo" : "", texto: dinero(saldo.gasto_sin_solicitud) }),
         el("dt", { texto: "En revisión de contabilidad" }), el("dd", { texto: String(saldo.comprobantes_en_revision) })
       )

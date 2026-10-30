@@ -17,19 +17,32 @@
     }
   }
 
-  // Obras existentes (su alta y presupuesto viven en otro módulo); se elige, no se escribe
+  // Obras existentes (su alta y su fondo viven en otro módulo); se elige, no se escribe.
+  // El disponible se vuelve a consultar al elegir y tras cada envío para reflejar las aprobaciones.
+  async function mostrarDisponible() {
+    const nota = $("presupuesto-obra");
+    const id = $("obra").value;
+    nota.hidden = !id;
+    if (!id) {
+      return;
+    }
+    try {
+      const obras = await llamar("/catalogo/obras");
+      const obra = obras.find((o) => o.id === id);
+      if (obra) {
+        nota.textContent = "Caja chica disponible: " + dinero(obra.disponible_caja_chica)
+          + " de " + dinero(obra.presupuesto_caja_chica);
+      }
+    } catch (e) {
+      avisar(e.message, true);
+    }
+  }
+
   async function cargarObras() {
     try {
       const obras = await llamar("/catalogo/obras");
-      const select = $("obra");
-      obras.forEach((o) => select.append(el("option", { value: o.id, texto: o.nombre + " · " + o.id })));
-      select.addEventListener("change", () => {
-        const elegida = obras.find((o) => o.id === select.value);
-        $("presupuesto-obra").hidden = !elegida;
-        if (elegida) {
-          $("presupuesto-obra").textContent = "Presupuesto de la obra: " + dinero(elegida.presupuesto);
-        }
-      });
+      $("obra").append(...obras.map((o) => el("option", { value: o.id, texto: o.nombre + " · " + o.id })));
+      $("obra").addEventListener("change", mostrarDisponible);
     } catch (e) {
       avisar(e.message, true);
     }

@@ -546,6 +546,12 @@ button:disabled {
   background: var(--error);
 }
 
+.cifra {
+  margin: 0.25rem 0 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
 .negativo {
   color: var(--error);
   font-weight: 700;

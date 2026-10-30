@@ -7,6 +7,7 @@
   // Espejo de PARTIDAS_CON_HORAS (src/models/comprobante.py); el backend valida de todos modos
   const PARTIDAS_CON_HORAS = ["renta de maquinaria", "mano de obra"];
 
+  const ELEGIR = "elegir";
   const $ = (id) => document.getElementById(id);
   let residente = leerResidente();
   let comprobanteActual = null;
@@ -69,10 +70,8 @@
     datos.append("solicitante_id", residente);
     datos.append("imagen", archivo);
     try {
-      const comprobante = await llamar("/comprobantes/captura", { method: "POST", body: datos });
-      avisar(comprobante.solicitud_id
-        ? "Comprobante guardado. Complete los datos cuando pueda."
-        : "Foto guardada. Elija la solicitud al completar los datos.");
+      await llamar("/comprobantes/captura", { method: "POST", body: datos });
+      avisar("Foto guardada. Elige la solicitud al completar los datos.");
       cargarPendientes();
     } catch (e) {
       avisar(e.message, true);
@@ -127,10 +126,8 @@
       form.querySelector('input[name="tipo"][value="' + datos.tipo + '"]').checked = true;
     }
 
-    $("campo-solicitud").hidden = Boolean(comprobante.solicitud_id);
-    if (!comprobante.solicitud_id) {
-      await cargarSolicitudes();
-    }
+    // Siempre se elige la solicitud a la que se conecta el comprobante; se conserva la ya elegida
+    await cargarSolicitudes(comprobante.solicitud_id);
     actualizarCampoHoras();
 
     $("captura").hidden = true;
@@ -138,7 +135,7 @@
     $("formulario").hidden = false;
   }
 
-  async function cargarSolicitudes() {
+  async function cargarSolicitudes(elegida) {
     const select = $("solicitud");
     try {
       const solicitudes = await llamar("/solicitudes");
@@ -149,31 +146,59 @@
       solicitudesAprobadas = [];
       avisar(e.message, true);
     }
+    const placeholder = document.createElement("option");
+    placeholder.value = ELEGIR;
+    placeholder.textContent = solicitudesAprobadas.length
+      ? "Selecciona la solicitud"
+      : "No tienes solicitudes aprobadas";
+    placeholder.disabled = true;
     const opciones = solicitudesAprobadas.map((s) => {
       const opcion = document.createElement("option");
       opcion.value = s.id;
-      opcion.textContent = s.folio + " · " + s.concepto;
+      opcion.textContent = s.folio + " · " + s.concepto + " · " + dinero(montoAutorizado(s));
       return opcion;
     });
     // El residente también puede comprobar un gasto que pagó antes de pedir fondos
     const sinSolicitud = document.createElement("option");
     sinSolicitud.value = "";
     sinSolicitud.textContent = "Lo pagué por mi cuenta (sin solicitud)";
-    select.replaceChildren(...opciones, sinSolicitud);
+    select.replaceChildren(placeholder, ...opciones, sinSolicitud);
+    select.value = solicitudesAprobadas.some((s) => s.id === elegida) ? elegida : ELEGIR;
   }
 
+  function montoAutorizado(solicitud) {
+    const decision = solicitud.autorizacion;
+    return decision && decision.monto_autorizado ? decision.monto_autorizado : solicitud.monto_solicitado;
+  }
+
+  function dinero(valor) {
+    return Number(valor).toLocaleString("es-MX", { style: "currency", currency: "MXN" });
+  }
+
+  // "" es el gasto pagado por cuenta propia; ELEGIR es que todavía no se decide
   function pagoSinSolicitud() {
-    return !comprobanteActual.solicitud_id && $("solicitud").value === "";
+    return $("solicitud").value === "";
+  }
+
+  function mostrarDetalleSolicitud() {
+    const elegida = solicitudesAprobadas.find((s) => s.id === $("solicitud").value);
+    const detalle = $("detalle-solicitud");
+    detalle.hidden = !elegida;
+    if (elegida) {
+      detalle.textContent = elegida.obra_id + " · " + elegida.etapa_construccion + " · "
+        + elegida.partida_categoria;
+    }
   }
 
   // Muestra las horas solo cuando la partida de la solicitud las exige (RF07)
   function actualizarCampoHoras() {
     const sinSolicitud = pagoSinSolicitud();
     $("campo-clasificacion").hidden = !sinSolicitud;
-    let requiere = comprobanteActual && comprobanteActual.requiere_horas;
+    mostrarDetalleSolicitud();
+    let requiere;
     if (sinSolicitud) {
       requiere = PARTIDAS_CON_HORAS.includes($("partida-gasto").value.trim().toLowerCase());
-    } else if (requiere === null || requiere === undefined) {
+    } else {
       const elegida = solicitudesAprobadas.find((s) => s.id === $("solicitud").value);
       requiere = Boolean(elegida)
         && PARTIDAS_CON_HORAS.includes(elegida.partida_categoria.trim().toLowerCase());
@@ -198,13 +223,20 @@
       concepto: form.elements.concepto.value,
       horas: conHoras ? form.elements.horas.value || null : null,
       unidad_horas: conHoras ? form.elements.unidad_horas.value : null,
-      solicitud_id: comprobanteActual.solicitud_id ? null : form.elements.solicitud_id.value || null,
+      solicitud_id: sinSolicitud || form.elements.solicitud_id.value === ELEGIR
+        ? null
+        : form.elements.solicitud_id.value,
     };
   }
 
   async function enviarFormulario(evento) {
     evento.preventDefault();
     const accion = evento.submitter ? evento.submitter.dataset.accion : "guardar";
+    if ($("solicitud").value === ELEGIR) {
+      avisar("Elige la solicitud a la que corresponde el gasto.", true);
+      $("solicitud").focus();
+      return;
+    }
     const id = comprobanteActual.id;
     try {
       comprobanteActual = await llamar("/comprobantes/" + id + "/datos", {

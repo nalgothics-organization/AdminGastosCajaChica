@@ -14,8 +14,9 @@ router = APIRouter()
     response_model=List[SaldoObra],
     summary="Saldos por obra en tiempo real",
     description=(
-        "Para cada obra devuelve lo autorizado, lo comprobado, el saldo disponible, el gasto pagado "
-        "sin solicitud (reembolso pendiente) y lo que espera autorización."
+        "Para cada obra devuelve su fondo de caja chica y lo disponible tras las aprobaciones, lo "
+        "comprobado, lo que falta por comprobar, el gasto pagado sin solicitud (reembolso pendiente) y "
+        "lo que espera autorización."
     ),
     response_description="Un renglón por obra con movimientos.",
 )

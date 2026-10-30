@@ -45,9 +45,10 @@
           <label><input type="radio" name="tipo" value="nota_simple"> Nota simple</label>
         </fieldset>
 
-        <div id="campo-solicitud" hidden>
-          <label for="solicitud">Solicitud de fondo</label>
-          <select id="solicitud" name="solicitud_id"></select>
+        <div id="campo-solicitud">
+          <label for="solicitud">¿A qué solicitud corresponde este gasto?</label>
+          <select id="solicitud" name="solicitud_id" required></select>
+          <p id="detalle-solicitud" class="nota" hidden></p>
         </div>
 
         <!-- Gasto pagado por el residente sin solicitud previa: la clasificación (RF02) se captura aquí -->

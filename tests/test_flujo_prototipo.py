@@ -76,8 +76,13 @@ class TestSaldosPorObra(BaseHU07TestCase):
         saldos = self.client.get("/api/saldos").json()
         return next(s for s in saldos if s["obra_id"] == obra_id)
 
-    def test_sin_movimientos_no_hay_saldos(self):
-        self.assertEqual(self.client.get("/api/saldos").json(), [])
+    def test_sin_movimientos_cada_obra_muestra_su_fondo_completo(self):
+        saldos = self.client.get("/api/saldos").json()
+
+        self.assertEqual({s["obra_id"] for s in saldos}, {"OBRA-NORTE-01", "OBRA-SUR-02", "OBRA-PONIENTE-03"})
+        for saldo in saldos:
+            self.assertEqual(Decimal(saldo["disponible_caja_chica"]), Decimal(saldo["presupuesto_caja_chica"]))
+            self.assertEqual(Decimal(saldo["autorizado"]), Decimal("0"))
 
     def test_solicitud_pendiente_cuenta_como_pendiente_de_autorizacion(self):
         self.client.post("/api/solicitudes", json={
@@ -102,7 +107,9 @@ class TestSaldosPorObra(BaseHU07TestCase):
 
         self.assertEqual(Decimal(saldo["autorizado"]), Decimal("3500.00"))
         self.assertEqual(Decimal(saldo["comprobado"]), Decimal("3200.00"))
-        self.assertEqual(Decimal(saldo["saldo_disponible"]), Decimal("300.00"))
+        self.assertEqual(Decimal(saldo["por_comprobar"]), Decimal("300.00"))
+        self.assertEqual(Decimal(saldo["disponible_caja_chica"]), Decimal("16500.00"))
+        self.assertEqual(Decimal(saldo["porcentaje_autorizado"]), Decimal("17.5"))
         self.assertEqual(Decimal(saldo["porcentaje_gastado"]), Decimal("91.4"))
         self.assertEqual(saldo["comprobantes_en_revision"], 1)
 
@@ -113,7 +120,7 @@ class TestSaldosPorObra(BaseHU07TestCase):
         saldo = self.saldo("OBRA-NORTE-01")
 
         self.assertEqual(Decimal(saldo["comprobado"]), Decimal("0"))
-        self.assertEqual(Decimal(saldo["saldo_disponible"]), Decimal("3500.00"))
+        self.assertEqual(Decimal(saldo["por_comprobar"]), Decimal("3500.00"))
 
     def test_reverso_devuelve_el_saldo_y_ajuste_lo_sustituye(self):
         comprobante_id = self.capturar_vinculado()
@@ -156,7 +163,7 @@ class TestPersistencia(BaseHU07TestCase):
     def test_los_datos_sobreviven_a_una_instancia_nueva_del_servicio(self):
         solicitud = crear_solicitud_aprobada()
         comprobante_id = self.capturar().json()["id"]
-        self.completar(comprobante_id)
+        self.completar(comprobante_id, solicitud_id=str(solicitud.id))
         self.cerrar(comprobante_id)
 
         solicitudes = SolicitudFondoService()

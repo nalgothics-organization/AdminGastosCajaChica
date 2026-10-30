@@ -77,27 +77,25 @@ class TestHU16CapturaRapida(BaseComprobanteTestCase):
 
     def test_criterio_2_captura_solo_requiere_la_imagen(self):
         """El proceso no pide datos: solo la foto, sin tipo, monto ni solicitud."""
-        solicitud = crear_solicitud_aprobada()
+        crear_solicitud_aprobada()
 
         response = self.capturar()
 
         self.assertEqual(response.status_code, 201)
         body = response.json()
         self.assertEqual(body["estado"], "Borrador")
-        self.assertEqual(body["solicitud_id"], str(solicitud.id))
-        self.assertTrue(body["requiere_horas"])
+        self.assertIsNone(body["solicitud_id"])
         self.assertIsNone(body["datos"])
         self.assertTrue(Path(body["imagen_ruta"]).is_file())
 
-    def test_vincula_la_solicitud_aprobada_mas_reciente_del_residente(self):
+    def test_la_foto_no_se_vincula_sola_aunque_haya_solicitudes_aprobadas(self):
         crear_solicitud_aprobada(partida="Renta de Maquinaria")
-        reciente = crear_solicitud_aprobada(partida="Materiales")
-        crear_solicitud_aprobada(partida="Materiales", solicitante="OTRO-RESIDENTE")
+        crear_solicitud_aprobada(partida="Materiales")
 
         body = self.capturar().json()
 
-        self.assertEqual(body["solicitud_id"], str(reciente.id))
-        self.assertFalse(body["requiere_horas"])
+        self.assertIsNone(body["solicitud_id"])
+        self.assertIsNone(body["requiere_horas"])
 
     def test_sin_solicitud_aprobada_la_foto_se_guarda_igual(self):
         body = self.capturar().json()

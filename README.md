@@ -26,6 +26,7 @@ MORRISON RAMÍREZ, CARLOS JAASIEL — 80702: Equipo de desarrollo.
 
 - Python 3.10 o superior (probado con 3.13)
 - Git
+- Docker Desktop (para la base de datos PostgreSQL)
 
 ### Instalación
 
@@ -43,6 +44,16 @@ pip install -r requirements.txt
 bash
 python -m pytest tests -v
 
+
+### Base de datos
+
+bash
+copy .env.example .env          # Windows; en Linux/macOS: cp .env.example .env
+docker compose up -d db
+python -m src.seed             # datos de ejemplo (opcional; --reset para empezar de cero)
+
+
+La API lee `DATABASE_URL` del archivo `.env`. Las tablas (`solicitudes`, `autorizaciones` y `comprobantes`) se crean al arrancar y ningún registro se borra físicamente. Las pruebas usan SQLite en memoria y no tocan PostgreSQL.
 
 ### Levantar la API
 
@@ -70,8 +81,24 @@ Abre http://127.0.0.1:8000/docs para probar los endpoints desde Swagger.
 | POST | /api/comprobantes/{id}/cerrar | Cerrar: factura → Comprobado; ticket o nota → Revisión contabilidad |
 | POST | /api/comprobantes/{id}/ajustes | Ajuste o reverso de un comprobante cerrado |
 | DELETE | /api/comprobantes/{id} | Descartar un borrador (soft delete) |
+| GET | /api/saldos | Saldos por obra: autorizado, comprobado, disponible y reembolsos pendientes |
 
-Los datos se guardan en memoria, así que se pierden al detener el servidor. Las imágenes de comprobantes se guardan en la carpeta `UPLOADS_DIR` (por defecto `./uploads`, ver `.env.example`).
+Los datos se guardan en PostgreSQL y sobreviven al reiniciar la API. Las imágenes de comprobantes se guardan en la carpeta `UPLOADS_DIR` (por defecto `./uploads`, ver `.env.example`).
+
+### Pantallas del prototipo
+
+Con la API arriba, abre `http://127.0.0.1:8000/app/`:
+
+| Pantalla | Ruta | Historia |
+| --- | --- | --- |
+| Captura de comprobante | /app/index.html | HU07, HU16 |
+| Solicitar fondo | /app/solicitud.html | HU01, HU02 |
+| Bandeja de autorización | /app/autorizacion.html | HU05 |
+| Saldos por obra | /app/saldos.html | HU10 |
+
+### Gasto sin solicitud previa
+
+Un residente puede comprobar un gasto que pagó por su cuenta, sin solicitud aprobada: en el formulario elige *Lo pagué por mi cuenta* e indica obra, etapa y partida. Ese comprobante siempre queda en *Revisión contabilidad* y el tablero lo suma como *Pagado sin solicitud* (reembolso pendiente). Si el residente tiene una solicitud aprobada, la foto se vincula automáticamente a la más reciente.
 
 ### Captura en obra desde el celular
 
@@ -85,9 +112,9 @@ Desde la raíz del proyecto, en PowerShell:
 powershell -ExecutionPolicy Bypass -File .\demo.ps1
 ```
 
-El script instala las dependencias, ejecuta los tests, levanta la API, carga dos solicitudes de ejemplo (una para Administración y otra para Dirección) y abre Swagger en `http://127.0.0.1:8000/docs`. Presiona `Ctrl+C` para detener el servidor.
+El script instala las dependencias, ejecuta los tests, levanta PostgreSQL en Docker, carga datos de ejemplo (5 solicitudes y 4 comprobantes en 2 obras), arranca la API y abre el tablero de saldos en `http://127.0.0.1:8000/app/saldos.html`. Presiona `Ctrl+C` para detener el servidor; la base de datos sigue en Docker.
 
-Opciones: `-SinDatos` para iniciar sin solicitudes de ejemplo y `-Puerto 8001` si el puerto 8000 está ocupado.
+Opciones: `-SinDatos` para iniciar sin datos de ejemplo, `-Reiniciar` para borrar la base y volver a cargarlos, y `-Puerto 8001` si el puerto 8000 está ocupado.
 
   ## Versionado
 

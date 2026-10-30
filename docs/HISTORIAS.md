@@ -68,6 +68,7 @@
         *   **Dado** que acabo de pagar, **cuando** abro la comprobación, **entonces** puedo tomar una foto directa desde el celular.
         *   **Dado** que tomo la foto, **cuando** confirmo la captura, **entonces** se guarda la imagen legible y se asocia al gasto correspondiente.
         *   **Dado** que el gasto se respalda con una nota simple, **cuando** la registro, **entonces** puedo indicar el concepto, las horas trabajadas (si aplica), el proveedor y el monto pagado.
+        *   **Dado** que pagué el gasto por mi cuenta y no existe una solicitud aprobada, **cuando** completo los datos, **entonces** puedo comprobarlo indicando obra, etapa y partida, y queda en revisión de contabilidad como reembolso pendiente.
 
 *   **HU08: Exigencia de comprobante válido**
     *   **Requerimiento:** RF08

@@ -1,10 +1,13 @@
-# Prepara la demostracion: instala dependencias, corre los tests,
-# levanta la API, carga solicitudes de ejemplo y abre Swagger.
-# Uso: powershell -ExecutionPolicy Bypass -File .\demo.ps1 [-SinDatos] [-Puerto 8000]
+# Prepara la demostracion: instala dependencias, corre los tests, levanta PostgreSQL en Docker,
+# carga datos de ejemplo, arranca la API y abre las pantallas del prototipo.
+# Uso: powershell -ExecutionPolicy Bypass -File .\demo.ps1 [-SinDatos] [-Reiniciar] [-Puerto 8000]
+#   -SinDatos   no carga los datos de ejemplo
+#   -Reiniciar  borra la base de datos y vuelve a cargar los datos de ejemplo
 
 param(
   [int]$Puerto = 8000,
-  [switch]$SinDatos
+  [switch]$SinDatos,
+  [switch]$Reiniciar
 )
 
 $ErrorActionPreference = "Stop"
@@ -12,20 +15,44 @@ $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 $base = "http://127.0.0.1:$Puerto"
 
-Write-Host "`n[1/4] Instalando dependencias..." -ForegroundColor Cyan
+Write-Host "`n[1/5] Instalando dependencias..." -ForegroundColor Cyan
 python -m pip install -q --disable-pip-version-check -r requirements.txt
 if ($LASTEXITCODE -ne 0) { throw "No se pudieron instalar las dependencias." }
 
-Write-Host "`n[2/4] Ejecutando tests..." -ForegroundColor Cyan
-python -m pytest tests -v
+Write-Host "`n[2/5] Ejecutando tests..." -ForegroundColor Cyan
+python -m pytest tests -q
 if ($LASTEXITCODE -ne 0) { throw "Hay tests fallando; revisa la salida antes de presentar." }
+
+Write-Host "`n[3/5] Levantando PostgreSQL en Docker..." -ForegroundColor Cyan
+if (-not (Test-Path .env)) {
+  Copy-Item .env.example .env
+  Write-Host "  Se creo .env a partir de .env.example (ajusta la contrasena si lo necesitas)."
+}
+docker info *> $null
+if ($LASTEXITCODE -ne 0) { throw "Docker no esta corriendo. Abre Docker Desktop y vuelve a intentar." }
+docker compose up -d db
+if ($LASTEXITCODE -ne 0) { throw "No se pudo levantar la base de datos." }
+$saludable = $false
+for ($i = 0; $i -lt 40 -and -not $saludable; $i++) {
+  $estado = docker inspect -f "{{.State.Health.Status}}" cajachica-db
+  if ($estado -eq "healthy") { $saludable = $true } else { Start-Sleep -Seconds 2 }
+}
+if (-not $saludable) { throw "PostgreSQL no estuvo listo a tiempo (docker logs cajachica-db)." }
 
 if (Get-NetTCPConnection -LocalPort $Puerto -State Listen -ErrorAction SilentlyContinue) {
   throw "El puerto $Puerto ya esta en uso. Cierra la otra instancia o usa -Puerto 8001."
 }
 
-Write-Host "`n[3/4] Levantando la API en $base ..." -ForegroundColor Cyan
-$servidor = Start-Process python -ArgumentList "-m", "uvicorn", "src.main:app", "--port", "$Puerto" -NoNewWindow -PassThru
+if (-not $SinDatos) {
+  Write-Host "`n[4/5] Cargando datos de ejemplo..." -ForegroundColor Cyan
+  if ($Reiniciar) { python -m src.seed --reset } else { python -m src.seed }
+  if ($LASTEXITCODE -ne 0) { throw "No se pudieron cargar los datos de ejemplo." }
+} else {
+  Write-Host "`n[4/5] Sin datos de ejemplo (-SinDatos)." -ForegroundColor Cyan
+}
+
+Write-Host "`n[5/5] Levantando la API en $base ..." -ForegroundColor Cyan
+$servidor = Start-Process python -ArgumentList "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "$Puerto" -NoNewWindow -PassThru
 
 try {
   $listo = $false
@@ -35,36 +62,11 @@ try {
   }
   if (-not $listo) { throw "La API no respondio a tiempo." }
 
-  if (-not $SinDatos) {
-    Write-Host "`n[4/4] Cargando solicitudes de ejemplo..." -ForegroundColor Cyan
-    $ejemplos = @(
-      @{
-        obra_id = "OBRA-NORTE-01"; solicitante_id = "RESIDENTE-PAU"
-        etapa_construccion = "estructura"; partida_categoria = "Renta de Maquinaria"
-        concepto = "Renta de retroexcavadora para sondeo"
-        monto_solicitado = "3500.00"; costo_estimado = "4000.00"; urgencia = "urgente"
-        evidencia_url = "https://storage.empresa.com/evidencias/fuga_tubo_01.jpg"
-      },
-      @{
-        obra_id = "OBRA-SUR-02"; solicitante_id = "RESIDENTE-JP"
-        etapa_construccion = "acabados"; partida_categoria = "Materiales"
-        concepto = "Compra de pintura y selladores para fachada"
-        monto_solicitado = "18000.00"; costo_estimado = "18500.00"; urgencia = "alta"
-        evidencia_url = "https://storage.empresa.com/evidencias/fachada_02.jpg"
-        firma_digital_direccion = "FIRMA-DIR-001"
-      }
-    )
-    foreach ($ejemplo in $ejemplos) {
-      $cuerpo = [Text.Encoding]::UTF8.GetBytes(($ejemplo | ConvertTo-Json))
-      $respuesta = Invoke-WebRequest "$base/api/solicitudes" -Method Post -Body $cuerpo -ContentType "application/json; charset=utf-8" -UseBasicParsing
-      $r = [Text.Encoding]::UTF8.GetString($respuesta.RawContentStream.ToArray()) | ConvertFrom-Json
-      Write-Host ("  {0} -> notificado a {1}" -f $r.solicitud.folio, $r.notificacion_enviada.destinatario_rol)
-    }
-  }
-
-  Start-Process "$base/docs"
-  Write-Host "`nSwagger abierto en $base/docs  (ReDoc: $base/redoc)" -ForegroundColor Green
-  Write-Host "Presiona Ctrl+C para detener el servidor.`n" -ForegroundColor Green
+  Start-Process "$base/app/saldos.html"
+  Write-Host "`nPrototipo abierto en $base/app/  (Swagger: $base/docs)" -ForegroundColor Green
+  Write-Host "Recorrido sugerido: Solicitar fondo -> Autorizacion -> Captura -> Saldos." -ForegroundColor Green
+  Write-Host "Desde el celular usa http://<IP-de-tu-equipo>:$Puerto/app/ en la misma red." -ForegroundColor Green
+  Write-Host "Presiona Ctrl+C para detener el servidor (la base de datos sigue en Docker).`n" -ForegroundColor Green
   Wait-Process -Id $servidor.Id
 }
 finally {

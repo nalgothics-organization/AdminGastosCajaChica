@@ -43,7 +43,7 @@ El módulo controla el ciclo completo de la caja chica en las obras de la constr
 
 **Responsable:** @bladeRunner08
 
-El residente usa el sistema desde el navegador de su celular en el frente de obra. Solicita fondos con el concepto, el monto, la urgencia y la evidencia de la necesidad, y después comprueba sus gastos tomando una foto del comprobante. Captura con prisa y a veces sin señal, por eso la interfaz debe requerir máximo 3 toques para registrar un ticket.
+El residente usa el sistema desde el navegador de su celular en el frente de obra. Solicita fondos con el concepto, el monto, la urgencia y la evidencia de la necesidad, y comprueba sus gastos tomando una foto del comprobante. Si el gasto no podía esperar y lo pagó por su cuenta, lo comprueba sin solicitud previa: contabilidad lo revisa y queda como reembolso pendiente. Captura con prisa y a veces sin señal, por eso la interfaz debe requerir máximo 3 toques para registrar un ticket.
 
 ### Administración
 

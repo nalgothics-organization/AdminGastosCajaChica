@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Caja chica · Solicitar fondo</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main>
+    <nav class="menu">
+      <a href="index.html">Captura</a>
+      <a href="solicitud.html">Solicitar fondo</a>
+      <a href="autorizacion.html">Autorización</a>
+      <a href="saldos.html">Saldos</a>
+    </nav>
+    <h1>Solicitar fondo</h1>
+    <p class="nota">Úsalo cuando puedas planear el gasto. Si ya lo pagaste, ve a Captura y comprueba sin solicitud.</p>
+
+    <p id="aviso" class="aviso" role="status" aria-live="polite" hidden></p>
+
+    <section id="config" hidden>
+      <label for="residente">¿Quién solicita? (solo la primera vez)</label>
+      <input id="residente" type="text" placeholder="ID de residente" autocomplete="off">
+      <button id="guardar-residente" type="button">Guardar</button>
+    </section>
+
+    <section id="registro" hidden>
+      <p id="residente-actual" class="nota"></p>
+      <form id="form-solicitud" novalidate>
+        <label for="obra">Obra</label>
+        <input id="obra" name="obra_id" type="text" placeholder="OBRA-NORTE-01" required>
+
+        <div class="cuadricula-2">
+          <div>
+            <label for="etapa">Etapa</label>
+            <select id="etapa" name="etapa_construccion" required>
+              <option value="cimentación">Cimentación</option>
+              <option value="estructura">Estructura</option>
+              <option value="albañilería">Albañilería</option>
+              <option value="instalaciones">Instalaciones</option>
+              <option value="acabados">Acabados</option>
+              <option value="entrega">Entrega</option>
+            </select>
+          </div>
+          <div>
+            <label for="partida">Partida</label>
+            <select id="partida" name="partida_categoria" required>
+              <option>Materiales</option>
+              <option>Renta de Maquinaria</option>
+              <option>Mano de Obra</option>
+              <option>Trámites</option>
+              <option>Otros</option>
+            </select>
+          </div>
+        </div>
+
+        <label for="concepto">Concepto</label>
+        <input id="concepto" name="concepto" type="text" required>
+
+        <div class="cuadricula-2">
+          <div>
+            <label for="monto">Monto solicitado</label>
+            <input id="monto" name="monto_solicitado" type="number" inputmode="decimal" min="0.01" step="0.01" required>
+          </div>
+          <div>
+            <label for="costo">Costo estimado</label>
+            <input id="costo" name="costo_estimado" type="number" inputmode="decimal" min="0.01" step="0.01" required>
+          </div>
+        </div>
+
+        <label for="urgencia">Urgencia</label>
+        <select id="urgencia" name="urgencia" required>
+          <option value="baja">Baja</option>
+          <option value="media" selected>Media</option>
+          <option value="alta">Alta</option>
+          <option value="urgente">Urgente</option>
+        </select>
+
+        <label for="evidencia">Evidencia de la necesidad (enlace o ruta)</label>
+        <input id="evidencia" name="evidencia_url" type="text" required>
+
+        <div id="campo-firma" hidden>
+          <label for="firma">Firma digital de Dirección (el monto supera $5,000)</label>
+          <input id="firma" name="firma_digital_direccion" type="text" autocomplete="off">
+        </div>
+
+        <div class="acciones">
+          <button type="submit">Enviar solicitud</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="mis-solicitudes" hidden>
+      <h2>Mis solicitudes</h2>
+      <ul id="lista-solicitudes"></ul>
+    </section>
+  </main>
+  <script src="comun.js"></script>
+  <script src="solicitud.js"></script>
+</body>
+</html>

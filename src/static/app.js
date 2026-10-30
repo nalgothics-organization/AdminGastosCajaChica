@@ -117,6 +117,11 @@
     if (datos.unidad_horas) {
       form.elements.unidad_horas.value = datos.unidad_horas;
     }
+    if (datos.obra_id) {
+      form.elements.obra_id.value = datos.obra_id;
+      form.elements.etapa_construccion.value = datos.etapa_construccion;
+      form.elements.partida_categoria.value = datos.partida_categoria;
+    }
     if (datos.tipo) {
       form.querySelector('input[name="tipo"][value="' + datos.tipo + '"]').checked = true;
     }
@@ -143,18 +148,31 @@
       solicitudesAprobadas = [];
       avisar(e.message, true);
     }
-    select.replaceChildren(...solicitudesAprobadas.map((s) => {
+    const opciones = solicitudesAprobadas.map((s) => {
       const opcion = document.createElement("option");
       opcion.value = s.id;
       opcion.textContent = s.folio + " · " + s.concepto;
       return opcion;
-    }));
+    });
+    // El residente también puede comprobar un gasto que pagó antes de pedir fondos
+    const sinSolicitud = document.createElement("option");
+    sinSolicitud.value = "";
+    sinSolicitud.textContent = "Lo pagué por mi cuenta (sin solicitud)";
+    select.replaceChildren(...opciones, sinSolicitud);
+  }
+
+  function pagoSinSolicitud() {
+    return !comprobanteActual.solicitud_id && $("solicitud").value === "";
   }
 
   // Muestra las horas solo cuando la partida de la solicitud las exige (RF07)
   function actualizarCampoHoras() {
+    const sinSolicitud = pagoSinSolicitud();
+    $("campo-clasificacion").hidden = !sinSolicitud;
     let requiere = comprobanteActual && comprobanteActual.requiere_horas;
-    if (requiere === null || requiere === undefined) {
+    if (sinSolicitud) {
+      requiere = PARTIDAS_CON_HORAS.includes($("partida-gasto").value.trim().toLowerCase());
+    } else if (requiere === null || requiere === undefined) {
       const elegida = solicitudesAprobadas.find((s) => s.id === $("solicitud").value);
       requiere = Boolean(elegida)
         && PARTIDAS_CON_HORAS.includes(elegida.partida_categoria.trim().toLowerCase());
@@ -167,7 +185,11 @@
     const form = $("form-datos");
     const tipo = form.querySelector('input[name="tipo"]:checked');
     const conHoras = !$("campo-horas").hidden;
+    const sinSolicitud = pagoSinSolicitud();
     return {
+      obra_id: sinSolicitud ? form.elements.obra_id.value : null,
+      etapa_construccion: sinSolicitud ? form.elements.etapa_construccion.value : null,
+      partida_categoria: sinSolicitud ? form.elements.partida_categoria.value : null,
       tipo: tipo ? tipo.value : null,
       monto_comprobado: form.elements.monto_comprobado.value || null,
       fecha_gasto: form.elements.fecha_gasto.value || null,
@@ -229,6 +251,7 @@
   });
 
   $("solicitud").addEventListener("change", actualizarCampoHoras);
+  $("partida-gasto").addEventListener("change", actualizarCampoHoras);
   $("form-datos").addEventListener("submit", enviarFormulario);
   $("descartar").addEventListener("click", descartar);
   $("volver").addEventListener("click", mostrarPantalla);

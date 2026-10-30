@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Caja chica · Bandeja de autorización</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main class="ancho">
+    <nav class="menu">
+      <a href="index.html">Captura</a>
+      <a href="solicitud.html">Solicitar fondo</a>
+      <a href="autorizacion.html">Autorización</a>
+      <a href="saldos.html">Saldos</a>
+    </nav>
+    <h1>Bandeja de autorización</h1>
+
+    <p id="aviso" class="aviso" role="status" aria-live="polite" hidden></p>
+
+    <section>
+      <div class="cuadricula-2">
+        <div>
+          <label for="rol">Rol</label>
+          <select id="rol">
+            <option value="Administración">Administración (hasta $5,000)</option>
+            <option value="Dirección">Dirección (cualquier monto)</option>
+          </select>
+        </div>
+        <div>
+          <label for="nombre">Tu nombre</label>
+          <input id="nombre" type="text" placeholder="Laura Méndez" autocomplete="off">
+        </div>
+      </div>
+    </section>
+
+    <h2>Pendientes</h2>
+    <p id="vacio" class="nota" hidden>No hay solicitudes pendientes.</p>
+    <div id="pendientes" class="rejilla"></div>
+
+    <h2>Decididas recientemente</h2>
+    <ul id="decididas"></ul>
+  </main>
+  <script src="comun.js"></script>
+  <script src="autorizacion.js"></script>
+</body>
+</html>

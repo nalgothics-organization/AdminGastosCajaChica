@@ -134,3 +134,132 @@ button.secundario {
   gap: 0.5rem;
   margin-top: 1rem;
 }
+
+/* Navegación y componentes compartidos por todas las pantallas */
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.menu a {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--borde);
+  border-radius: 0.5rem;
+  color: var(--texto);
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.menu a[aria-current="page"] {
+  background: var(--primario);
+  border-color: var(--primario);
+  color: var(--primario-texto);
+}
+
+main.ancho {
+  max-width: 64rem;
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 1rem;
+}
+
+.tarjeta {
+  padding: 1rem;
+  border: 1px solid var(--borde);
+  border-radius: 0.75rem;
+}
+
+.tarjeta h3 {
+  margin: 0 0 0.25rem;
+}
+
+.tarjeta dl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.15rem 1rem;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.tarjeta dt {
+  opacity: 0.75;
+}
+
+.tarjeta dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.etiqueta {
+  display: inline-block;
+  padding: 0.1rem 0.6rem;
+  border-radius: 1rem;
+  background: var(--borde);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.etiqueta.aprobado {
+  background: var(--exito);
+  color: #ffffff;
+}
+
+.etiqueta.rechazado {
+  background: var(--error);
+  color: #ffffff;
+}
+
+.barra {
+  height: 0.7rem;
+  margin: 0.5rem 0;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: var(--borde);
+}
+
+.barra > span {
+  display: block;
+  height: 100%;
+  background: var(--exito);
+}
+
+.barra.alerta > span {
+  background: var(--primario);
+}
+
+.barra.excedido > span {
+  background: var(--error);
+}
+
+.negativo {
+  color: var(--error);
+  font-weight: 700;
+}
+
+button.rechazar {
+  background: var(--error);
+}
+
+button:disabled {
+  opacity: 0.5;
+}
+
+.cuadricula-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 1rem;
+}
+
+input[type="url"],
+input[type="password"] {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--borde);
+  border-radius: 0.5rem;
+}

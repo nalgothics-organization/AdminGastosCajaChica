@@ -8,6 +8,12 @@
 </head>
 <body>
   <main>
+    <nav class="menu">
+      <a href="index.html">Captura</a>
+      <a href="solicitud.html">Solicitar fondo</a>
+      <a href="autorizacion.html">Autorización</a>
+      <a href="saldos.html">Saldos</a>
+    </nav>
     <h1>Caja chica</h1>
 
     <section id="config" hidden>
@@ -43,6 +49,31 @@
         <div id="campo-solicitud" hidden>
           <label for="solicitud">Solicitud de fondo</label>
           <select id="solicitud" name="solicitud_id"></select>
+        </div>
+
+        <!-- Gasto pagado por el residente sin solicitud previa: la clasificación (RF02) se captura aquí -->
+        <div id="campo-clasificacion" hidden>
+          <label for="obra-gasto">Obra</label>
+          <input id="obra-gasto" name="obra_id" type="text" placeholder="OBRA-NORTE-01">
+
+          <label for="etapa-gasto">Etapa</label>
+          <select id="etapa-gasto" name="etapa_construccion">
+            <option value="cimentación">Cimentación</option>
+            <option value="estructura">Estructura</option>
+            <option value="albañilería">Albañilería</option>
+            <option value="instalaciones">Instalaciones</option>
+            <option value="acabados">Acabados</option>
+            <option value="entrega">Entrega</option>
+          </select>
+
+          <label for="partida-gasto">Partida</label>
+          <select id="partida-gasto" name="partida_categoria">
+            <option>Materiales</option>
+            <option>Renta de Maquinaria</option>
+            <option>Mano de Obra</option>
+            <option>Trámites</option>
+            <option>Otros</option>
+          </select>
         </div>
 
         <label for="monto">Monto pagado</label>

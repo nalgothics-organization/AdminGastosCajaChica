@@ -21,6 +21,7 @@
 | **RF12** | El sistema debe generar alertas automáticas para detectar comprobaciones que se están venciendo, gastos repetidos o montos que se salen de su patrón habitual. | Baja | 12 |
 | **RF13** | El sistema debe comparar por partida presupuestal el monto cotizado contra el gasto real acumulado y el porcentaje de avance de obra reportado, y alertar cuando el porcentaje gastado supere al porcentaje de avance. | Media | 12 |
 | **RF14** | El sistema debe permitir clasificar cada gasto como cobrable al cliente o como cargo al fondo de contingencia (error de proyecto o de ejecución), y mostrar el saldo disponible de dicho fondo por obra. | Media | 6 |
+| **RF15** | El sistema debe identificar al usuario y su rol (residente de obra, administración, dirección o contabilidad) y mostrar en la pantalla única solo los apartados que corresponden a ese rol, según la matriz de apartados por rol de `docs/CONTEXT.md`. La API debe rechazar las acciones que no correspondan al rol del usuario. | Alta | 10 |
 
 
 # Catálogo de Requerimientos No Funcionales (RNF)

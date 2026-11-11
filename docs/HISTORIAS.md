@@ -183,3 +183,14 @@
         *   **Dado** que apruebo o rechazo una solicitud, **cuando** confirmo la acción, **entonces** los apartados de entregas y saldos se actualizan en la misma pantalla sin recargar la página.
         *   **Dado** que quiero concentrarme en un apartado, **cuando** lo contraigo o lo expando, **entonces** el resto de la pantalla se mantiene y no pierdo lo que estaba capturando.
         *   **Dado** que abro la pantalla desde el celular, **cuando** carga, **entonces** los apartados se apilan en una sola columna en orden de prioridad, con las autorizaciones primero.
+
+*   **HU20: Apartados visibles según el rol**
+    *   **Requerimiento:** RF15
+    *   **Prioridad:** Alta
+    *   **Estimación:** 10 h
+    *   **Descripción:** Como **dirección**, necesito que cada persona vea solo los apartados de su rol, para que el residente no vea las autorizaciones, contabilidad no apruebe gastos y cada quien encuentre rápido lo suyo.
+    *   **Criterios de aceptación:**
+        *   **Dado** que inicio sesión, **cuando** el sistema identifica mi rol, **entonces** la pantalla única muestra solo los apartados que la matriz de apartados por rol asigna a ese rol.
+        *   **Dado** que soy residente de obra, **cuando** abro la aplicación, **entonces** veo el botón de escanear comprobante, mis solicitudes y comprobaciones y el saldo de mi obra, pero no las autorizaciones ni la conciliación.
+        *   **Dado** que soy contabilidad, **cuando** abro la aplicación, **entonces** veo la revisión de tickets y notas simples, la conciliación y los saldos, sin los botones de aprobar o rechazar.
+        *   **Dado** que alguien intenta una acción fuera de su rol (por ejemplo, aprobar una solicitud siendo residente), **cuando** la API recibe la petición, **entonces** la rechaza y registra el intento.

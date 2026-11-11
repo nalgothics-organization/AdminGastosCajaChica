@@ -40,6 +40,7 @@
     *   **Criterios de aceptación:**
         *   **Dado** que un residente tiene comprobaciones vencidas, **cuando** pide un nuevo fondo, **entonces** el sistema rechaza la solicitud automáticamente.
         *   **Dado** que el sistema bloquea la entrega, **cuando** el residente revisa el estado, **entonces** se le notifica que debe comprobar sus gastos anteriores primero.
+        *   **Dado** que reviso las autorizaciones en la pantalla única, **cuando** un residente tiene comprobaciones vencidas, **entonces** su solicitud aparece marcada como bloqueada con el número de comprobaciones pendientes.
 
 *   **HU05: Autorización de caja chica**
     *   **Requerimiento:** RF05
@@ -54,10 +55,11 @@
     *   **Requerimiento:** RF06
     *   **Prioridad:** Media
     *   **Estimación:** 6 h
-    *   **Descripción:** Como **administración**, necesito registrar si entregué el dinero en efectivo, tarjeta o transferencia, para rastrear de dónde salió el recurso hacia la obra.
+    *   **Descripción:** Como **administración**, necesito registrar, desde la misma pantalla donde autorizo, si entregué el dinero en efectivo, tarjeta o transferencia, para rastrear de dónde salió el recurso hacia la obra.
     *   **Criterios de aceptación:**
         *   **Dado** que una solicitud está autorizada, **cuando** entrego el recurso, **entonces** el sistema me permite añadir la referencia bancaria o marcar efectivo.
         *   **Dado** que se guarda el registro de entrega, **cuando** se consulta la solicitud, **entonces** aparece el nombre de la persona que dispersó el recurso.
+        *   **Dado** que acabo de aprobar una solicitud en la pantalla única, **cuando** reviso el apartado de entregas, **entonces** la solicitud aparece lista para registrar su entrega sin cambiar de pantalla.
 
 *   **HU07: Captura de comprobante en campo**
     *   **Requerimiento:** RF07
@@ -88,6 +90,7 @@
     *   **Criterios de aceptación:**
         *   **Dado** que lo gastado es menor a lo entregado, **cuando** se cierra la comprobación, **entonces** se genera un registro de "sobrante a devolver".
         *   **Dado** que el residente puso dinero propio, **cuando** lo comprobado supera al fondo, **entonces** se genera una alerta de reembolso pendiente.
+        *   **Dado** que estoy en la pantalla única, **cuando** reviso el apartado de conciliación, **entonces** veo por solicitud lo entregado, lo comprobado y la diferencia, y registro ahí mismo el sobrante o el reembolso.
 
 *   **HU10: Visualización de saldos en tiempo real**
     *   **Requerimiento:** RF10
@@ -169,3 +172,14 @@
     *   **Criterios de aceptación:**
         *   **Dado** que selecciono una obra y un periodo, **cuando** genero la exportación, **entonces** obtengo un archivo con el formato que acepta el sistema contable actual.
         *   **Dado** que importo el archivo generado, **cuando** el sistema contable lo procesa, **entonces** no se presenta ningún error de formato.
+
+*   **HU19: Pantalla única del administrador**
+    *   **Requerimiento:** RNF04
+    *   **Prioridad:** Alta
+    *   **Estimación:** 12 h
+    *   **Descripción:** Como **administración**, necesito ver en una sola pantalla las solicitudes por autorizar, las entregas por registrar, la conciliación, los saldos por obra y las alertas, para atender la caja chica sin brincar entre pestañas ni pantallas.
+    *   **Criterios de aceptación:**
+        *   **Dado** que entro a la aplicación como administración, **cuando** carga la pantalla, **entonces** veo en la misma página los apartados de autorizaciones pendientes, entregas por registrar, conciliación, saldos por obra y alertas, cada uno con su contador de pendientes.
+        *   **Dado** que apruebo o rechazo una solicitud, **cuando** confirmo la acción, **entonces** los apartados de entregas y saldos se actualizan en la misma pantalla sin recargar la página.
+        *   **Dado** que quiero concentrarme en un apartado, **cuando** lo contraigo o lo expando, **entonces** el resto de la pantalla se mantiene y no pierdo lo que estaba capturando.
+        *   **Dado** que abro la pantalla desde el celular, **cuando** carga, **entonces** los apartados se apilan en una sola columna en orden de prioridad, con las autorizaciones primero.

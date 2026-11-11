@@ -63,6 +63,26 @@ Dirección autoriza las solicitudes que superan los $5,000; el sistema registra 
 
 Contabilidad revisa los comprobantes: los gastos con factura se cierran directamente y los respaldados con ticket o nota simple quedan en revisión para que los valide. También vigila las comprobaciones próximas a vencer y obtiene del sistema los gastos comprobados de cada obra y periodo.
 
+## Apartados visibles por rol
+
+**Responsable:** @casizzy
+
+A petición del cliente (CC-02), cada persona trabaja desde una sola pantalla (CC-01, RNF04) que muestra solo los apartados de su rol (RF15, HU20). La matriz siguiente es la referencia para la aplicación web y para los permisos de la API: si un rol no tiene un apartado, no lo ve en pantalla y la API rechaza la acción.
+
+| Apartado de la pantalla única | Residente de obra | Administración | Dirección | Contabilidad |
+| :--- | :---: | :---: | :---: | :---: |
+| Botón "Escanear comprobante" (CC-03) | Sí | No | No | No |
+| Mis solicitudes y comprobaciones | Sí | No | No | No |
+| Nueva solicitud de fondo | Sí | No | No | No |
+| Autorizaciones pendientes | No | Hasta $5,000 | Más de $5,000 | No |
+| Entregas por registrar | No | Sí | No | No |
+| Conciliación | No | Sí | Consulta | Consulta |
+| Revisión de tickets y notas simples | No | No | No | Sí |
+| Saldos por obra | Solo su obra | Todas | Todas | Todas |
+| Alertas (bloqueos y comprobaciones vencidas) | Solo las suyas | Sí | Sí | Sí |
+
+La pantalla del residente pone el escaneo de comprobantes en primer plano (CC-03, RNF05). La del administrador es la primera que se construye (Iteración 6) porque reúne más apartados.
+
 ## Sistemas externos
 
 ### Sistema contable

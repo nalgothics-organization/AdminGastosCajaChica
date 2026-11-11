@@ -42,6 +42,8 @@ C4Container
 
 Construida con React y Vite, y pensada para usarse desde el celular en obra. Incluye las pantallas de docs/diseno: inicio del residente, captura de comprobante, bandeja de autorización, tablero de saldos y registro de solicitud. Se comunica con la API por HTTP intercambiando JSON; la dirección de la API se configura con una variable de entorno.
 
+A partir de la Iteración 6 (cambio del cliente CC-01, RNF04), las pantallas separadas por pestañas se reúnen en una sola pantalla por rol. Los apartados se cargan en la misma página y se actualizan sin recargarla. La primera es la del administrador: autorizaciones, entregas, conciliación, saldos y alertas. El rol del usuario decide qué apartados se muestran (CC-02, RF15).
+
 ### API REST
 
 **Responsable:** @juanpismata11

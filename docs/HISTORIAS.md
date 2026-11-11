@@ -79,8 +79,8 @@
     *   **Descripción:** Como **contabilidad**, necesito que toda comprobación cuente con un comprobante válido, para asegurar la deducibilidad y cuadrar el sistema contable.
     *   **Criterios de aceptación:**
         *   **Dado** que un gasto no tiene ningún comprobante adjunto, **cuando** el residente intenta cerrarlo como comprobado, **entonces** el sistema se lo impide.
-        *   **Dado** que hay proveedores que no dan factura, **cuando** se ingresa una nota simple, **entonces** el sistema marca el gasto bajo un estatus de revisión especial para contabilidad.
-        *   **Dado** que el gasto tiene factura, **cuando** se cierra la comprobación, **entonces** queda como comprobado sin revisión adicional.
+        *   **Dado** que hay proveedores que no dan factura, **cuando** escaneo un ticket o una nota simple, **entonces** el gasto pasa solo al estatus de revisión especial para contabilidad.
+        *   **Dado** que el gasto tiene factura, **cuando** confirmo el escaneo, **entonces** queda como comprobado sin revisión adicional ni pasos extra.
 
 *   **HU09: Conciliación de faltantes y sobrantes**
     *   **Requerimiento:** RF09
@@ -103,12 +103,13 @@
 
 *   **HU11: Extracción automática de datos fotográficos (OCR)**
     *   **Requerimiento:** RF11
-    *   **Prioridad:** Baja
-    *   **Estimación:** 20 h
-    *   **Descripción:** Como **residente de obra**, necesito que el sistema lea los datos del comprobante por mí, para ahorrar tiempo de captura manual que compite con mis actividades urgentes.
+    *   **Prioridad:** Alta
+    *   **Estimación:** 16 h
+    *   **Descripción:** Como **residente de obra**, necesito que el sistema lea el monto, la fecha y el proveedor del comprobante que escaneo, para solo confirmar los datos en lugar de escribirlos mientras atiendo la obra.
     *   **Criterios de aceptación:**
-        *   **Dado** que subo la fotografía de una factura, **cuando** el sistema la procesa, **entonces** extrae automáticamente el monto y el proveedor.
+        *   **Dado** que escaneo un ticket o una factura, **cuando** el sistema procesa la foto, **entonces** precarga el monto, la fecha, el proveedor y el tipo de comprobante en menos de 5 segundos.
         *   **Dado** que la extracción falla o es parcial, **cuando** reviso el resultado, **entonces** puedo editar manualmente los campos no reconocidos.
+        *   **Dado** que escaneo sin conexión, **cuando** confirmo la captura, **entonces** se guarda sin esperar la extracción y los datos se precargan al sincronizar.
 
 *   **HU12: Alertas de gastos sospechosos**
     *   **Requerimiento:** RF12
@@ -163,6 +164,7 @@
     *   **Criterios de aceptación:**
         *   **Dado** que mi celular no tiene conexión, **cuando** capturo un gasto, **entonces** la app lo guarda en la memoria local.
         *   **Dado** que la app detecta conexión nuevamente, **cuando** me conecto a una red celular o WiFi, **entonces** todos los registros offline se envían automáticamente en menos de 60 segundos.
+        *   **Dado** que escaneo sin señal, **cuando** confirmo, **entonces** veo la confirmación de inmediato con la marca "pendiente de enviar" y puedo seguir escaneando.
 
 *   **HU18: Exportación de gastos al sistema contable**
     *   **Requerimiento:** RNF03
@@ -194,3 +196,14 @@
         *   **Dado** que soy residente de obra, **cuando** abro la aplicación, **entonces** veo el botón de escanear comprobante, mis solicitudes y comprobaciones y el saldo de mi obra, pero no las autorizaciones ni la conciliación.
         *   **Dado** que soy contabilidad, **cuando** abro la aplicación, **entonces** veo la revisión de tickets y notas simples, la conciliación y los saldos, sin los botones de aprobar o rechazar.
         *   **Dado** que alguien intenta una acción fuera de su rol (por ejemplo, aprobar una solicitud siendo residente), **cuando** la API recibe la petición, **entonces** la rechaza y registra el intento.
+
+*   **HU21: Escaneo rápido de tickets y comprobantes**
+    *   **Requerimiento:** RNF05
+    *   **Prioridad:** Alta
+    *   **Estimación:** 8 h
+    *   **Descripción:** Como **residente de obra**, necesito escanear un ticket o comprobante con un botón que siempre esté a la vista y sin llenar formularios en ese momento, para comprobar mis gastos en segundos aunque esté en plena obra.
+    *   **Criterios de aceptación:**
+        *   **Dado** que abro la aplicación como residente, **cuando** carga la pantalla única, **entonces** el botón "Escanear comprobante" está fijo y visible sin desplazarme.
+        *   **Dado** que toco el botón, **cuando** tomo la foto, **entonces** la obra y la solicitud activa se precargan y solo confirmo con un toque.
+        *   **Dado** que confirmo el escaneo, **cuando** la imagen se sube, **entonces** veo la confirmación en 20 segundos o menos y no tengo que esperar en la pantalla a que termine la subida.
+        *   **Dado** que la foto salió borrosa u oscura, **cuando** el sistema la revisa, **entonces** me pide repetirla antes de guardarla.

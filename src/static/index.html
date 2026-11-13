@@ -34,19 +34,33 @@
         <h2 id="resumen-titulo"></h2>
         <div id="resumen-detalle" class="dos-columnas"></div>
 
-        <h2>2. Sube el comprobante</h2>
-        <p class="nota">Toma la foto ahora; los datos se completan después y el comprobante pasa a revisión.</p>
-        <div class="acciones inicio">
-          <!-- RNF01: toque 1 abre la cámara, toque 2 es el obturador, toque 3 "Usar foto" sube sin más pasos -->
-          <label id="boton-foto" class="boton-foto" for="foto">Fotografiar comprobante</label>
-          <input id="foto" type="file" accept="image/*" capture="environment" hidden>
-          <label class="boton secundario" for="archivo">Subir archivo</label>
-          <input id="archivo" type="file" accept="image/*" hidden>
-        </div>
-
-        <h3>Comprobantes de esta solicitud</h3>
+        <h2>2. Comprobantes de esta solicitud</h2>
+        <p class="nota">Escanea el comprobante con el botón fijo de abajo; los datos se completan después y pasa a revisión.</p>
         <p id="sin-comprobantes" class="nota" hidden>Aún no hay comprobantes.</p>
         <ul id="lista-comprobantes"></ul>
+      </div>
+
+      <!-- RNF05/HU21: foto borrosa u oscura, se pide repetirla antes de guardarla -->
+      <div id="revision-foto" class="panel paso revision" role="alert" hidden>
+        <h2 id="revision-motivo"></h2>
+        <img id="revision-vista" class="vista-evidencia" alt="Vista previa de la foto">
+        <div class="acciones inicio">
+          <label class="boton dispara-escaneo" for="foto">Repetir foto</label>
+          <button type="button" id="revision-usar" class="secundario">Usar de todos modos</button>
+          <button type="button" id="revision-cancelar" class="secundario">Cancelar</button>
+        </div>
+      </div>
+
+      <!-- RNF05/HU21: botón fijo y siempre visible; toque 1 cámara, toque 2 obturador, toque 3 "Usar foto" -->
+      <div class="barra-escaneo">
+        <ul id="envios" class="envios" aria-live="polite"></ul>
+        <p id="contexto-escaneo" class="nota"></p>
+        <div class="acciones inicio">
+          <label id="boton-foto" class="boton-foto dispara-escaneo" for="foto">Escanear comprobante</label>
+          <input id="foto" type="file" accept="image/*" capture="environment" hidden>
+          <label class="boton secundario dispara-escaneo" for="archivo">Subir archivo</label>
+          <input id="archivo" type="file" accept="image/*" hidden>
+        </div>
       </div>
     </section>
 

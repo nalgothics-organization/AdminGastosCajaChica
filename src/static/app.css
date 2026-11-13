@@ -864,3 +864,84 @@ label.boton.secundario {
   padding: 0.5rem 0;
   border-top: 1px solid var(--borde);
 }
+
+/* RNF05/HU21: botón de escaneo fijo y siempre visible, con el estado de las subidas */
+.barra-escaneo {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--borde);
+  border-radius: 0.9rem;
+  background: var(--superficie);
+  box-shadow: 0 -6px 18px rgba(17, 26, 48, 0.12);
+}
+
+.barra-escaneo .nota {
+  margin: 0 0 0.5rem;
+}
+
+.barra-escaneo .acciones.inicio {
+  flex-wrap: nowrap;
+  margin-top: 0;
+}
+
+.barra-escaneo .boton-foto {
+  flex: 1 1 auto;
+  min-height: 3.5rem;
+  font-size: 1.15rem;
+}
+
+.barra-escaneo label.boton {
+  min-height: 3.5rem;
+  white-space: nowrap;
+}
+
+.envios {
+  margin: 0 0 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.envio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.5rem;
+  background: #fff8e1;
+  color: #7a4a00;
+  font-size: 0.85rem;
+}
+
+.envio + .envio {
+  margin-top: 0.25rem;
+}
+
+.envio.enviado {
+  background: #e3f6ee;
+  color: #0f6b4a;
+}
+
+.envio.error {
+  background: #fde8e8;
+  color: var(--error);
+}
+
+.envio button {
+  min-height: 2rem;
+  margin: 0;
+  padding: 0 0.75rem;
+}
+
+.revision {
+  border-color: #f2dc8a;
+  background: #fffdf3;
+}
+
+.revision .vista-evidencia {
+  max-height: 12rem;
+}

@@ -9,6 +9,10 @@
   const PARTIDAS_CON_HORAS = ["renta de maquinaria", "mano de obra"];
   const PROPIA = "propia"; // gasto que el residente pagó por su cuenta, sin solicitud previa
   const ESTADOS_CERRADOS = ["Comprobado", "Revisión contabilidad"];
+  // Umbrales de la revisión de la foto (RNF05/HU21): luminancia media 0-255 y varianza del laplaciano
+  const UMBRAL_OSCURA = 45;
+  const UMBRAL_BORROSA = 100;
+  const LADO_ANALISIS = 320;
 
   const $ = (id) => document.getElementById(id);
   const moneda = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
@@ -19,6 +23,9 @@
   let solicitudes = [];
   let comprobantes = [];
   let saldos = [];
+  let inicioEscaneo = 0; // instante en que se tocó "Escanear comprobante", para medir el tiempo (RNF05)
+  let enRevision = null; // foto que salió borrosa u oscura y espera la decisión del residente
+  const envios = []; // subidas en segundo plano: { estado, segundos, archivo, solicitudId, inicio }
 
   function leerResidente() {
     try {
@@ -109,9 +116,9 @@
     solicitudes = todas.filter((s) => s.solicitante_id === residente && s.estado === "Aprobado");
     comprobantes = propios;
     saldos = resumenObras;
-    // Con una sola solicitud aprobada se elige sola para llegar a la cámara en 3 toques (RNF01)
-    if (!seleccion && solicitudes.length === 1) {
-      seleccion = solicitudes[0].id;
+    // La solicitud activa (la más reciente aprobada) se precarga para escanear en 3 toques (RNF01/RNF05)
+    if (!seleccion && solicitudes.length > 0) {
+      seleccion = solicitudes[solicitudes.length - 1].id;
     }
     if (seleccion && seleccion !== PROPIA && !solicitudElegida()) {
       seleccion = null;
@@ -141,6 +148,14 @@
       crearOpcionPropia()
     );
     renderizarResumen();
+    renderizarContextoEscaneo();
+  }
+
+  function renderizarContextoEscaneo() {
+    const solicitud = solicitudElegida();
+    $("contexto-escaneo").textContent = solicitud
+      ? "Se vincula a " + solicitud.folio + " · " + solicitud.obra_id
+      : "Sin solicitud: se registra como gasto pagado por mi cuenta";
   }
 
   function crearOpcion(clase, ...hijos) {
@@ -244,20 +259,130 @@
       el("span", "", fecha + " · " + monto), pastilla(comprobante.estado, color));
   }
 
-  async function subirFoto(archivo) {
+  // Revisa la foto en el dispositivo: luminancia media (oscura) y varianza del laplaciano (borrosa)
+  function evaluarCalidad(pixeles, ancho, alto) {
+    const gris = new Float32Array(ancho * alto);
+    let suma = 0;
+    for (let i = 0; i < gris.length; i++) {
+      gris[i] = 0.299 * pixeles[i * 4] + 0.587 * pixeles[i * 4 + 1] + 0.114 * pixeles[i * 4 + 2];
+      suma += gris[i];
+    }
+    const luminancia = suma / gris.length;
+    let acumulado = 0;
+    let acumuladoCuadrado = 0;
+    let cuenta = 0;
+    for (let y = 1; y < alto - 1; y++) {
+      for (let x = 1; x < ancho - 1; x++) {
+        const i = y * ancho + x;
+        const laplaciano = 4 * gris[i] - gris[i - 1] - gris[i + 1] - gris[i - ancho] - gris[i + ancho];
+        acumulado += laplaciano;
+        acumuladoCuadrado += laplaciano * laplaciano;
+        cuenta++;
+      }
+    }
+    const media = acumulado / cuenta;
+    const nitidez = acumuladoCuadrado / cuenta - media * media;
+    return { oscura: luminancia < UMBRAL_OSCURA, borrosa: nitidez < UMBRAL_BORROSA };
+  }
+
+  async function analizarFoto(archivo) {
+    try {
+      const imagen = await createImageBitmap(archivo);
+      const escala = Math.min(1, LADO_ANALISIS / Math.max(imagen.width, imagen.height));
+      const ancho = Math.max(3, Math.round(imagen.width * escala));
+      const alto = Math.max(3, Math.round(imagen.height * escala));
+      const lienzo = document.createElement("canvas");
+      lienzo.width = ancho;
+      lienzo.height = alto;
+      const contexto = lienzo.getContext("2d", { willReadFrequently: true });
+      contexto.drawImage(imagen, 0, 0, ancho, alto);
+      imagen.close();
+      return evaluarCalidad(contexto.getImageData(0, 0, ancho, alto).data, ancho, alto);
+    } catch (e) {
+      // Si el navegador no puede analizarla, no se bloquea el escaneo: el servidor valida la imagen
+      return { oscura: false, borrosa: false };
+    }
+  }
+
+  function cerrarRevision() {
+    if (enRevision) {
+      URL.revokeObjectURL($("revision-vista").src);
+    }
+    enRevision = null;
+    $("revision-foto").hidden = true;
+  }
+
+  function pedirRepetir(archivo, calidad) {
+    cerrarRevision();
+    const motivo = calidad.oscura && calidad.borrosa ? "oscura y borrosa" : calidad.oscura ? "oscura" : "borrosa";
+    enRevision = { archivo, solicitudId: seleccion };
+    $("revision-motivo").textContent = "La foto salió " + motivo + ". Repítela para que se lea bien.";
+    $("revision-vista").src = URL.createObjectURL(archivo);
+    $("revision-foto").hidden = false;
+    $("revision-foto").scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function dibujarEnvios() {
+    $("envios").replaceChildren(...envios.slice(-3).map((envio) => {
+      const texto = envio.estado === "enviado"
+        ? "Comprobante enviado · " + envio.segundos + " s desde que tocaste Escanear"
+        : envio.estado === "error"
+          ? "No se pudo enviar el comprobante"
+          : "Comprobante recibido · subiendo en segundo plano…";
+      const fila = el("li", "envio " + envio.estado, texto);
+      if (envio.estado === "error") {
+        const reintentar = el("button", "secundario", "Reintentar");
+        reintentar.type = "button";
+        reintentar.addEventListener("click", () => subirEnSegundoPlano(envio));
+        fila.append(reintentar);
+      }
+      return fila;
+    }));
+  }
+
+  // La confirmación es inmediata; la subida sigue en segundo plano y no bloquea el siguiente escaneo
+  function encolarEscaneo(archivo, solicitudId) {
+    const envio = { estado: "subiendo", segundos: 0, archivo, solicitudId, inicio: inicioEscaneo };
+    envios.push(envio);
+    dibujarEnvios();
+    avisar("Escaneo recibido. Se sube en segundo plano; puedes seguir.");
+    subirEnSegundoPlano(envio);
+  }
+
+  async function subirEnSegundoPlano(envio) {
+    envio.estado = "subiendo";
+    dibujarEnvios();
     const datos = new FormData();
     datos.append("solicitante_id", residente);
-    if (seleccion && seleccion !== PROPIA) {
-      datos.append("solicitud_id", seleccion);
+    if (envio.solicitudId && envio.solicitudId !== PROPIA) {
+      datos.append("solicitud_id", envio.solicitudId);
     }
-    datos.append("imagen", archivo);
+    datos.append("imagen", envio.archivo);
     try {
       await llamar("/comprobantes/captura", { method: "POST", body: datos });
-      avisar("Foto guardada. Completa los datos desde la lista para enviarla a revisión.");
-      mostrarPantalla();
+      envio.estado = "enviado";
+      envio.segundos = ((performance.now() - envio.inicio) / 1000).toFixed(1);
+      dibujarEnvios();
+      // No se interrumpe al residente si ya abrió el formulario de otro comprobante
+      if (!$("mi-caja").hidden) {
+        await cargarDatos();
+        renderizar();
+      }
     } catch (e) {
+      envio.estado = "error";
+      dibujarEnvios();
       avisar(e.message, true);
     }
+  }
+
+  async function procesarEscaneo(archivo) {
+    cerrarRevision();
+    const calidad = await analizarFoto(archivo);
+    if (calidad.oscura || calidad.borrosa) {
+      pedirRepetir(archivo, calidad);
+      return;
+    }
+    encolarEscaneo(archivo, seleccion);
   }
 
   async function abrirFormulario(comprobante) {
@@ -364,7 +489,7 @@
     // Se limpia para que la misma foto pueda volver a seleccionarse si falla la subida
     evento.target.value = "";
     if (archivo) {
-      subirFoto(archivo);
+      procesarEscaneo(archivo);
     }
   }
 
@@ -376,6 +501,17 @@
     }
   });
 
+  document.querySelectorAll(".dispara-escaneo").forEach((boton) => {
+    boton.addEventListener("click", () => { inicioEscaneo = performance.now(); });
+  });
+  $("revision-usar").addEventListener("click", () => {
+    if (enRevision) {
+      const { archivo, solicitudId } = enRevision;
+      cerrarRevision();
+      encolarEscaneo(archivo, solicitudId);
+    }
+  });
+  $("revision-cancelar").addEventListener("click", cerrarRevision);
   $("foto").addEventListener("change", alElegirArchivo);
   $("archivo").addEventListener("change", alElegirArchivo);
   $("partida-gasto").addEventListener("change", actualizarCampoHoras);

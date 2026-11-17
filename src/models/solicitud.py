@@ -10,6 +10,8 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
+from src.models.obra import es_partida_generica
+
 
 def _ahora_utc() -> datetime:
     return datetime.now(timezone.utc)
@@ -58,6 +60,20 @@ class SolicitudFondoBase(BaseModel):
     costo_estimado: Decimal = Field(..., gt=0, description="Costo estimado de la actividad")
     urgencia: UrgenciaSolicitud = Field(..., description="Nivel de urgencia")
     evidencia_url: str = Field(..., min_length=5, description="URL o ruta de la evidencia que justifica la necesidad")
+
+    @field_validator("obra_id")
+    @classmethod
+    def validar_obra_obligatoria(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Es obligatorio seleccionar una obra activa.")
+        return v.strip()
+
+    @field_validator("partida_categoria")
+    @classmethod
+    def validar_partida_no_generica(cls, v: str) -> str:
+        if not v or not v.strip() or es_partida_generica(v):
+            raise ValueError("No se permiten gastos genéricos; seleccione una partida presupuestal.")
+        return v.strip()
 
     @field_validator("evidencia_url")
     @classmethod

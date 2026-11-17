@@ -230,6 +230,10 @@ class TestSwaggerDocumentacion(BaseApiTestCase):
         ("delete", "/api/comprobantes/{comprobante_id}"),
         ("get", "/api/saldos"),
         ("get", "/api/catalogo/obras"),
+        ("get", "/api/obras"),
+        ("post", "/api/obras"),
+        ("delete", "/api/obras/{obra_id}"),
+        ("get", "/api/obras/{obra_id}/partidas"),
     }
 
     def setUp(self):

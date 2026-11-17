@@ -144,7 +144,7 @@ def cargar() -> None:
 
     # Rechazada, con el comentario de quien la decidió
     equipo = solicitar(
-        "OBRA-NORTE-01", "RESIDENTE-LUIS", "acabados", "Otros",
+        "OBRA-NORTE-01", "RESIDENTE-LUIS", "acabados", "Materiales",
         "Compra de herramienta eléctrica", "2000.00", "2000.00", "baja", "herramienta_05.jpg",
     )
     solicitud_service.rechazar_solicitud(

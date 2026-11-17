@@ -18,12 +18,22 @@ from src.models.solicitud import (
     SolicitudFondoCreate,
     UrgenciaSolicitud,
 )
+from src.models.obra import Obra, PartidaPresupuestal
+from src.services.obra_service import ObraService
 from src.services.solicitud_service import SolicitudFondoService
 
 
 class TestHU01RegistroSolicitudFondo(unittest.TestCase):
     def setUp(self):
-        self.service = SolicitudFondoService()
+        obra_service = ObraService()
+        obra_service.registrar_obra(
+            Obra(
+                id="OBRA-NORTE-01",
+                nombre="Residencial Norte",
+                partidas=[PartidaPresupuestal(clave="P-01", nombre="Renta de Maquinaria")],
+            )
+        )
+        self.service = SolicitudFondoService(obra_service=obra_service)
         self.payload_valido = {
             "obra_id": "OBRA-NORTE-01",
             "solicitante_id": "RESIDENTE-PAU",

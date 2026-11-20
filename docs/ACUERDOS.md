@@ -21,6 +21,8 @@
 ## Acuerdo número 7
 **Rama principal con revisión obligatoria:** La rama principal del proyecto es `main`. Nadie hace push directo a `main`. Todo cambio entra mediante Pull Request y requiere al menos 1 aprobación de un integrante distinto al autor antes de fusionarse. Si se agregan commits nuevos al PR, la aprobación se vuelve asolicitar. Esta regla está configurada como protección de rama en GitHub (Settings → Branches) y aplica también a los administradores.
 
+## Acuerdo número 8
+**Borrado de ramas al fusionar:** Cuando un Pull Request se fusiona a `main`, su rama se elimina del repositorio remoto; GitHub lo hace automáticamente con la opción "Automatically delete head branches". El autor también borra su copia local con `git branch -d <rama>` y limpia las referencias con `git fetch --prune`. Una rama fusionada no se reutiliza: cualquier cambio posterior se hace en una rama nueva creada desde `main` actualizada.
 ---
 
 # Definición de Terminado (DoD)

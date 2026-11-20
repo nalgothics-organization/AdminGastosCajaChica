@@ -7,7 +7,17 @@
 **Gestión de secretos y seguridad:** Está estrictamente prohibido subir archivos `.env`, contraseñas o tokens al repositorio. Cualquier configuración de entorno requerida debe documentarse únicamente en un archivo `.env.example`.
 
 ## Acuerdo número 3
-**Nomenclatura de ramas:** Las ramas siguen el estándar `feat/nombre-tarea`, `fix/bug-detectado` o `hotfix/error-urgente`. Esto mantiene el repositorio organizado cuando los 5 integrantes trabajan en paralelo.
+**Nomenclatura de ramas (Conventional Commits):** Las ramas se nombran `<tipo>/<descripcion-corta>`, usando como tipo los de la especificación https://www.conventionalcommits.org/en/v1.0.0/:
+
+- `feat/` nueva funcionalidad
+- `fix/` corrección de un error
+- `docs/` solo documentación
+- `style/` formato, sin cambios de lógica
+- `refactor/` reestructura de código sin cambiar su comportamiento
+- `test/` pruebas
+- `chore/` mantenimiento, configuración o versiones
+
+La descripción va en minúsculas, con palabras separadas por guiones, sin acentos, sin espacios ni la letra ñ, y puede empezar con el número de issue. Ejemplos: `feat/42-captura-rapida`, `fix/saldo-negativo`, `docs/plantilla-pr`. El tipo de la rama debe coincidir con el tipo de los commits que contiene (Acuerdo 1).
 
 ## Acuerdo número 4
 **Asignación de tareas:** Para evitar duplicidad de trabajo, nadie debe comenzar una tarea sin antes haberse asignado explícitamente el Issue o la tarjeta en el tablero del proyecto.

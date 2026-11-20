@@ -18,6 +18,9 @@
 ## Acuerdo número 6
 **Estimación y priorización:** Requerimientos e historias de usuario se estiman en **horas**, con la misma escala para ambos tipos de tarea. La estimación de un requerimiento es la suma de las estimaciones de sus historias de usuario (sub-issues). La prioridad se expresa como Alta, Media o Baja. El backlog se ordena por identificador numérico (RF, RNF y HU) y por iteración.
 
+## Acuerdo número 7
+**Rama principal con revisión obligatoria:** La rama principal del proyecto es `main`. Nadie hace push directo a `main`. Todo cambio entra mediante Pull Request y requiere al menos 1 aprobación de un integrante distinto al autor antes de fusionarse. Si se agregan commits nuevos al PR, la aprobación se vuelve asolicitar. Esta regla está configurada como protección de rama en GitHub (Settings → Branches) y aplica también a los administradores.
+
 ---
 
 # Definición de Terminado (DoD)

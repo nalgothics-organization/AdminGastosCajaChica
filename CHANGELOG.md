@@ -34,6 +34,22 @@
   - Los datos de ejemplo (`python -m src.seed`) generan fotos reales de evidencia en lugar de enlaces inexistentes; usa `demo.ps1 -Reiniciar` para recargarlos.
   - La comprobación admite gastos sin solicitud previa (RF07/HU07): el residente indica obra, etapa y partida, el comprobante queda en revisión de contabilidad y el saldo lo muestra como reembolso pendiente.
 
+  ### Instalación
+
+  Descargar `AdminGastosCajaChica-v0.2.0.zip` de la [release v0.2.0](https://github.com/nalgothics-organization/AdminGastosCajaChica/releases/tag/v0.2.0) y comprobar su SHA-256 con el archivo `.sha256` adjunto. Después, descomprimirlo y ejecutar `powershell -ExecutionPolicy Bypass -File .\demo.ps1`. Requisitos: Python 3.10+ y Docker Desktop. Guía completa en `docs/BUILD.md`.
+
+  ### Pull requests incluidos
+
+  - docs(build): document ZIP deliverable and prepare v0.2.0, por @bladeRunner08 (#80)
+  - docs(changelog): add 0.1.0 release entry, por @casizzy (#63)
+  - docs(iteraciones): replan iterations 6 and 7 for client change requests, por @bladeRunner08 (#75)
+  - docs(requerimientos): add single-screen requirement for client change CC-01, por @jaaaaaaaaasiel (#76)
+  - docs(context): add per-role section visibility matrix, por @casizzy (#77)
+  - docs(requerimientos): add role-based sections requirement for client change CC-02, por @juanpismata11 (#78)
+  - docs(requerimientos): prioritize fast receipt scanning for client change CC-03, por @PauAlba (#79)
+
+  Las funcionalidades de "Added" y "Changed" se integraron a `main` mediante commits directos, por eso no aparecen como PR.
+
   ## [0.1.0] - 2026-10-29
 
   Primera versión documentada del prototipo.

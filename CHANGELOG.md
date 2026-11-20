@@ -7,8 +7,20 @@
 
   ## [Unreleased]
 
+  ## [0.2.0] - 2026-11-20
+
+  Segunda versión del prototipo. El flujo completo de caja chica ya funciona de punta a punta: solicitud de fondo con foto, aprobación o rechazo, comprobación de gastos (con o sin solicitud previa) y saldos por obra en tiempo real, con los datos guardados en PostgreSQL. La entrega incluye el paquete instalable `AdminGastosCajaChica-v0.2.0.zip` (ver `docs/BUILD.md`).
+
+  Esta versión no tiene cambios incompatibles para quien instala desde cero. Al ser 0.y.z (desarrollo inicial según SemVer), la API todavía puede cambiar.
+
   ### Added
 
+  - Clasificación obligatoria de gastos por obra, etapa y partida (RF02), con catálogo de obras (`GET /api/catalogo/obras`) y selección de obras existentes en los formularios de solicitud y de gasto.
+  - Captura rápida de comprobantes (solo la foto) y formulario de comprobación de gastos (RF07/HU16).
+  - Saldo de caja chica por obra en la pantalla del residente, con comprobantes ligados a la solicitud elegida; "Mi caja chica" reúne en una sola pantalla la elección de solicitud, el resumen y la carga del comprobante.
+  - Paquete instalable ZIP, script `scripts/build.ps1` y guía `docs/BUILD.md` para generar y publicar la entrega.
+  - Diagrama de flujo en Mermaid a partir de los requerimientos (`docs/DIAGRAMA_FLUJO.md`).
+  - Requerimientos y replaneación de las iteraciones 6 y 7 por las solicitudes de cambio del cliente: pantalla única (CC-01, #75, #76), secciones por rol (CC-02, #77, #78) y escaneo rápido de comprobantes (CC-03, #79).
   - Base de datos PostgreSQL en Docker (`docker compose up -d db`) con tablas `solicitudes`, `autorizaciones` y `comprobantes`; los datos ya no se pierden al reiniciar la API.
   - Saldos por obra en tiempo real (RF10/HU10): `GET /api/saldos` y pantalla `/app/saldos.html`.
   - Pantallas de solicitud de fondo y bandeja de autorización, y datos de ejemplo con `python -m src.seed`.
@@ -37,5 +49,6 @@
 
   - Título de la categoría "Otros cambios" en `.github/release.yml` (#62).
 
-  [unreleased]: https://github.com/nalgothics-organization/AdminGastosCajaChica/compare/v0.1.0...HEAD
+  [unreleased]: https://github.com/nalgothics-organization/AdminGastosCajaChica/compare/v0.2.0...HEAD
+  [0.2.0]: https://github.com/nalgothics-organization/AdminGastosCajaChica/compare/v0.1.0...v0.2.0
   [0.1.0]: https://github.com/nalgothics-organization/AdminGastosCajaChica/releases/tag/v0.1.0

@@ -23,6 +23,7 @@ El archivo `.github/workflows/calidad.yml` corre en cada pull request hacia `mai
 | Linter | Ruff | Hay cualquier hallazgo, incluida una función con complejidad mayor a 10 |
 | Pruebas y cobertura | pytest + pytest-cov | Alguna prueba falla o la cobertura de `src/` baja de 90 % |
 | Dependencias | pip-audit | Alguna dependencia de `requirements.txt` tiene una vulnerabilidad conocida |
+| Secretos (job aparte) | Gitleaks | Aparece una llave, token o contraseña en los archivos o en cualquier commit del historial |
 
 Fuentes: [GitHub Actions · Compilar y probar Python](https://docs.github.com/es/actions/tutorials/build-and-test-code/python), [GitHub · Verificaciones de estado](https://docs.github.com/es/pull-requests/reference/status-checks).
 
@@ -114,7 +115,20 @@ Se corrió Ruff 0.17.6 sobre `src/` y `tests/` antes de corregir nada (rama `cho
 
 ### Validación de entradas del usuario
 
-<!-- Pendiente: Paulina. Dónde y cómo se validan las entradas, qué entrada se validó y qué prueba comprueba el caso que debe fallar. -->
+Validamos en el servidor, en los modelos de Pydantic, antes de que el dato llegue a la base de datos o a la pantalla de otro usuario. Si un `field_validator` lanza `ValueError`, la API responde **422** y no guarda nada. Seguimos la recomendación de OWASP de usar **lista de permitidos**: se define exactamente qué formato se acepta y todo lo demás se rechaza.
+
+**Entrada validada: `evidencia_url` de la solicitud de fondo.** Antes aceptaba cualquier texto, así que se podía guardar `javascript:alert(1)` o `/api/evidencias/../../.env` y mostrárselo a quien autoriza. Ahora solo acepta:
+
+| Formato permitido | Ejemplo |
+| --- | --- |
+| Foto subida a la API: `/api/evidencias/<uuid>.jpg` (también `.png` o `.webp`) | `/api/evidencias/0b8f6c2e-1d4a-4f6b-9c3e-5a7d2e9f1b04.jpg` |
+| Enlace `http://` o `https://` sin espacios, `<`, `>` ni comillas | `https://storage.empresa.com/evidencias/fuga.jpg` |
+
+**Casos que deben fallar** (`tests/test_validacion_evidencia.py`): un enlace `javascript:`, una ruta con `../` y un enlace con HTML incrustado responden 422 con el mensaje de error, y la solicitud no se guarda.
+
+Otras validaciones que ya existían: montos mayores a cero (`gt=0`), partidas genéricas prohibidas, obra obligatoria, y fotos revisadas por su firma de bytes y tamaño (`validar_imagen`). Las consultas usan SQLAlchemy con parámetros, lo que evita la inyección SQL.
+
+Fuentes: [OWASP · Input Validation Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html), [OWASP Top 10](https://top10.owasp.org/es/).
 
 ### Dependencias con vulnerabilidades conocidas
 
@@ -133,4 +147,34 @@ Fuentes: [pip-audit](https://pypi.org/project/pip-audit/), [GitHub · Alertas de
 
 ### Secretos: búsqueda y resguardo
 
-<!-- Pendiente: Stella. Cómo se buscan llaves y contraseñas en el código y en el historial, dónde se guardan los secretos y qué se hace si aparece uno. -->
+**Búsqueda en código e historial.** El job *Búsqueda de secretos* del flujo descarga todo el historial (`fetch-depth: 0`) y corre [Gitleaks](https://github.com/gitleaks/gitleaks) sobre cada commit. Si encuentra una llave o contraseña, termina con código 1 y el PR se marca en rojo. Usamos la imagen oficial de Docker porque la acción `gitleaks-action` pide licencia en repositorios de organizaciones.
+
+Para correrlo en tu computadora:
+
+```bash
+gitleaks git -v --redact .    # todo el historial
+gitleaks dir -v --redact .    # archivos actuales
+```
+
+Resultado del primer análisis: **0 hallazgos** en el historial completo.
+
+Además, como el repositorio es público, están activados sin costo **secret scanning** (GitHub avisa si detecta un secreto conocido) y **push protection** (bloquea el push que trae un secreto).
+
+**Dónde se guardan los secretos:**
+
+| Dónde | Qué va ahí |
+| --- | --- |
+| `.env` en tu computadora (en `.gitignore`, nunca se sube) | Contraseña de PostgreSQL, `SECRET_KEY` y cualquier valor real |
+| `.env.example` en el repo | Solo los nombres de las variables con valores de ejemplo (`change_this_...`) |
+| GitHub → Settings → Secrets and variables → Actions | Secretos que necesite el flujo; se leen con `${{ secrets.NOMBRE }}` y GitHub los oculta en los logs |
+
+`tests/test_secretos.py` comprueba que `.env` esté en `.gitignore`, que no esté versionado y que `.env.example` solo traiga valores de ejemplo.
+
+**Si aparece un secreto:**
+
+1. Avisar al equipo en ese momento.
+2. **Revocar y cambiar** la llave o contraseña donde se generó. Borrarla del archivo no basta: sigue en el historial y cualquiera que haya clonado el repo la tiene.
+3. Quitarla del código, moverla a `.env` o a GitHub Secrets y abrir un PR `fix(security)` que lo explique.
+4. Si es un falso positivo (un valor de ejemplo), agregar su fingerprint a `.gitleaksignore` y explicarlo en el PR.
+
+Fuentes: [Gitleaks](https://github.com/gitleaks/gitleaks), [OWASP · Secrets Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html), [GitHub Actions · Uso de secretos](https://docs.github.com/es/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets), [GitHub · Secret scanning](https://docs.github.com/es/code-security/secret-scanning/introduction/about-secret-scanning).

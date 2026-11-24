@@ -1,7 +1,7 @@
-"""Pruebas de la revisión de calidad de la foto del escaneo (RNF05/HU21).
+"""Pruebas del aviso de foto oscura del escaneo (RNF05/HU21).
 
 La revisión corre en el navegador (src/static/calidad.js); aquí se ejecuta con Node sobre imágenes
-sintéticas para comprobar que una foto borrosa u oscura se detecta y una nítida y clara no.
+sintéticas. La nitidez y el contenido se revisan en el servidor con OCR (tests/test_legibilidad.py).
 """
 
 import json
@@ -31,10 +31,9 @@ function imagen(valorEn) {
 
 const tablero = (oscuro, claro) => (x, y) => ((x >> 2) + (y >> 2)) % 2 === 0 ? oscuro : claro;
 const casos = {
-  nitida: tablero(30, 220),
-  borrosa: (x) => 80 + x,
+  clara: tablero(30, 220),
   oscura: tablero(0, 40),
-  oscura_y_borrosa: () => 10,
+  negra: () => 10,
 };
 
 const resultado = {};
@@ -46,7 +45,7 @@ console.log(JSON.stringify(resultado));
 
 
 @unittest.skipUnless(shutil.which("node"), "Node.js no está instalado")
-class TestCalidadFoto(unittest.TestCase):
+class TestFotoOscura(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         salida = subprocess.run(
@@ -54,17 +53,14 @@ class TestCalidadFoto(unittest.TestCase):
         ).stdout
         cls.resultado = json.loads(salida)
 
-    def test_foto_nitida_y_clara_se_acepta(self):
-        self.assertEqual(self.resultado["nitida"], {"oscura": False, "borrosa": False})
-
-    def test_foto_borrosa_pide_repetirse(self):
-        self.assertEqual(self.resultado["borrosa"], {"oscura": False, "borrosa": True})
+    def test_foto_con_buena_luz_se_acepta(self):
+        self.assertEqual(self.resultado["clara"], {"oscura": False})
 
     def test_foto_oscura_pide_repetirse(self):
-        self.assertEqual(self.resultado["oscura"], {"oscura": True, "borrosa": False})
+        self.assertEqual(self.resultado["oscura"], {"oscura": True})
 
-    def test_foto_oscura_y_borrosa_se_detectan_las_dos(self):
-        self.assertEqual(self.resultado["oscura_y_borrosa"], {"oscura": True, "borrosa": True})
+    def test_foto_casi_negra_pide_repetirse(self):
+        self.assertEqual(self.resultado["negra"], {"oscura": True})
 
 
 if __name__ == "__main__":

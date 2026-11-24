@@ -945,3 +945,147 @@ label.boton.secundario {
 .revision .vista-evidencia {
   max-height: 12rem;
 }
+
+/* Foto que el servidor no pudo leer (borrosa, oscura o sin monto): se pide repetirla */
+.envio.rechazado {
+  background: #fde8e8;
+  color: var(--error);
+}
+
+.envio label.boton {
+  min-height: 2rem;
+  margin: 0;
+  padding: 0 0.75rem;
+}
+
+/* La barra del residente solo se ve en celular */
+.barra-movil {
+  display: none;
+}
+
+/*
+ * Celular: la pantalla de captura se reduce a quién captura, la solicitud y los botones de escaneo.
+ * Se acota a body.captura para no cambiar las demás pantallas; en computadora se ve completa.
+ */
+@media (max-width: 40rem) {
+  body.captura .lateral,
+  body.captura .superior,
+  body.captura .modulos,
+  body.captura .menu,
+  body.captura .hero,
+  body.captura #resumen {
+    display: none;
+  }
+
+  body.captura .contenido {
+    padding: 0.75rem 0.75rem 14rem;
+  }
+
+  body.captura .barra-movil {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.9rem;
+    background: var(--oscuro);
+    color: #ffffff;
+  }
+
+  body.captura .barra-movil small {
+    display: block;
+    color: #d5d9f0;
+  }
+
+  body.captura .barra-movil strong {
+    font-size: 1.1rem;
+  }
+
+  body.captura .barra-movil button {
+    min-height: 3rem;
+    margin: 0;
+    padding: 0 1.25rem;
+    border-color: #6d74c4;
+    background: transparent;
+    color: #ffffff;
+  }
+
+  body.captura #mi-caja .paso h2 {
+    text-align: center;
+    font-size: 1.3rem;
+  }
+
+  body.captura .selector {
+    grid-template-columns: 1fr;
+  }
+
+  body.captura .selector .opcion {
+    align-items: center;
+    min-height: 5rem;
+    font-size: 1.05rem;
+    text-align: center;
+  }
+
+  body.captura .barra-escaneo {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    max-height: 70vh;
+    margin: 0;
+    padding: 0.75rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    border-width: 1px 0 0;
+    border-radius: 1.1rem 1.1rem 0 0;
+  }
+
+  body.captura .barra-escaneo .nota {
+    text-align: center;
+    font-size: 0.95rem;
+  }
+
+  body.captura .barra-escaneo .acciones.inicio {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  body.captura .barra-escaneo .boton-foto {
+    flex: none;
+    width: 100%;
+    min-height: 5rem;
+    font-size: 1.4rem;
+  }
+
+  body.captura .barra-escaneo label.boton {
+    justify-content: center;
+    width: 100%;
+    min-height: 3.5rem;
+    font-size: 1.1rem;
+  }
+
+  body.captura .envio {
+    font-size: 1rem;
+  }
+
+  body.captura .envio label.boton {
+    min-height: 3rem;
+    font-size: 1rem;
+  }
+
+  body.captura .aviso {
+    right: 0.75rem;
+    left: 0.75rem;
+    max-width: none;
+  }
+
+  body.captura #config input,
+  body.captura #config button {
+    width: 100%;
+    min-height: 3.5rem;
+    font-size: 1.1rem;
+  }
+
+  body.captura #config button {
+    margin-top: 0.75rem;
+  }
+}

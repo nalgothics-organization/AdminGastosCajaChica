@@ -24,6 +24,7 @@ from src.models.comprobante import (
 )
 from src.models.solicitud import EstadoSolicitud
 from src.repositories import ComprobanteRepositorio
+from src.services.legibilidad import revisar_legibilidad
 from src.services.solicitud_service import SolicitudFondoService, solicitud_service
 
 # Firmas binarias de los formatos aceptados; no se confía solo en el content-type del cliente
@@ -55,6 +56,8 @@ class ComprobanteService:
         self._solicitudes = solicitudes
         self.uploads_dir = Path(uploads_dir or os.getenv("UPLOADS_DIR", "./uploads"))
         self.tamano_maximo_bytes = int(os.getenv("MAX_IMAGEN_MB", "10")) * 1024 * 1024
+        # Rechaza fotos borrosas, oscuras o que no parecen un comprobante (RNF05/HU21); se apaga en las pruebas
+        self.validar_legibilidad = os.getenv("VALIDAR_LEGIBILIDAD", "true").strip().lower() != "false"
 
     def validar_imagen(self, contenido: bytes, content_type: str) -> str:
         """Valida formato y tamaño de la imagen; devuelve la extensión con la que se guarda."""
@@ -75,17 +78,21 @@ class ComprobanteService:
         contenido: bytes,
         content_type: str,
         solicitud_id: Optional[UUID] = None,
+        revisar_texto: bool = True,
     ) -> Comprobante:
         """Guarda la foto sin pedir ningún dato adicional (HU16: máximo 3 toques).
 
         Si el residente ya eligió la solicitud a la que corresponde el gasto, la foto queda vinculada
-        a ella; si no, se elige al completar los datos.
+        a ella; si no, se elige al completar los datos. La foto debe leerse con OCR y traer un monto
+        (RNF05/HU21); `revisar_texto=False` la omite solo para los datos de demostración.
         """
         solicitante_id = solicitante_id.strip()
         if not solicitante_id:
             raise ValueError("El residente que captura es obligatorio.")
         solicitud = self._solicitud_del_residente(solicitud_id, solicitante_id) if solicitud_id else None
         extension = self.validar_imagen(contenido, content_type)
+        if revisar_texto and self.validar_legibilidad:
+            revisar_legibilidad(contenido)
 
         comprobante_id = uuid4()
         self.uploads_dir.mkdir(parents=True, exist_ok=True)

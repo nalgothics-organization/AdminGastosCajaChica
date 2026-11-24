@@ -91,6 +91,8 @@ class TestHU16CapturaRapida(BaseComprobanteTestCase):
 
         self.assertIn('<script src="calidad.js">', pagina.text)
         self.assertIn('id="contexto-escaneo"', pagina.text)
+        self.assertIn('<body class="captura">', pagina.text)
+        self.assertIn('id="cambiar-residente"', pagina.text)
         self.assertEqual(calidad.status_code, 200)
         self.assertIn("evaluarCalidad", calidad.text)
 

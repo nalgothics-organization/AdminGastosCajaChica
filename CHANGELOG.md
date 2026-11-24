@@ -32,6 +32,7 @@
   - Tablero de inicio con indicadores, movimientos y pendientes calculados con los datos de la API.
   - Aprobación y rechazo de solicitudes de fondo (RF05/HU05): `POST /api/solicitudes/{id}/aprobar` y `POST /api/solicitudes/{id}/rechazar` registran quién decidió, cuándo, el monto autorizado y el comentario, obligatorio al rechazar.
   - Primera versión del escaneo rápido de comprobantes (RNF05/HU21, #68 y #69): botón "Escanear comprobante" fijo en "Mi caja chica", solicitud activa precargada, subida en segundo plano con tiempo medido y aviso para repetir fotos borrosas u oscuras. Los umbrales de la revisión se calibraron con imágenes sintéticas y falta medir los 20 s en celular.
+  - Revisión de la foto con OCR (RapidOCR) al escanear: se rechazan las fotos borrosas, oscuras o sin ningún monto, y la pantalla del celular se reduce a elegir solicitud y escanear (RNF05/HU21, #68 y #69).
 
   ### Changed
 

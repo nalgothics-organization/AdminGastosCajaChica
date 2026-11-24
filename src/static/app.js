@@ -22,7 +22,7 @@
   let comprobantes = [];
   let saldos = [];
   let inicioEscaneo = 0; // instante en que se tocó "Escanear comprobante", para medir el tiempo (RNF05)
-  let enRevision = null; // foto que salió borrosa u oscura y espera la decisión del residente
+  let enRevision = null; // foto que salió oscura y espera la decisión del residente
   const envios = []; // subidas en segundo plano: { estado, segundos, archivo, solicitudId, inicio }
 
   function leerResidente() {
@@ -61,7 +61,9 @@
       const detalle = Array.isArray(cuerpo.detail)
         ? cuerpo.detail.map((d) => d.msg).join(" ")
         : cuerpo.detail;
-      throw new Error(detalle || "Error al comunicarse con el servidor.");
+      const error = new Error(detalle || "Error al comunicarse con el servidor.");
+      error.status = respuesta.status;
+      throw error;
     }
     return cuerpo;
   }
@@ -128,6 +130,7 @@
     $("mi-caja").hidden = !residente;
     $("formulario").hidden = true;
     $("residente-actual").textContent = residente ? "Capturando como " + residente : "";
+    $("residente-movil").textContent = residente;
     if (!residente) {
       return;
     }
@@ -272,7 +275,7 @@
       return CalidadFoto.evaluarCalidad(contexto.getImageData(0, 0, ancho, alto).data, ancho, alto);
     } catch (e) {
       // Si el navegador no puede analizarla, no se bloquea el escaneo: el servidor valida la imagen
-      return { oscura: false, borrosa: false };
+      return { oscura: false };
     }
   }
 
@@ -284,11 +287,10 @@
     $("revision-foto").hidden = true;
   }
 
-  function pedirRepetir(archivo, calidad) {
+  function pedirRepetir(archivo) {
     cerrarRevision();
-    const motivo = calidad.oscura && calidad.borrosa ? "oscura y borrosa" : calidad.oscura ? "oscura" : "borrosa";
     enRevision = { archivo, solicitudId: seleccion };
-    $("revision-motivo").textContent = "La foto salió " + motivo + ". Repítela para que se lea bien.";
+    $("revision-motivo").textContent = "La foto salió muy oscura. Repítela con más luz para que se lea bien.";
     $("revision-vista").src = URL.createObjectURL(archivo);
     $("revision-foto").hidden = false;
     $("revision-foto").scrollIntoView({ behavior: "smooth", block: "center" });
@@ -298,10 +300,19 @@
     $("envios").replaceChildren(...envios.slice(-3).map((envio) => {
       const texto = envio.estado === "enviado"
         ? "Comprobante enviado · " + envio.segundos + " s desde que tocaste Escanear"
-        : envio.estado === "error"
-          ? "No se pudo enviar el comprobante"
-          : "Comprobante recibido · subiendo en segundo plano…";
+        : envio.estado === "rechazado"
+          ? envio.motivo
+          : envio.estado === "error"
+            ? "No se pudo enviar el comprobante"
+            : "Comprobante recibido · revisando y subiendo en segundo plano…";
       const fila = el("li", "envio " + envio.estado, texto);
+      if (envio.estado === "rechazado") {
+        // El servidor no pudo leer la foto: se repite con la cámara, sin reenviar la misma imagen
+        const repetir = el("label", "boton", "Repetir foto");
+        repetir.htmlFor = "foto";
+        repetir.addEventListener("click", () => { inicioEscaneo = performance.now(); });
+        fila.append(repetir);
+      }
       if (envio.estado === "error") {
         const reintentar = el("button", "secundario", "Reintentar");
         reintentar.type = "button";
@@ -341,17 +352,23 @@
         renderizar();
       }
     } catch (e) {
-      envio.estado = "error";
+      // 422: el servidor leyó la foto y no es un comprobante legible (borrosa, oscura o sin monto)
+      if (e.status === 422) {
+        envio.estado = "rechazado";
+        envio.motivo = e.message;
+      } else {
+        envio.estado = "error";
+        avisar(e.message, true);
+      }
       dibujarEnvios();
-      avisar(e.message, true);
     }
   }
 
   async function procesarEscaneo(archivo) {
     cerrarRevision();
     const calidad = await analizarFoto(archivo);
-    if (calidad.oscura || calidad.borrosa) {
-      pedirRepetir(archivo, calidad);
+    if (calidad.oscura) {
+      pedirRepetir(archivo);
       return;
     }
     encolarEscaneo(archivo, seleccion);
@@ -471,6 +488,12 @@
       guardarResidente(valor);
       mostrarPantalla();
     }
+  });
+
+  $("cambiar-residente").addEventListener("click", () => {
+    guardarResidente("");
+    seleccion = null;
+    mostrarPantalla();
   });
 
   document.querySelectorAll(".dispara-escaneo").forEach((boton) => {

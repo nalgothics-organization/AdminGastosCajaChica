@@ -94,7 +94,7 @@ def aprobar(solicitud, nombre, rol, comentario=None, monto=None):
 def comprobar(residente, datos: ComprobanteDatos, solicitud=None, cerrar=True):
     """Captura la foto (vinculada a la solicitud elegida, si hay) y completa los datos."""
     comprobante = comprobante_service.capturar_rapido(
-        residente, imagen_demo(), "image/png", solicitud.id if solicitud else None
+        residente, imagen_demo(), "image/png", solicitud.id if solicitud else None, revisar_texto=False
     )
     datos = datos.model_copy(update={"solicitud_id": solicitud.id if solicitud else None})
     comprobante_service.completar_datos(comprobante.id, datos)
@@ -129,7 +129,7 @@ def cargar() -> None:
         proveedor="Pinturas del Centro", concepto="Pintura vinílica y sellador",
     ), pintura)
     # Una foto tomada en obra que todavía no se completa
-    comprobante_service.capturar_rapido("RESIDENTE-JP", imagen_demo(), "image/png")
+    comprobante_service.capturar_rapido("RESIDENTE-JP", imagen_demo(), "image/png", revisar_texto=False)
 
     # Esperando decisión: una de Administración y una de Dirección
     solicitar(

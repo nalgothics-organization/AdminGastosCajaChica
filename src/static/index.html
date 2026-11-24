@@ -6,7 +6,7 @@
   <title>Caja chica · Captura en obra</title>
   <link rel="stylesheet" href="app.css">
 </head>
-<body>
+<body class="captura">
   <main>
     <section id="config" class="panel" hidden>
       <label for="residente">¿Quién captura? (solo la primera vez)</label>
@@ -15,6 +15,15 @@
     </section>
 
     <section id="mi-caja" hidden>
+      <!-- Solo en celular: quién captura, para elegir la solicitud y escanear sin nada más -->
+      <div class="barra-movil">
+        <div>
+          <small>Capturando como</small>
+          <strong id="residente-movil"></strong>
+        </div>
+        <button type="button" id="cambiar-residente" class="secundario">Cambiar</button>
+      </div>
+
       <div class="hero">
         <div>
           <span class="insignia">Mi caja chica</span>

@@ -5,6 +5,7 @@ from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
 from src.models.comprobante import AjusteCreate, Comprobante, ComprobanteDatos, EstadoComprobante
 from src.services.comprobante_service import (
@@ -61,7 +62,8 @@ def _ejecutar(operacion, *args):
     description=(
         "Guarda la fotografía del comprobante sin pedir ningún otro dato (RNF01/HU16). "
         "Si se indica la solicitud aprobada a la que corresponde el gasto, la foto queda vinculada a ella; "
-        "si no, se elige al completar los datos."
+        "si no, se elige al completar los datos. La foto se lee con OCR y se rechaza (422) si sale borrosa, "
+        "oscura o no trae ningún monto, para que el residente la repita."
     ),
     response_description="Comprobante guardado en estado Borrador.",
     responses=RESPUESTA_422,
@@ -72,8 +74,14 @@ async def capturar_comprobante(
     solicitud_id: Optional[UUID] = Form(default=None, description="Solicitud aprobada a la que corresponde el gasto"),
 ):
     contenido = await imagen.read()
-    return _ejecutar(
-        comprobante_service.capturar_rapido, solicitante_id, contenido, imagen.content_type or "", solicitud_id
+    # El OCR tarda un par de segundos; corre en otro hilo para no detener las demás peticiones
+    return await run_in_threadpool(
+        _ejecutar,
+        comprobante_service.capturar_rapido,
+        solicitante_id,
+        contenido,
+        imagen.content_type or "",
+        solicitud_id,
     )
 
 

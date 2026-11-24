@@ -4,6 +4,8 @@ import os
 
 # Debe fijarse antes de importar src.database para no tocar la base real de PostgreSQL
 os.environ["DATABASE_URL"] = "sqlite://"
+# Las pruebas suben imágenes sintéticas sin texto; tests/test_legibilidad.py activa la revisión con OCR
+os.environ["VALIDAR_LEGIBILIDAD"] = "false"
 
 import pytest
 

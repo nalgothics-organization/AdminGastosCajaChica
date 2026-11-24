@@ -24,6 +24,7 @@ from src.models.comprobante import (
 )
 from src.models.solicitud import EstadoSolicitud
 from src.repositories import ComprobanteRepositorio
+from src.services.extraccion import extraer_datos
 from src.services.legibilidad import revisar_legibilidad
 from src.services.solicitud_service import SolicitudFondoService, solicitud_service
 
@@ -91,8 +92,10 @@ class ComprobanteService:
             raise ValueError("El residente que captura es obligatorio.")
         solicitud = self._solicitud_del_residente(solicitud_id, solicitante_id) if solicitud_id else None
         extension = self.validar_imagen(contenido, content_type)
+        lectura = None
         if revisar_texto and self.validar_legibilidad:
-            revisar_legibilidad(contenido)
+            # Una sola lectura de la foto sirve para validarla y para precargar monto, fecha, proveedor y tipo
+            lectura = extraer_datos(*revisar_legibilidad(contenido))
 
         comprobante_id = uuid4()
         self.uploads_dir.mkdir(parents=True, exist_ok=True)
@@ -108,6 +111,7 @@ class ComprobanteService:
             etapa_construccion=solicitud.etapa_construccion if solicitud else None,
             partida_categoria=solicitud.partida_categoria if solicitud else None,
             imagen_ruta=str(ruta),
+            lectura=lectura,
         )
         self._db[comprobante.id] = comprobante
         return comprobante
@@ -117,6 +121,14 @@ class ComprobanteService:
         if comprobante and comprobante.activo:
             return comprobante
         return None
+
+    def ruta_imagen(self, comprobante_id: UUID) -> Optional[Path]:
+        """Ruta de la foto de un comprobante activo; solo se sirve lo que está dentro de la carpeta de fotos."""
+        comprobante = self.obtener_por_id(comprobante_id)
+        if comprobante is None:
+            return None
+        ruta = self.uploads_dir / Path(comprobante.imagen_ruta).name
+        return ruta if ruta.is_file() else None
 
     def listar(self, solicitante_id: Optional[str] = None, estado: Optional[EstadoComprobante] = None) -> List[Comprobante]:
         return [

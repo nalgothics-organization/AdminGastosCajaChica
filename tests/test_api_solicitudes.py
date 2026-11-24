@@ -224,6 +224,7 @@ class TestSwaggerDocumentacion(BaseApiTestCase):
         ("post", "/api/comprobantes/captura"),
         ("get", "/api/comprobantes"),
         ("get", "/api/comprobantes/{comprobante_id}"),
+        ("get", "/api/comprobantes/{comprobante_id}/imagen"),
         ("put", "/api/comprobantes/{comprobante_id}/datos"),
         ("post", "/api/comprobantes/{comprobante_id}/cerrar"),
         ("post", "/api/comprobantes/{comprobante_id}/ajustes"),

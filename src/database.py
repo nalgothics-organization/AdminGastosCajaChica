@@ -16,11 +16,14 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    JSON,
     Numeric,
     String,
     Text,
     Uuid,
     create_engine,
+    inspect,
+    text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -121,14 +124,36 @@ class ComprobanteTabla(Base):
     horas: Mapped[Optional[Decimal]] = mapped_column(Numeric(8, 2))
     unidad_horas: Mapped[Optional[str]] = mapped_column(String(20))
 
+    # Lo que el OCR leyó de la foto (RF11); no sustituye a los datos confirmados por el residente
+    lectura: Mapped[Optional[dict]] = mapped_column(JSON)
+
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
     deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+def agregar_columnas_faltantes() -> None:
+    """Agrega a las tablas ya creadas las columnas nuevas (siempre opcionales), sin borrar ningún dato.
+
+    `create_all` solo crea tablas que no existen; así una base de PostgreSQL de una versión anterior
+    sigue funcionando sin tener que reiniciarla con `python -m src.seed --reset`.
+    """
+    inspector = inspect(engine)
+    with engine.begin() as conexion:
+        for tabla in Base.metadata.sorted_tables:
+            if not inspector.has_table(tabla.name):
+                continue
+            existentes = {columna["name"] for columna in inspector.get_columns(tabla.name)}
+            for columna in tabla.columns:
+                if columna.name not in existentes and columna.nullable:
+                    tipo = columna.type.compile(dialect=engine.dialect)
+                    conexion.execute(text(f'ALTER TABLE "{tabla.name}" ADD COLUMN "{columna.name}" {tipo}'))
+
+
 def crear_tablas() -> None:
     Base.metadata.create_all(engine)
+    agregar_columnas_faltantes()
 
 
 def reiniciar_tablas() -> None:

@@ -115,7 +115,20 @@ Se corrió Ruff 0.17.6 sobre `src/` y `tests/` antes de corregir nada (rama `cho
 
 ### Validación de entradas del usuario
 
-<!-- Pendiente: Paulina. Dónde y cómo se validan las entradas, qué entrada se validó y qué prueba comprueba el caso que debe fallar. -->
+Validamos en el servidor, en los modelos de Pydantic, antes de que el dato llegue a la base de datos o a la pantalla de otro usuario. Si un `field_validator` lanza `ValueError`, la API responde **422** y no guarda nada. Seguimos la recomendación de OWASP de usar **lista de permitidos**: se define exactamente qué formato se acepta y todo lo demás se rechaza.
+
+**Entrada validada: `evidencia_url` de la solicitud de fondo.** Antes aceptaba cualquier texto, así que se podía guardar `javascript:alert(1)` o `/api/evidencias/../../.env` y mostrárselo a quien autoriza. Ahora solo acepta:
+
+| Formato permitido | Ejemplo |
+| --- | --- |
+| Foto subida a la API: `/api/evidencias/<uuid>.jpg` (también `.png` o `.webp`) | `/api/evidencias/0b8f6c2e-1d4a-4f6b-9c3e-5a7d2e9f1b04.jpg` |
+| Enlace `http://` o `https://` sin espacios, `<`, `>` ni comillas | `https://storage.empresa.com/evidencias/fuga.jpg` |
+
+**Casos que deben fallar** (`tests/test_validacion_evidencia.py`): un enlace `javascript:`, una ruta con `../` y un enlace con HTML incrustado responden 422 con el mensaje de error, y la solicitud no se guarda.
+
+Otras validaciones que ya existían: montos mayores a cero (`gt=0`), partidas genéricas prohibidas, obra obligatoria, y fotos revisadas por su firma de bytes y tamaño (`validar_imagen`). Las consultas usan SQLAlchemy con parámetros, lo que evita la inyección SQL.
+
+Fuentes: [OWASP · Input Validation Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html), [OWASP Top 10](https://top10.owasp.org/es/).
 
 ### Dependencias con vulnerabilidades conocidas
 

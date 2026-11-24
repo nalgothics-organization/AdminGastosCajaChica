@@ -2,6 +2,7 @@
 Reglas de codificación: UTF-8, LF, 4 espacios de indentación.
 """
 
+import re
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
@@ -11,6 +12,9 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
 from src.models.obra import es_partida_generica
+
+# Evidencia aceptada: una foto subida a la API o un enlace http(s) sin espacios (lista de permitidos, OWASP)
+EVIDENCIA_PERMITIDA = re.compile(r"^(/api/evidencias/[0-9a-f-]{36}\.(jpg|png|webp)|https?://[^\s<>\"']+)$")
 
 
 def _ahora_utc() -> datetime:
@@ -80,6 +84,8 @@ class SolicitudFondoBase(BaseModel):
     def validar_evidencia_no_vacia(cls, v: str) -> str:
         if not v or not v.strip():
             raise ValueError("La evidencia de la necesidad es obligatoria para registrar la solicitud.")
+        if not EVIDENCIA_PERMITIDA.match(v.strip()):
+            raise ValueError("La evidencia debe ser una foto subida o un enlace que empiece con http:// o https://.")
         return v.strip()
 
     @field_validator(*CAMPOS_OBLIGATORIOS)

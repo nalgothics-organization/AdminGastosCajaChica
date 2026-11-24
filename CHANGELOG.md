@@ -10,6 +10,7 @@
   ### Added
 
   - Análisis estático con Ruff y regla de complejidad C901 (máximo 10), ejecutado junto con las pruebas en el flujo `.github/workflows/calidad.yml` en cada pull request. Detalle en `docs/PRUEBAS.md`.
+  - Revisión de dependencias con pip-audit en el flujo de calidad y configuración de Dependabot.
 
   ## [0.2.0] - 2026-11-20
 

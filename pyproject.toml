@@ -17,3 +17,13 @@ select = ["E4", "E7", "E9", "F", "C901"]
 # Complejidad máxima permitida por función; con 11 o más el flujo falla.
 # https://docs.astral.sh/ruff/settings/#lint_mccabe_max-complexity
 max-complexity = 10
+
+[tool.coverage.run]
+# Mide solo el código de la aplicación, no las pruebas
+source = ["src"]
+
+[tool.coverage.report]
+# Cobertura mínima acordada: con menos, pytest termina con error y el flujo falla.
+# https://coverage.readthedocs.io/en/latest/config.html#report-fail-under
+fail_under = 90
+show_missing = true

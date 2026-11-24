@@ -45,3 +45,7 @@ jobs:
       - name: Pruebas y cobertura (pytest-cov)
         run: python -m pytest tests -v --cov --cov-report=term-missing
 
+      # Dependencias con vulnerabilidades conocidas: pip-audit termina con código 1
+      # si encuentra alguna y el flujo se marca en rojo.
+      - name: Revisión de dependencias (pip-audit)
+        run: pip-audit -r requirements.txt

@@ -1,0 +1,16 @@
+# Dependabot revisa cada semana si hay versiones nuevas de las dependencias y abre un PR.
+# https://docs.github.com/es/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ignore-for-release"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ignore-for-release"

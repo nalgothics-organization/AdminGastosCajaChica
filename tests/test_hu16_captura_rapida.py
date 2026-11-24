@@ -85,6 +85,15 @@ class TestHU16CapturaRapida(BaseComprobanteTestCase):
         self.assertIn("barra-escaneo", response.text)
         self.assertIn("revision-foto", response.text)
 
+    def test_rnf05_la_pagina_carga_la_revision_de_calidad_y_la_solicitud_precargada(self):
+        pagina = self.client.get("/app/")
+        calidad = self.client.get("/app/calidad.js")
+
+        self.assertIn('<script src="calidad.js">', pagina.text)
+        self.assertIn('id="contexto-escaneo"', pagina.text)
+        self.assertEqual(calidad.status_code, 200)
+        self.assertIn("evaluarCalidad", calidad.text)
+
     def test_criterio_2_captura_solo_requiere_la_imagen(self):
         """El proceso no pide datos: solo la foto, sin tipo, monto ni solicitud."""
         crear_solicitud_aprobada()

@@ -9,9 +9,7 @@
   const PARTIDAS_CON_HORAS = ["renta de maquinaria", "mano de obra"];
   const PROPIA = "propia"; // gasto que el residente pagó por su cuenta, sin solicitud previa
   const ESTADOS_CERRADOS = ["Comprobado", "Revisión contabilidad"];
-  // Umbrales de la revisión de la foto (RNF05/HU21): luminancia media 0-255 y varianza del laplaciano
-  const UMBRAL_OSCURA = 45;
-  const UMBRAL_BORROSA = 100;
+  // Lado mayor al que se reduce la foto para revisar su calidad (calidad.js, RNF05/HU21)
   const LADO_ANALISIS = 320;
 
   const $ = (id) => document.getElementById(id);
@@ -259,32 +257,6 @@
       el("span", "", fecha + " · " + monto), pastilla(comprobante.estado, color));
   }
 
-  // Revisa la foto en el dispositivo: luminancia media (oscura) y varianza del laplaciano (borrosa)
-  function evaluarCalidad(pixeles, ancho, alto) {
-    const gris = new Float32Array(ancho * alto);
-    let suma = 0;
-    for (let i = 0; i < gris.length; i++) {
-      gris[i] = 0.299 * pixeles[i * 4] + 0.587 * pixeles[i * 4 + 1] + 0.114 * pixeles[i * 4 + 2];
-      suma += gris[i];
-    }
-    const luminancia = suma / gris.length;
-    let acumulado = 0;
-    let acumuladoCuadrado = 0;
-    let cuenta = 0;
-    for (let y = 1; y < alto - 1; y++) {
-      for (let x = 1; x < ancho - 1; x++) {
-        const i = y * ancho + x;
-        const laplaciano = 4 * gris[i] - gris[i - 1] - gris[i + 1] - gris[i - ancho] - gris[i + ancho];
-        acumulado += laplaciano;
-        acumuladoCuadrado += laplaciano * laplaciano;
-        cuenta++;
-      }
-    }
-    const media = acumulado / cuenta;
-    const nitidez = acumuladoCuadrado / cuenta - media * media;
-    return { oscura: luminancia < UMBRAL_OSCURA, borrosa: nitidez < UMBRAL_BORROSA };
-  }
-
   async function analizarFoto(archivo) {
     try {
       const imagen = await createImageBitmap(archivo);
@@ -297,7 +269,7 @@
       const contexto = lienzo.getContext("2d", { willReadFrequently: true });
       contexto.drawImage(imagen, 0, 0, ancho, alto);
       imagen.close();
-      return evaluarCalidad(contexto.getImageData(0, 0, ancho, alto).data, ancho, alto);
+      return CalidadFoto.evaluarCalidad(contexto.getImageData(0, 0, ancho, alto).data, ancho, alto);
     } catch (e) {
       // Si el navegador no puede analizarla, no se bloquea el escaneo: el servidor valida la imagen
       return { oscura: false, borrosa: false };

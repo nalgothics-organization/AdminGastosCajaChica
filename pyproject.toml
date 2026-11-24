@@ -1,0 +1,19 @@
+# Configuración de herramientas de calidad (docs/PRUEBAS.md).
+# Ruff: https://docs.astral.sh/ruff/configuration/
+
+[tool.ruff]
+# Versión mínima de Python que soporta el proyecto (README.md)
+target-version = "py310"
+line-length = 120
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# Errores reales (sintaxis, imports y nombres sin usar o sin definir)
+# más la regla de complejidad ciclomática C901, que Ruff no trae activada.
+# https://docs.astral.sh/ruff/linter/#rule-selection
+select = ["E4", "E7", "E9", "F", "C901"]
+
+[tool.ruff.lint.mccabe]
+# Complejidad máxima permitida por función; con 11 o más el flujo falla.
+# https://docs.astral.sh/ruff/settings/#lint_mccabe_max-complexity
+max-complexity = 10

@@ -71,12 +71,30 @@ class BaseComprobanteTestCase(unittest.TestCase):
 
 class TestHU16CapturaRapida(BaseComprobanteTestCase):
     def test_criterio_1_pantalla_principal_tiene_boton_fotografiar(self):
-        """Dado que abro la app, entonces encuentro el botón "Fotografiar comprobante"."""
+        """Dado que abro la app, entonces encuentro el botón "Escanear comprobante"."""
         response = self.client.get("/app/")
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Fotografiar comprobante", response.text)
+        self.assertIn("Escanear comprobante", response.text)
         self.assertIn('capture="environment"', response.text)
+
+    def test_rnf05_boton_de_escaneo_fijo_y_revision_de_fotos_borrosas(self):
+        """RNF05/HU21: botón fijo a la vista y aviso para repetir una foto borrosa u oscura."""
+        response = self.client.get("/app/")
+
+        self.assertIn("barra-escaneo", response.text)
+        self.assertIn("revision-foto", response.text)
+
+    def test_rnf05_la_pagina_carga_la_revision_de_calidad_y_la_solicitud_precargada(self):
+        pagina = self.client.get("/app/")
+        calidad = self.client.get("/app/calidad.js")
+
+        self.assertIn('<script src="calidad.js">', pagina.text)
+        self.assertIn('id="contexto-escaneo"', pagina.text)
+        self.assertIn('<body class="captura">', pagina.text)
+        self.assertIn('id="cambiar-residente"', pagina.text)
+        self.assertEqual(calidad.status_code, 200)
+        self.assertIn("evaluarCalidad", calidad.text)
 
     def test_criterio_2_captura_solo_requiere_la_imagen(self):
         """El proceso no pide datos: solo la foto, sin tipo, monto ni solicitud."""

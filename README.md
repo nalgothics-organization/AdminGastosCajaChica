@@ -86,7 +86,7 @@ Abre http://127.0.0.1:8000/docs para probar los endpoints desde Swagger.
 | DELETE | /api/comprobantes/{id} | Descartar un borrador (soft delete) |
 | GET | /api/saldos | Saldos por obra: autorizado, comprobado, disponible y reembolsos pendientes |
 
-Los datos se guardan en PostgreSQL y sobreviven al reiniciar la API. Las imágenes de comprobantes se guardan en la carpeta `UPLOADS_DIR` (por defecto `./uploads`, ver `.env.example`).
+Los datos se guardan en PostgreSQL y sobreviven al reiniciar la API. Las imágenes de comprobantes se guardan en la carpeta `UPLOADS_DIR` (por defecto `./uploads`, ver `.env.example`). Cada foto se lee con OCR ([RapidOCR](https://rapidai.github.io/RapidOCRDocs/)) antes de guardarse y se rechaza si sale borrosa, oscura o sin ningún monto; con `VALIDAR_LEGIBILIDAD=false` se desactiva.
 
 ### Pantallas del prototipo
 

@@ -6,7 +6,7 @@ pytest>=7.4.0
 python-multipart>=0.0.9
 sqlalchemy>=2.0.0
 psycopg[binary]>=3.2.0
-python-dotenv>=1.0.0
+python-dotenv>=1.2.4
 ruff==0.17.6
 pytest-cov==7.1.0
 rapidocr==3.10.0

@@ -40,6 +40,8 @@ jobs:
       - name: Linter (Ruff)
         run: ruff check --output-format=github .
 
-      # Pruebas automatizadas con pytest (base SQLite en memoria, ver tests/conftest.py).
-      - name: Pruebas (pytest)
-        run: python -m pytest tests -v
+      # Pruebas y cobertura: falla si alguna prueba falla o si la cobertura de src/
+      # baja del umbral (fail_under = 90 en pyproject.toml).
+      - name: Pruebas y cobertura (pytest-cov)
+        run: python -m pytest tests -v --cov --cov-report=term-missing
+

@@ -12,6 +12,10 @@
   - Análisis estático con Ruff y regla de complejidad C901 (máximo 10), ejecutado junto con las pruebas en el flujo `.github/workflows/calidad.yml` en cada pull request. Detalle en `docs/PRUEBAS.md`.
   - Revisión de dependencias con pip-audit en el flujo de calidad y configuración de Dependabot.
 
+  ### Security
+
+  - `evidencia_url` solo acepta una foto subida a la API o un enlace http(s); se rechazan `javascript:`, rutas con `../` y HTML.
+
   ## [0.2.0] - 2026-11-20
 
   Segunda versión del prototipo. El flujo completo de caja chica ya funciona de punta a punta: solicitud de fondo con foto, aprobación o rechazo, comprobación de gastos (con o sin solicitud previa) y saldos por obra en tiempo real, con los datos guardados en PostgreSQL. La entrega incluye el paquete instalable `AdminGastosCajaChica-v0.2.0.zip` (ver `docs/BUILD.md`).

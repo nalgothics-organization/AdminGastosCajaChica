@@ -11,6 +11,7 @@
 
   - Análisis estático con Ruff y regla de complejidad C901 (máximo 10), ejecutado junto con las pruebas en el flujo `.github/workflows/calidad.yml` en cada pull request. Detalle en `docs/PRUEBAS.md`.
   - Revisión de dependencias con pip-audit en el flujo de calidad y configuración de Dependabot.
+  - Búsqueda de secretos con Gitleaks en el código y en todo el historial de Git en cada pull request.
 
   ## [0.2.0] - 2026-11-20
 
@@ -74,3 +75,5 @@
   [unreleased]: https://github.com/nalgothics-organization/AdminGastosCajaChica/compare/v0.2.0...HEAD
   [0.2.0]: https://github.com/nalgothics-organization/AdminGastosCajaChica/compare/v0.1.0...v0.2.0
   [0.1.0]: https://github.com/nalgothics-organization/AdminGastosCajaChica/releases/tag/v0.1.0
+
+  

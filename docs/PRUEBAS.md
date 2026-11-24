@@ -9,6 +9,7 @@ Con el entorno virtual activado y las dependencias instaladas (`pip install -r r
 ```bash
 ruff check .                 # análisis estático (linter y complejidad)
 python -m pytest tests -v --cov --cov-report=term-missing   # pruebas y cobertura
+pip-audit -r requirements.txt   # dependencias con vulnerabilidades conocidas
 ```
 
 Si los dos comandos terminan sin errores en tu computadora, el flujo de GitHub Actions también debe quedar en verde.
@@ -21,6 +22,7 @@ El archivo `.github/workflows/calidad.yml` corre en cada pull request hacia `mai
 | --- | --- | --- |
 | Linter | Ruff | Hay cualquier hallazgo, incluida una función con complejidad mayor a 10 |
 | Pruebas y cobertura | pytest + pytest-cov | Alguna prueba falla o la cobertura de `src/` baja de 90 % |
+| Dependencias | pip-audit | Alguna dependencia de `requirements.txt` tiene una vulnerabilidad conocida |
 
 Fuentes: [GitHub Actions · Compilar y probar Python](https://docs.github.com/es/actions/tutorials/build-and-test-code/python), [GitHub · Verificaciones de estado](https://docs.github.com/es/pull-requests/reference/status-checks).
 
@@ -116,7 +118,18 @@ Se corrió Ruff 0.17.6 sobre `src/` y `tests/` antes de corregir nada (rama `cho
 
 ### Dependencias con vulnerabilidades conocidas
 
-<!-- Pendiente: Jaasiel. Herramienta disponible en el plan de la organización, cómo se ejecuta en el flujo y qué se hace cuando reporta algo. -->
+La organización está en el plan GitHub Free y el repositorio es público. Usamos dos herramientas que se complementan:
+
+| Herramienta | Cuándo actúa | Qué hace |
+| --- | --- | --- |
+| [pip-audit](https://pypi.org/project/pip-audit/) | En cada pull request (paso *Revisión de dependencias*) | Revisa `requirements.txt` contra la base de vulnerabilidades de Python. Termina con código 1 si encuentra algo y el flujo se marca en rojo |
+| [Dependabot alerts](https://docs.github.com/es/code-security/concepts/supply-chain-security/dependabot-alerts) | Siempre, aunque nadie abra un PR | Avisa en la pestaña *Security* cuando una versión que ya usamos tiene una vulnerabilidad nueva. `.github/dependabot.yml` además abre cada semana PRs para actualizar versiones |
+
+Resultado del primer análisis: `pip-audit -r requirements.txt` → `No known vulnerabilities found`.
+
+**Si aparece una vulnerabilidad:** se sube la versión del paquete en `requirements.txt` a una que la corrija, en un PR `fix(deps)`. Si no existe corrección y el riesgo no aplica al proyecto, se puede ignorar con `pip-audit --ignore-vuln <ID>`, dejando escrito el motivo en el PR.
+
+Fuentes: [pip-audit](https://pypi.org/project/pip-audit/), [GitHub · Alertas de Dependabot](https://docs.github.com/es/code-security/concepts/supply-chain-security/dependabot-alerts), [GitHub · Planes](https://docs.github.com/es/get-started/learning-about-github/githubs-plans).
 
 ### Secretos: búsqueda y resguardo
 

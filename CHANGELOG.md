@@ -11,9 +11,9 @@
 
   - Análisis estático con Ruff y regla de complejidad C901 (máximo 10), ejecutado junto con las pruebas en el flujo `.github/workflows/calidad.yml` en cada pull request. Detalle en `docs/PRUEBAS.md`.
   - Revisión de dependencias con pip-audit en el flujo de calidad y configuración de Dependabot.
-  - Búsqueda de secretos con Gitleaks en el código y en todo el historial de Git en cada pull request.
   - Primera versión del escaneo rápido de comprobantes (RNF05/HU21, #68 y #69): botón "Escanear comprobante" fijo en "Mi caja chica", solicitud activa precargada, subida en segundo plano con tiempo medido y aviso para repetir fotos borrosas u oscuras. Los umbrales de la revisión se calibraron con imágenes sintéticas y falta medir los 20 s en celular.
   - Revisión de la foto con OCR (RapidOCR) al escanear: se rechazan las fotos borrosas, oscuras o sin ningún monto, y la pantalla del celular se reduce a elegir solicitud y escanear (RNF05/HU21, #68 y #69).
+  - Búsqueda de secretos con Gitleaks en el código y en todo el historial de Git en cada pull request.
 
   ### Security
 

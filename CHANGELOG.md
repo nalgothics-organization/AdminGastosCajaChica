@@ -64,6 +64,7 @@
   - Sección "Versionado" en el README (#58).
   - Sección "Instalación y uso" en el README (#61).
   - Este archivo CHANGELOG.md (#59).
+  - Reporte de cobertura con pytest-cov y umbral mínimo de 90 % en el flujo de calidad.
 
   ### Fixed
 

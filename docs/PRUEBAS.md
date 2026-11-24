@@ -8,7 +8,7 @@ Con el entorno virtual activado y las dependencias instaladas (`pip install -r r
 
 ```bash
 ruff check .                 # análisis estático (linter y complejidad)
-python -m pytest tests -v    # pruebas automatizadas
+python -m pytest tests -v --cov --cov-report=term-missing   # pruebas y cobertura
 ```
 
 Si los dos comandos terminan sin errores en tu computadora, el flujo de GitHub Actions también debe quedar en verde.
@@ -20,7 +20,7 @@ El archivo `.github/workflows/calidad.yml` corre en cada pull request hacia `mai
 | Paso | Herramienta | Falla cuando |
 | --- | --- | --- |
 | Linter | Ruff | Hay cualquier hallazgo, incluida una función con complejidad mayor a 10 |
-| Pruebas | pytest | Alguna prueba falla |
+| Pruebas y cobertura | pytest + pytest-cov | Alguna prueba falla o la cobertura de `src/` baja de 90 % |
 
 Fuentes: [GitHub Actions · Compilar y probar Python](https://docs.github.com/es/actions/tutorials/build-and-test-code/python), [GitHub · Verificaciones de estado](https://docs.github.com/es/pull-requests/reference/status-checks).
 
@@ -54,7 +54,24 @@ Fuentes: [Ruff · Selección de reglas](https://docs.astral.sh/ruff/linter/#rule
 
 ### Cobertura
 
-<!-- Pendiente: Juan Pablo. Herramienta, comando para generar el reporte y cómo se configura el umbral que hace fallar el flujo. -->
+Medimos la cobertura con [coverage.py](https://coverage.readthedocs.io/) a través del plugin [pytest-cov](https://pytest-cov.readthedocs.io/), fijado en `requirements.txt` (`pytest-cov==7.1.0`).
+
+```bash
+python -m pytest tests --cov --cov-report=term-missing
+```
+
+`--cov` toma la carpeta a medir de `[tool.coverage.run] source = ["src"]` y `--cov-report=term-missing` imprime el porcentaje por archivo y las líneas que ninguna prueba ejecutó. El umbral está en `pyproject.toml`:
+
+```toml
+[tool.coverage.report]
+fail_under = 90
+```
+
+Si la cobertura total queda por debajo de 90 %, pytest termina con el mensaje `FAIL Required test coverage of 90% not reached` y el paso del flujo falla.
+
+Medición al configurarla: 95 % de `src/`. El archivo más bajo era `src/api/obras.py` (50 %); con `tests/test_api_obras.py` llegó a 100 % y el total quedó en 96 %.
+
+Fuentes: [pytest-cov · Configuración](https://pytest-cov.readthedocs.io/en/latest/config.html), [coverage.py · fail_under](https://coverage.readthedocs.io/en/latest/config.html#report-fail-under).
 
 ### Umbrales acordados
 
@@ -62,7 +79,7 @@ Fuentes: [Ruff · Selección de reglas](https://docs.astral.sh/ruff/linter/#rule
 | --- | --- | --- |
 | Complejidad ciclomática máxima por función (`C901`) | 10 | Es el valor por defecto de Ruff y el límite original de McCabe. Con el código actual solo una función lo superaba, así que el límite es exigente sin obligar a reescribir el proyecto. |
 | Hallazgos del linter permitidos | 0 | El código actual quedó sin hallazgos; cualquier hallazgo nuevo pone el flujo en rojo. |
-| Cobertura mínima | <!-- Pendiente: Juan Pablo --> | <!-- Pendiente: Juan Pablo --> |
+| Cobertura mínima de `src/` (`fail_under`) | 90 % | La cobertura actual es 96 %. Dejar 6 puntos de margen permite agregar código, pero un PR con mucho código sin pruebas pone el flujo en rojo. |
 
 ### Resultado del primer análisis
 

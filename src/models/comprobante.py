@@ -168,6 +168,10 @@ class Comprobante(BaseModel):
     lectura: Optional[LecturaComprobante] = Field(
         default=None, description="Datos que el OCR leyó de la foto; se confirman o completan en el formulario"
     )
+    cierre_automatico: Optional[bool] = Field(
+        default=None,
+        description="True si el comprobante se cerró solo porque la lectura de la foto salió completa (RF08)",
+    )
     activo: bool = Field(default=True, description="Indicador para borrado lógico (soft delete)")
     deleted_at: Optional[datetime] = Field(default=None, description="Fecha de borrado lógico")
     created_at: datetime = Field(default_factory=_ahora_utc)

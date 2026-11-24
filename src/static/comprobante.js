@@ -56,12 +56,16 @@
   function pintarDatos(comprobante) {
     const confirmado = Boolean(comprobante.datos);
     const fuente = comprobante.datos || comprobante.lectura || {};
-    const etiqueta = confirmado ? "Confirmado" : "Leído";
+    // Si se cerró solo, nadie los confirmó: son los datos leídos de la foto
+    const etiqueta = confirmado && !comprobante.cierre_automatico ? "Confirmado" : "Leído";
     $("datos-leidos").replaceChildren(...DATOS.map(([campo, rotulo]) =>
       filaDeDato(rotulo, fuente[campo] ? formatear(campo, fuente[campo]) : null, etiqueta)));
 
     const resumen = $("resumen-lectura");
-    if (confirmado) {
+    if (comprobante.cierre_automatico) {
+      resumen.textContent = "Se leyeron los 4 datos y el comprobante se cerró solo. "
+        + "Si algo está mal, contabilidad lo corrige con un ajuste.";
+    } else if (confirmado) {
       resumen.textContent = "Estos datos ya fueron confirmados.";
     } else if (!comprobante.lectura) {
       resumen.textContent = "No se leyeron datos de esta foto. Complétalos a mano.";
@@ -80,7 +84,7 @@
   function pintar(comprobante) {
     $("estado").textContent = comprobante.estado === "Borrador"
       ? "Por completar: confirma los datos para enviarlo a revisión."
-      : "Estado: " + comprobante.estado + ".";
+      : "Estado: " + comprobante.estado + (comprobante.cierre_automatico ? " (cerrado solo al leerse completo)." : ".");
     const foto = $("foto-comprobante");
     foto.addEventListener("error", () => { foto.hidden = true; });
     foto.src = API + "/comprobantes/" + encodeURIComponent(comprobante.id) + "/imagen";

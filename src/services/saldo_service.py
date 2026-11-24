@@ -69,23 +69,33 @@ class SaldoService:
             for o in OBRAS
         }
 
-        def saldo_de(obra_id: str) -> SaldoObra:
-            return saldos.setdefault(obra_id, SaldoObra(obra_id=obra_id, nombre=obra_id))
+        self._sumar_solicitudes(saldos)
+        self._sumar_comprobantes(saldos)
+        for saldo in saldos.values():
+            self.calcular_indicadores(saldo)
+        return sorted(saldos.values(), key=lambda s: s.obra_id)
 
+    @staticmethod
+    def _saldo_de(saldos: Dict[str, SaldoObra], obra_id: str) -> SaldoObra:
+        """Devuelve el saldo de la obra; si no está en el catálogo, lo crea vacío."""
+        return saldos.setdefault(obra_id, SaldoObra(obra_id=obra_id, nombre=obra_id))
+
+    def _sumar_solicitudes(self, saldos: Dict[str, SaldoObra]) -> None:
         for solicitud in self._solicitudes.listar_solicitudes_activas():
-            saldo = saldo_de(solicitud.obra_id)
+            saldo = self._saldo_de(saldos, solicitud.obra_id)
             if solicitud.estado == EstadoSolicitud.APROBADO and solicitud.autorizacion:
                 saldo.autorizado += solicitud.autorizacion.monto_autorizado or CERO
             elif solicitud.estado == EstadoSolicitud.PENDIENTE:
                 saldo.pendiente_autorizacion += solicitud.monto_solicitado
                 saldo.solicitudes_pendientes += 1
 
+    def _sumar_comprobantes(self, saldos: Dict[str, SaldoObra]) -> None:
         cerrados = [
             c for c in self._comprobantes.listar()
             if c.estado in ESTADOS_CERRADOS and c.datos is not None and c.obra_id
         ]
         for comprobante in self._comprobantes_vigentes(cerrados):
-            saldo = saldo_de(comprobante.obra_id)
+            saldo = self._saldo_de(saldos, comprobante.obra_id)
             if comprobante.solicitud_id is None:
                 saldo.gasto_sin_solicitud += comprobante.datos.monto_comprobado
             else:
@@ -93,18 +103,24 @@ class SaldoService:
 
         for comprobante in cerrados:
             if comprobante.estado.value == "Revisión contabilidad" and comprobante.tipo_registro != TipoRegistro.REVERSO:
-                saldo_de(comprobante.obra_id).comprobantes_en_revision += 1
+                self._saldo_de(saldos, comprobante.obra_id).comprobantes_en_revision += 1
 
-        for saldo in saldos.values():
-            saldo.por_comprobar = saldo.autorizado - saldo.comprobado
-            saldo.disponible_caja_chica = saldo.presupuesto_caja_chica - saldo.autorizado
-            if saldo.presupuesto_caja_chica > 0:
-                saldo.porcentaje_autorizado = (
-                    saldo.autorizado * 100 / saldo.presupuesto_caja_chica
-                ).quantize(Decimal("0.1"))
-            if saldo.autorizado > 0:
-                saldo.porcentaje_gastado = (saldo.comprobado * 100 / saldo.autorizado).quantize(Decimal("0.1"))
-        return sorted(saldos.values(), key=lambda s: s.obra_id)
+    @staticmethod
+    def calcular_indicadores(saldo: SaldoObra) -> SaldoObra:
+        """Calcula lo disponible, lo por comprobar y los porcentajes a partir de los montos sumados.
+
+        Si el fondo o lo autorizado es cero, el porcentaje correspondiente se queda en cero
+        en lugar de dividir entre cero.
+        """
+        saldo.por_comprobar = saldo.autorizado - saldo.comprobado
+        saldo.disponible_caja_chica = saldo.presupuesto_caja_chica - saldo.autorizado
+        if saldo.presupuesto_caja_chica > 0:
+            saldo.porcentaje_autorizado = (
+                saldo.autorizado * 100 / saldo.presupuesto_caja_chica
+            ).quantize(Decimal("0.1"))
+        if saldo.autorizado > 0:
+            saldo.porcentaje_gastado = (saldo.comprobado * 100 / saldo.autorizado).quantize(Decimal("0.1"))
+        return saldo
 
 
 saldo_service = SaldoService()

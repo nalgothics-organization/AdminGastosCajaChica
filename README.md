@@ -42,7 +42,10 @@ pip install -r requirements.txt
 ### Ejecutar pruebas
 
 bash
+ruff check .                # análisis estático (linter y complejidad)
 python -m pytest tests -v
+
+Qué revisa cada herramienta, los umbrales acordados y el flujo de GitHub Actions están en `docs/PRUEBAS.md`.
 
 
 ### Base de datos

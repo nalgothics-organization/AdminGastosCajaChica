@@ -1,0 +1,45 @@
+# Flujo de calidad: corre en cada pull request hacia main y en cada push a main.
+# Si un paso falla, el pull request se marca en rojo (verificación de estado).
+# Detalle de cada paso y umbrales acordados: docs/PRUEBAS.md
+# Fuentes:
+#   https://docs.github.com/es/actions/tutorials/build-and-test-code/python
+#   https://docs.astral.sh/ruff/integrations/#github-actions
+
+name: Calidad
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    name: Linter y pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Análisis estático: falla con cualquier hallazgo, incluida una función
+      # con complejidad mayor a 10 (regla C901, configurada en pyproject.toml).
+      - name: Linter (Ruff)
+        run: ruff check --output-format=github .
+
+      # Pruebas automatizadas con pytest (base SQLite en memoria, ver tests/conftest.py).
+      - name: Pruebas (pytest)
+        run: python -m pytest tests -v

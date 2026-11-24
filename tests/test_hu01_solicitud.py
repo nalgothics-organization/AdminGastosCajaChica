@@ -6,7 +6,6 @@ import os
 import sys
 from decimal import Decimal
 import unittest
-from uuid import UUID
 
 # Asegurar que la raíz del proyecto esté en el PYTHONPATH al ejecutar el script directamente
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))

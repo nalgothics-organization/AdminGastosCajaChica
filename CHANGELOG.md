@@ -13,6 +13,11 @@
   - Revisión de dependencias con pip-audit en el flujo de calidad y configuración de Dependabot.
   - Primera versión del escaneo rápido de comprobantes (RNF05/HU21, #68 y #69): botón "Escanear comprobante" fijo en "Mi caja chica", solicitud activa precargada, subida en segundo plano con tiempo medido y aviso para repetir fotos borrosas u oscuras. Los umbrales de la revisión se calibraron con imágenes sintéticas y falta medir los 20 s en celular.
   - Revisión de la foto con OCR (RapidOCR) al escanear: se rechazan las fotos borrosas, oscuras o sin ningún monto, y la pantalla del celular se reduce a elegir solicitud y escanear (RNF05/HU21, #68 y #69).
+  - Búsqueda de secretos con Gitleaks en el código y en todo el historial de Git en cada pull request.
+
+  ### Security
+
+  - `evidencia_url` solo acepta una foto subida a la API o un enlace http(s); se rechazan `javascript:`, rutas con `../` y HTML.
 
   ## [0.2.0] - 2026-11-20
 
@@ -76,3 +81,5 @@
   [unreleased]: https://github.com/nalgothics-organization/AdminGastosCajaChica/compare/v0.2.0...HEAD
   [0.2.0]: https://github.com/nalgothics-organization/AdminGastosCajaChica/compare/v0.1.0...v0.2.0
   [0.1.0]: https://github.com/nalgothics-organization/AdminGastosCajaChica/releases/tag/v0.1.0
+
+  

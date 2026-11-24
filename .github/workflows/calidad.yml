@@ -49,3 +49,18 @@ jobs:
       # si encuentra alguna y el flujo se marca en rojo.
       - name: Revisión de dependencias (pip-audit)
         run: pip-audit -r requirements.txt
+
+  secretos:
+    name: Búsqueda de secretos
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 descarga todo el historial para que Gitleaks revise cada commit, no solo el último
+      - name: Descargar el código con todo el historial
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Imagen oficial de Gitleaks; termina con código 1 si encuentra una llave o contraseña.
+      # https://github.com/gitleaks/gitleaks
+      - name: Gitleaks (código e historial)
+        run: docker run --rm -v "${{ github.workspace }}:/repo" zricethezav/gitleaks:v8.30.1 git /repo -v --redact

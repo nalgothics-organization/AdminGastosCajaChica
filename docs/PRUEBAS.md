@@ -23,6 +23,7 @@ El archivo `.github/workflows/calidad.yml` corre en cada pull request hacia `mai
 | Linter | Ruff | Hay cualquier hallazgo, incluida una función con complejidad mayor a 10 |
 | Pruebas y cobertura | pytest + pytest-cov | Alguna prueba falla o la cobertura de `src/` baja de 90 % |
 | Dependencias | pip-audit | Alguna dependencia de `requirements.txt` tiene una vulnerabilidad conocida |
+| Secretos (job aparte) | Gitleaks | Aparece una llave, token o contraseña en los archivos o en cualquier commit del historial |
 
 Fuentes: [GitHub Actions · Compilar y probar Python](https://docs.github.com/es/actions/tutorials/build-and-test-code/python), [GitHub · Verificaciones de estado](https://docs.github.com/es/pull-requests/reference/status-checks).
 
@@ -146,4 +147,34 @@ Fuentes: [pip-audit](https://pypi.org/project/pip-audit/), [GitHub · Alertas de
 
 ### Secretos: búsqueda y resguardo
 
-<!-- Pendiente: Stella. Cómo se buscan llaves y contraseñas en el código y en el historial, dónde se guardan los secretos y qué se hace si aparece uno. -->
+**Búsqueda en código e historial.** El job *Búsqueda de secretos* del flujo descarga todo el historial (`fetch-depth: 0`) y corre [Gitleaks](https://github.com/gitleaks/gitleaks) sobre cada commit. Si encuentra una llave o contraseña, termina con código 1 y el PR se marca en rojo. Usamos la imagen oficial de Docker porque la acción `gitleaks-action` pide licencia en repositorios de organizaciones.
+
+Para correrlo en tu computadora:
+
+```bash
+gitleaks git -v --redact .    # todo el historial
+gitleaks dir -v --redact .    # archivos actuales
+```
+
+Resultado del primer análisis: **0 hallazgos** en el historial completo.
+
+Además, como el repositorio es público, están activados sin costo **secret scanning** (GitHub avisa si detecta un secreto conocido) y **push protection** (bloquea el push que trae un secreto).
+
+**Dónde se guardan los secretos:**
+
+| Dónde | Qué va ahí |
+| --- | --- |
+| `.env` en tu computadora (en `.gitignore`, nunca se sube) | Contraseña de PostgreSQL, `SECRET_KEY` y cualquier valor real |
+| `.env.example` en el repo | Solo los nombres de las variables con valores de ejemplo (`change_this_...`) |
+| GitHub → Settings → Secrets and variables → Actions | Secretos que necesite el flujo; se leen con `${{ secrets.NOMBRE }}` y GitHub los oculta en los logs |
+
+`tests/test_secretos.py` comprueba que `.env` esté en `.gitignore`, que no esté versionado y que `.env.example` solo traiga valores de ejemplo.
+
+**Si aparece un secreto:**
+
+1. Avisar al equipo en ese momento.
+2. **Revocar y cambiar** la llave o contraseña donde se generó. Borrarla del archivo no basta: sigue en el historial y cualquiera que haya clonado el repo la tiene.
+3. Quitarla del código, moverla a `.env` o a GitHub Secrets y abrir un PR `fix(security)` que lo explique.
+4. Si es un falso positivo (un valor de ejemplo), agregar su fingerprint a `.gitleaksignore` y explicarlo en el PR.
+
+Fuentes: [Gitleaks](https://github.com/gitleaks/gitleaks), [OWASP · Secrets Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html), [GitHub Actions · Uso de secretos](https://docs.github.com/es/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets), [GitHub · Secret scanning](https://docs.github.com/es/code-security/secret-scanning/introduction/about-secret-scanning).

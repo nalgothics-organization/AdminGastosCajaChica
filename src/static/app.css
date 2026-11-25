@@ -775,7 +775,8 @@ label.boton.secundario {
   color: var(--aviso);
 }
 
-.pastilla.rojo {
+.pastilla.rojo,
+.alerta.rojo {
   border-color: #f1b6b6;
   background: #fdecec;
   color: var(--error);
@@ -794,6 +795,12 @@ label.boton.secundario {
   border: 1px solid var(--borde);
   border-radius: 0.6rem;
   font-size: 0.88rem;
+}
+
+/* Solicitud bloqueada por comprobaciones vencidas (RF04/HU04) */
+.tarjeta.bloqueada {
+  border-color: #f1b6b6;
+  box-shadow: inset 4px 0 0 var(--error);
 }
 
 /* Foto y enlace de evidencia en la bandeja de autorización */

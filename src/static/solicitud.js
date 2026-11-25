@@ -50,10 +50,13 @@
 
   function crearTarjeta(solicitud) {
     const decision = solicitud.autorizacion;
+    const bloqueo = solicitud.bloqueo && solicitud.bloqueo.bloqueada ? solicitud.bloqueo : null;
     return el("li", {},
-      el("div", { className: "tarjeta" },
+      el("div", { className: "tarjeta" + (bloqueo ? " bloqueada" : "") },
         el("h3", { texto: solicitud.folio }),
         etiquetaEstado(solicitud.estado),
+        // RF04/HU04: el residente ve por qué su fondo no se autoriza todavía
+        bloqueo ? el("p", { className: "alerta rojo", texto: bloqueo.mensaje }) : null,
         el("p", { texto: solicitud.concepto }),
         el("dl", {},
           el("dt", { texto: "Obra" }), el("dd", { texto: solicitud.obra_id }),
@@ -101,7 +104,12 @@
     evento.preventDefault();
     try {
       const respuesta = await llamar("/solicitudes", enviarJson("POST", leerFormulario()));
-      avisar(respuesta.solicitud.folio + " enviada. " + respuesta.notificacion_enviada.mensaje);
+      const bloqueo = respuesta.solicitud.bloqueo;
+      if (bloqueo && bloqueo.bloqueada) {
+        avisar(respuesta.solicitud.folio + " enviada, pero no se autorizará: " + bloqueo.mensaje, true);
+      } else {
+        avisar(respuesta.solicitud.folio + " enviada. " + respuesta.notificacion_enviada.mensaje);
+      }
       $("form-solicitud").reset();
       $("vista-evidencia").hidden = true;
       $("campo-firma").hidden = true;

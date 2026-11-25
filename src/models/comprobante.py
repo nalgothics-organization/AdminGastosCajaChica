@@ -5,7 +5,7 @@ Reglas de codificación: UTF-8, LF, 4 espacios de indentación.
 from datetime import date, datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -148,3 +148,17 @@ class Comprobante(BaseModel):
     deleted_at: Optional[datetime] = Field(default=None, description="Fecha de borrado lógico")
     created_at: datetime = Field(default_factory=_ahora_utc)
     updated_at: datetime = Field(default_factory=_ahora_utc)
+
+
+def comprobantes_vigentes(cerrados: List[Comprobante]) -> List[Comprobante]:
+    """Un ajuste sustituye al original y un reverso lo anula; el reverso mismo no suma gasto."""
+    corregidos = {
+        c.comprobante_origen_id
+        for c in cerrados
+        if c.tipo_registro in (TipoRegistro.AJUSTE, TipoRegistro.REVERSO)
+    }
+    return [
+        c for c in cerrados
+        if c.tipo_registro == TipoRegistro.AJUSTE
+        or (c.tipo_registro == TipoRegistro.ORIGINAL and c.id not in corregidos)
+    ]

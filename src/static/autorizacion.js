@@ -1,4 +1,5 @@
-// Bandeja de autorización: aprobar o rechazar solicitudes de fondo (RF05/HU05).
+// Bandeja de autorización: aprobar o rechazar solicitudes de fondo (RF05/HU05)
+// y mostrar el bloqueo por comprobaciones vencidas del residente (RF04/HU04).
 (function () {
   "use strict";
 
@@ -57,6 +58,18 @@
     return el("p", { className: "nota", texto: "Evidencia: " + url });
   }
 
+  function crearBloqueo(bloqueo) {
+    const cantidad = bloqueo.comprobaciones_vencidas;
+    return el("div", { className: "alerta rojo", role: "note" },
+      el("span", { className: "etiqueta rechazado", texto: "Bloqueada" }),
+      el("p", {}, el("strong", {
+        texto: cantidad + (cantidad === 1 ? " comprobación pendiente" : " comprobaciones pendientes")
+          + " con más de " + bloqueo.limite_dias + " días · " + dinero(bloqueo.monto_por_comprobar),
+      })),
+      el("p", { className: "nota", texto: "Folios por comprobar: " + bloqueo.folios_vencidos.join(", ") })
+    );
+  }
+
   function crearTarjeta(solicitud) {
     const monto = el("input", { type: "number", min: "0.01", step: "0.01", value: solicitud.monto_solicitado });
     const comentario = el("input", { type: "text", placeholder: "Comentario (obligatorio al rechazar)" });
@@ -66,12 +79,15 @@
     rechazar.addEventListener("click", () => decidir(solicitud, "rechazar", null, comentario.value));
 
     const sinPermiso = solicitud.nivel_autorizacion === "Dirección" && $("rol").value !== "Dirección";
-    aprobar.disabled = sinPermiso;
+    // Con comprobaciones vencidas no se aprueba; rechazar sigue disponible para cerrar la solicitud
+    const bloqueo = solicitud.bloqueo && solicitud.bloqueo.bloqueada ? solicitud.bloqueo : null;
+    aprobar.disabled = sinPermiso || Boolean(bloqueo);
     rechazar.disabled = sinPermiso;
 
-    return el("div", { className: "tarjeta" },
+    return el("div", { className: "tarjeta" + (bloqueo ? " bloqueada" : "") },
       el("h3", { texto: solicitud.folio }),
       el("span", { className: "etiqueta", texto: "Autoriza: " + solicitud.nivel_autorizacion }),
+      bloqueo ? crearBloqueo(bloqueo) : null,
       el("p", { texto: solicitud.concepto }),
       el("dl", {},
         el("dt", { texto: "Obra" }), el("dd", { texto: solicitud.obra_id }),
@@ -109,9 +125,14 @@
     try {
       const todas = await llamar("/solicitudes");
       const pendientes = todas.filter((s) => s.estado === "Pendiente");
+      const bloqueadas = pendientes.filter((s) => s.bloqueo && s.bloqueo.bloqueada).length;
       const decididas = todas.filter((s) => s.autorizacion).slice(-5).reverse();
       $("pendientes").replaceChildren(...pendientes.map(crearTarjeta));
       $("vacio").hidden = pendientes.length > 0;
+      $("contador-bloqueadas").textContent = bloqueadas
+        ? bloqueadas + (bloqueadas === 1 ? " bloqueada" : " bloqueadas") + " por comprobaciones vencidas"
+        : "";
+      $("contador-bloqueadas").hidden = bloqueadas === 0;
       $("decididas").replaceChildren(...decididas.map(crearDecidida));
     } catch (e) {
       avisar(e.message, true);

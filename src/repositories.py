@@ -166,6 +166,7 @@ class ComprobanteRepositorio:
             fila.horas = datos.horas if datos else None
             fila.unidad_horas = _valor(datos.unidad_horas) if datos else None
             fila.lectura = comprobante.lectura.model_dump(mode="json") if comprobante.lectura else None
+            fila.cierre_automatico = comprobante.cierre_automatico
 
             fila.activo = comprobante.activo
             fila.deleted_at = comprobante.deleted_at
@@ -211,6 +212,7 @@ class ComprobanteRepositorio:
             motivo_correccion=fila.motivo_correccion,
             datos=datos,
             lectura=LecturaComprobante(**fila.lectura) if fila.lectura else None,
+            cierre_automatico=fila.cierre_automatico,
             activo=fila.activo,
             deleted_at=_utc(fila.deleted_at),
             created_at=_utc(fila.created_at),

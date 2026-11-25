@@ -296,6 +296,13 @@
     $("revision-foto").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  const RESULTADO_ENVIO = { "Comprobado": "comprobado", "Revisión contabilidad": "en revisión de contabilidad" };
+
+  // Si la foto se leyó completa, el comprobante ya quedó cerrado sin más pasos (RF08/HU08)
+  function resultadoDelEnvio(envio) {
+    return RESULTADO_ENVIO[envio.estadoComprobante] ? " y " + RESULTADO_ENVIO[envio.estadoComprobante] : "";
+  }
+
   // Lleva a la pantalla donde se ven la foto enviada y los datos que leyó el OCR (RF11/HU11)
   function enlaceAlComprobante(comprobanteId, texto) {
     const enlace = el("a", "ver-comprobante", texto + " · Ver foto y datos");
@@ -306,7 +313,7 @@
   function dibujarEnvios() {
     $("envios").replaceChildren(...envios.slice(-3).map((envio) => {
       const texto = envio.estado === "enviado"
-        ? "Comprobante enviado · " + envio.segundos + " s desde que tocaste Escanear"
+        ? "Comprobante enviado" + resultadoDelEnvio(envio) + " · " + envio.segundos + " s desde que tocaste Escanear"
         : envio.estado === "rechazado"
           ? envio.motivo
           : envio.estado === "error"
@@ -353,6 +360,7 @@
     try {
       const comprobante = await llamar("/comprobantes/captura", { method: "POST", body: datos });
       envio.comprobanteId = comprobante.id;
+      envio.estadoComprobante = comprobante.estado;
       envio.estado = "enviado";
       envio.segundos = ((performance.now() - envio.inicio) / 1000).toFixed(1);
       dibujarEnvios();

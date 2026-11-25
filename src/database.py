@@ -126,6 +126,7 @@ class ComprobanteTabla(Base):
 
     # Lo que el OCR leyó de la foto (RF11); no sustituye a los datos confirmados por el residente
     lectura: Mapped[Optional[dict]] = mapped_column(JSON)
+    cierre_automatico: Mapped[Optional[bool]] = mapped_column(Boolean)
 
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
     deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))

@@ -6,7 +6,7 @@ import re
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
@@ -217,6 +217,20 @@ class Autorizacion(BaseModel):
     fecha_decision: datetime = Field(default_factory=_ahora_utc)
 
 
+class BloqueoAdeudo(BaseModel):
+    """Comprobaciones vencidas del solicitante que impiden autorizar un fondo nuevo (RF04/HU04).
+
+    Se calcula al consultar la solicitud; no se guarda en la base de datos.
+    """
+
+    bloqueada: bool = Field(..., description="True si el solicitante tiene comprobaciones vencidas")
+    comprobaciones_vencidas: int = Field(default=0, description="Solicitudes aprobadas sin comprobar fuera del límite")
+    monto_por_comprobar: Decimal = Field(default=Decimal("0.00"), description="Suma pendiente de comprobar de las vencidas")
+    folios_vencidos: List[str] = Field(default_factory=list, description="Folios de las solicitudes vencidas")
+    limite_dias: int = Field(..., description="Días máximos para comprobar un fondo aprobado")
+    mensaje: Optional[str] = Field(default=None, description="Aviso para el residente y el autorizador")
+
+
 class SolicitudFondo(SolicitudFondoBase):
     id: UUID = Field(default_factory=uuid4, description="UUID identificador del registro")
     folio: str = Field(..., description="Folio único y legible generado automáticamente")
@@ -228,6 +242,10 @@ class SolicitudFondo(SolicitudFondoBase):
     deleted_at: Optional[datetime] = Field(default=None, description="Fecha de borrado lógico")
     created_at: datetime = Field(default_factory=_ahora_utc, description="Fecha de creación")
     updated_at: datetime = Field(default_factory=_ahora_utc, description="Fecha de última actualización")
+    bloqueo: Optional[BloqueoAdeudo] = Field(
+        default=None,
+        description="Bloqueo por comprobaciones vencidas (RF04); solo se calcula en solicitudes pendientes",
+    )
 
 
 class SolicitudFondoResponse(BaseModel):

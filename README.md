@@ -89,6 +89,8 @@ Abre http://127.0.0.1:8000/docs para probar los endpoints desde Swagger.
 
 Los datos se guardan en PostgreSQL y sobreviven al reiniciar la API. Las imágenes de comprobantes se guardan en la carpeta `UPLOADS_DIR` (por defecto `./uploads`, ver `.env.example`). Cada foto se lee con OCR ([RapidOCR](https://rapidai.github.io/RapidOCRDocs/)) antes de guardarse y se rechaza si sale borrosa, oscura o sin ningún monto; con `VALIDAR_LEGIBILIDAD=false` se desactiva. De esa misma lectura se precargan el proveedor, la fecha, el monto y el tipo (`lectura` del comprobante); lo que no se reconoce queda por completar. Desde "Comprobante enviado" se abre `comprobante.html` con la foto y los datos leídos.
 
+Un fondo aprobado debe comprobarse dentro de `LIMITE_DIAS_COMPROBACION` días (por defecto 7). Si el residente tiene fondos sin comprobar por más tiempo, sus solicitudes nuevas aparecen como bloqueadas en la bandeja de autorización y `POST /api/solicitudes/{id}/aprobar` responde 423 (RF04/HU04).
+
 ### Pantallas del prototipo
 
 Con la API arriba, abre `http://127.0.0.1:8000/app/`:

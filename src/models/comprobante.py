@@ -5,10 +5,10 @@ Reglas de codificación: UTF-8, LF, 4 espacios de indentación.
 from datetime import date, datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
 from src.models.solicitud import EtapaConstruccion
 
@@ -127,6 +127,27 @@ class AjusteCreate(BaseModel):
         return self
 
 
+class LecturaComprobante(BaseModel):
+    """Lo que el OCR alcanzó a distinguir en la foto (RF11/HU11).
+
+    Cada dato que no se reconoce queda en None y aparece en `faltantes`: el residente lo completa a mano.
+    No sustituye a `datos`, que solo existe cuando el residente confirma el formulario completo.
+    """
+
+    tipo: Optional[TipoComprobante] = Field(default=None, description="factura o ticket, si se reconoce")
+    monto_comprobado: Optional[Decimal] = Field(default=None, description="Total pagado")
+    fecha_gasto: Optional[date] = Field(default=None, description="Fecha impresa en el comprobante")
+    proveedor: Optional[str] = Field(default=None, description="Nombre del comercio")
+    renglones: List[str] = Field(default_factory=list, description="Texto leído de la foto, renglón por renglón")
+    confianza: Optional[float] = Field(default=None, description="Confianza media del OCR, de 0 a 1")
+
+    @computed_field(description="Datos que el OCR no pudo reconocer y quedan por completar")
+    @property
+    def faltantes(self) -> List[str]:
+        campos = ("tipo", "monto_comprobado", "fecha_gasto", "proveedor")
+        return [campo for campo in campos if getattr(self, campo) is None]
+
+
 class Comprobante(BaseModel):
     id: UUID = Field(default_factory=uuid4, description="UUID identificador del registro")
     solicitante_id: str = Field(..., description="Residente que capturó el comprobante")
@@ -144,6 +165,9 @@ class Comprobante(BaseModel):
     comprobante_origen_id: Optional[UUID] = Field(default=None, description="UUID del comprobante corregido")
     motivo_correccion: Optional[str] = Field(default=None)
     datos: Optional[ComprobanteDatos] = Field(default=None, description="Datos del formulario de comprobación")
+    lectura: Optional[LecturaComprobante] = Field(
+        default=None, description="Datos que el OCR leyó de la foto; se confirman o completan en el formulario"
+    )
     activo: bool = Field(default=True, description="Indicador para borrado lógico (soft delete)")
     deleted_at: Optional[datetime] = Field(default=None, description="Fecha de borrado lógico")
     created_at: datetime = Field(default_factory=_ahora_utc)

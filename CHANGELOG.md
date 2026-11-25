@@ -13,6 +13,7 @@
   - Revisión de dependencias con pip-audit en el flujo de calidad y configuración de Dependabot.
   - Primera versión del escaneo rápido de comprobantes (RNF05/HU21, #68 y #69): botón "Escanear comprobante" fijo en "Mi caja chica", solicitud activa precargada, subida en segundo plano con tiempo medido y aviso para repetir fotos borrosas u oscuras. Los umbrales de la revisión se calibraron con imágenes sintéticas y falta medir los 20 s en celular.
   - Revisión de la foto con OCR (RapidOCR) al escanear: se rechazan las fotos borrosas, oscuras o sin ningún monto, y la pantalla del celular se reduce a elegir solicitud y escanear (RNF05/HU21, #68 y #69).
+  - Extracción de proveedor, fecha, monto y tipo del comprobante con OCR (RF11/HU11, #29 y #30): se guarda lo que se reconoce, lo demás queda por completar, y "Comprobante enviado" abre una pantalla con la foto y los datos leídos. Las columnas nuevas de la base se agregan solas al arrancar.
   - Búsqueda de secretos con Gitleaks en el código y en todo el historial de Git en cada pull request.
 
   ### Security

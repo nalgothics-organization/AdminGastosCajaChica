@@ -6,6 +6,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from src.models.comprobante import AjusteCreate, Comprobante, ComprobanteDatos, EstadoComprobante
 from src.services.comprobante_service import (
@@ -112,6 +113,24 @@ def obtener_comprobante(comprobante_id: UUID):
             detail=f"Comprobante con ID {comprobante_id} no encontrado.",
         )
     return comprobante
+
+
+@router.get(
+    "/comprobantes/{comprobante_id}/imagen",
+    response_class=FileResponse,
+    summary="Ver la foto del comprobante",
+    description="Devuelve la fotografía que se subió al escanear el comprobante.",
+    response_description="Imagen del comprobante (JPEG, PNG o WEBP).",
+    responses=RESPUESTA_404,
+)
+def ver_imagen_comprobante(comprobante_id: UUID):
+    ruta = comprobante_service.ruta_imagen(comprobante_id)
+    if ruta is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No hay foto para el comprobante {comprobante_id}.",
+        )
+    return FileResponse(ruta)
 
 
 @router.put(

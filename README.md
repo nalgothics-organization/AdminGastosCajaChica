@@ -80,13 +80,14 @@ Abre http://127.0.0.1:8000/docs para probar los endpoints desde Swagger.
 | POST | /api/comprobantes/captura | Captura rápida: solo la foto del comprobante |
 | GET | /api/comprobantes | Listar comprobantes (filtros `solicitante_id`, `estado`) |
 | GET | /api/comprobantes/{id} | Obtener un comprobante por UUID |
+| GET | /api/comprobantes/{id}/imagen | Ver la foto que se subió del comprobante |
 | PUT | /api/comprobantes/{id}/datos | Completar datos (horas obligatorias en maquinaria y mano de obra) |
 | POST | /api/comprobantes/{id}/cerrar | Cerrar: factura → Comprobado; ticket o nota → Revisión contabilidad |
 | POST | /api/comprobantes/{id}/ajustes | Ajuste o reverso de un comprobante cerrado |
 | DELETE | /api/comprobantes/{id} | Descartar un borrador (soft delete) |
 | GET | /api/saldos | Saldos por obra: autorizado, comprobado, disponible y reembolsos pendientes |
 
-Los datos se guardan en PostgreSQL y sobreviven al reiniciar la API. Las imágenes de comprobantes se guardan en la carpeta `UPLOADS_DIR` (por defecto `./uploads`, ver `.env.example`). Cada foto se lee con OCR ([RapidOCR](https://rapidai.github.io/RapidOCRDocs/)) antes de guardarse y se rechaza si sale borrosa, oscura o sin ningún monto; con `VALIDAR_LEGIBILIDAD=false` se desactiva.
+Los datos se guardan en PostgreSQL y sobreviven al reiniciar la API. Las imágenes de comprobantes se guardan en la carpeta `UPLOADS_DIR` (por defecto `./uploads`, ver `.env.example`). Cada foto se lee con OCR ([RapidOCR](https://rapidai.github.io/RapidOCRDocs/)) antes de guardarse y se rechaza si sale borrosa, oscura o sin ningún monto; con `VALIDAR_LEGIBILIDAD=false` se desactiva. De esa misma lectura se precargan el proveedor, la fecha, el monto y el tipo (`lectura` del comprobante); lo que no se reconoce queda por completar. Desde "Comprobante enviado" se abre `comprobante.html` con la foto y los datos leídos.
 
 ### Pantallas del prototipo
 

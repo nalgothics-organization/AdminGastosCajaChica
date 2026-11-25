@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Caja chica · Comprobante enviado</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body class="captura">
+  <main>
+    <a class="volver" href="index.html">← Volver a escanear</a>
+
+    <p id="mensaje" class="nota" hidden></p>
+
+    <section id="vista" class="panel" hidden>
+      <h1>Comprobante enviado</h1>
+      <p id="estado" class="nota"></p>
+
+      <img id="foto-comprobante" class="foto-comprobante" alt="Foto del comprobante que enviaste">
+
+      <h2>Datos que se leyeron</h2>
+      <p id="resumen-lectura" class="nota"></p>
+      <ul id="datos-leidos" class="datos-leidos"></ul>
+
+      <details id="texto-leido" hidden>
+        <summary>Texto leído de la foto</summary>
+        <pre id="renglones" class="renglones"></pre>
+      </details>
+
+      <div class="acciones inicio">
+        <a id="completar" class="boton-enlace" href="index.html" hidden>Completar datos</a>
+      </div>
+    </section>
+  </main>
+  <script src="shell.js"></script>
+  <script src="comprobante.js"></script>
+</body>
+</html>

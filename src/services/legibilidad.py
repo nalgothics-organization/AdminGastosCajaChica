@@ -74,9 +74,10 @@ def motivo_de_rechazo(textos: List[str], confianzas: List[float]) -> Optional[st
     return None
 
 
-def revisar_legibilidad(contenido: bytes) -> None:
-    """Lanza ValueError con el motivo si la foto no se lee o no parece un comprobante."""
+def revisar_legibilidad(contenido: bytes) -> Tuple[List[str], List[float]]:
+    """Devuelve el texto leído de la foto; lanza ValueError con el motivo si no es un comprobante legible."""
     textos, confianzas = leer_texto(contenido)
     motivo = motivo_de_rechazo(textos, confianzas)
     if motivo:
         raise ValueError(motivo)
+    return textos, confianzas

@@ -10,7 +10,7 @@ from typing import Dict, List
 
 from pydantic import BaseModel, Field
 
-from src.models.comprobante import ESTADOS_CERRADOS, Comprobante, TipoRegistro
+from src.models.comprobante import ESTADOS_CERRADOS, TipoRegistro, comprobantes_vigentes
 from src.models.solicitud import EstadoSolicitud
 from src.services.comprobante_service import ComprobanteService, comprobante_service
 from src.services.obra_catalogo import OBRAS
@@ -48,20 +48,6 @@ class SaldoService:
         self._solicitudes = solicitudes
         self._comprobantes = comprobantes
 
-    @staticmethod
-    def _comprobantes_vigentes(cerrados: List[Comprobante]) -> List[Comprobante]:
-        """Un ajuste sustituye al original y un reverso lo anula; el reverso mismo no suma gasto."""
-        corregidos = {
-            c.comprobante_origen_id
-            for c in cerrados
-            if c.tipo_registro in (TipoRegistro.AJUSTE, TipoRegistro.REVERSO)
-        }
-        return [
-            c for c in cerrados
-            if c.tipo_registro == TipoRegistro.AJUSTE
-            or (c.tipo_registro == TipoRegistro.ORIGINAL and c.id not in corregidos)
-        ]
-
     def por_obra(self) -> List[SaldoObra]:
         # Todas las obras del catálogo aparecen aunque no tengan movimientos
         saldos: Dict[str, SaldoObra] = {
@@ -94,7 +80,7 @@ class SaldoService:
             c for c in self._comprobantes.listar()
             if c.estado in ESTADOS_CERRADOS and c.datos is not None and c.obra_id
         ]
-        for comprobante in self._comprobantes_vigentes(cerrados):
+        for comprobante in comprobantes_vigentes(cerrados):
             saldo = self._saldo_de(saldos, comprobante.obra_id)
             if comprobante.solicitud_id is None:
                 saldo.gasto_sin_solicitud += comprobante.datos.monto_comprobado

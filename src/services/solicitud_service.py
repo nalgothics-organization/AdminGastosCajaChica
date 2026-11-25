@@ -3,18 +3,23 @@ Implementa:
 - Generación automática de folio único (RF01/HU01).
 - Reglas de notificación al nivel correspondiente (HU01).
 - Asociación obligatoria a obra activa, etapa y partida presupuestal (RF02/HU02).
+- Bloqueo de fondos nuevos por comprobaciones vencidas (RF04/HU04).
 - Aprobación y rechazo con trazabilidad del autorizador (RF05/HU05).
 - Soft delete e inmutabilidad según AGENTS.md.
 """
 
-from datetime import datetime, timezone
+import os
+from collections import defaultdict
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import List, Optional
+from typing import Dict, Iterable, List, Optional
 from uuid import UUID
 
+from src.models.comprobante import ESTADOS_CERRADOS, comprobantes_vigentes
 from src.models.solicitud import (
     AprobacionCreate,
     Autorizacion,
+    BloqueoAdeudo,
     DecisionAutorizacion,
     DecisionBase,
     EstadoSolicitud,
@@ -25,7 +30,7 @@ from src.models.solicitud import (
     SolicitudFondoCreate,
     SolicitudFondoResponse,
 )
-from src.repositories import SolicitudRepositorio
+from src.repositories import ComprobanteRepositorio, SolicitudRepositorio
 from src.services.obra_service import ObraService, obra_service as obra_service_default
 
 
@@ -41,11 +46,35 @@ class AutorizadorNoPermitidoError(Exception):
     """El rol del autorizador no alcanza el nivel que exige el monto de la solicitud."""
 
 
+class SolicitudBloqueadaError(Exception):
+    """El solicitante tiene comprobaciones vencidas; no se le autoriza un fondo nuevo (RF04)."""
+
+
+# Días que tiene un residente para comprobar un fondo aprobado antes de que se le bloqueen fondos nuevos
+LIMITE_DIAS_COMPROBACION_DEFAULT = 7
+
+
+def _limite_dias_configurado() -> int:
+    valor = os.getenv("LIMITE_DIAS_COMPROBACION", str(LIMITE_DIAS_COMPROBACION_DEFAULT)).strip()
+    try:
+        dias = int(valor)
+    except ValueError:
+        raise ValueError("LIMITE_DIAS_COMPROBACION debe ser un número entero de días.")
+    if dias < 0:
+        raise ValueError("LIMITE_DIAS_COMPROBACION no puede ser negativo.")
+    return dias
+
+
 class SolicitudFondoService:
     def __init__(self, obra_service: Optional[ObraService] = None):
         # Catálogo de obras para validar obra activa y partida presupuestal (RF02)
         self._obra_service = obra_service or obra_service_default
         self._db = SolicitudRepositorio()
+        # Solo se leen los comprobantes para saber qué tanto se ha comprobado de cada fondo (RF04)
+        self._comprobantes = ComprobanteRepositorio()
+        self.limite_dias_comprobacion = _limite_dias_configurado()
+        # Reloj inyectable para que las pruebas simulen el paso de los días
+        self.reloj = lambda: datetime.now(timezone.utc)
         self.notificaciones_enviadas: List[NotificacionNivelAutorizacion] = []
 
     def generar_folio_unico(self, obra_id: str) -> str:
@@ -115,6 +144,8 @@ class SolicitudFondoService:
         )
 
         self._db.guardar(nueva_solicitud)
+        # El residente se entera al enviar la solicitud de que no se autorizará hasta que compruebe (HU04)
+        self.anotar_bloqueos([nueva_solicitud])
 
         # Notificación al nivel autorizador correspondiente
         notificacion = self.emitir_notificacion(folio, data.monto_solicitado, rol_autorizador)
@@ -138,6 +169,75 @@ class SolicitudFondoService:
 
     def listar_solicitudes_activas(self) -> List[SolicitudFondo]:
         return [s for s in self._db.values() if s.activo]
+
+    def _comprobado_por_solicitud(self) -> Dict[UUID, Decimal]:
+        """Suma lo comprobado de cada solicitud con los comprobantes cerrados y vigentes."""
+        cerrados = [
+            c for c in self._comprobantes.values()
+            if c.activo and c.estado in ESTADOS_CERRADOS and c.datos is not None and c.solicitud_id
+        ]
+        comprobado: Dict[UUID, Decimal] = defaultdict(lambda: Decimal("0.00"))
+        for comprobante in comprobantes_vigentes(cerrados):
+            comprobado[comprobante.solicitud_id] += comprobante.datos.monto_comprobado
+        return comprobado
+
+    def _bloqueos_por_solicitante(self, solicitudes: Iterable[SolicitudFondo]) -> Dict[str, BloqueoAdeudo]:
+        """Calcula el bloqueo de cada solicitante a partir de sus fondos aprobados sin comprobar.
+
+        Una comprobación está vencida cuando el fondo se aprobó hace más de `limite_dias_comprobacion`
+        días y lo comprobado todavía no cubre el monto autorizado (RF04/HU04).
+        """
+        comprobado = self._comprobado_por_solicitud()
+        fecha_limite = self.reloj() - timedelta(days=self.limite_dias_comprobacion)
+        vencidas: Dict[str, List[SolicitudFondo]] = defaultdict(list)
+        por_comprobar: Dict[str, Decimal] = defaultdict(lambda: Decimal("0.00"))
+
+        for solicitud in solicitudes:
+            autorizacion = solicitud.autorizacion
+            if not solicitud.activo or solicitud.estado != EstadoSolicitud.APROBADO or not autorizacion:
+                continue
+            faltante = (autorizacion.monto_autorizado or Decimal("0.00")) - comprobado[solicitud.id]
+            if faltante > 0 and autorizacion.fecha_decision < fecha_limite:
+                vencidas[solicitud.solicitante_id].append(solicitud)
+                por_comprobar[solicitud.solicitante_id] += faltante
+
+        return {
+            solicitante: self._crear_bloqueo(lista, por_comprobar[solicitante])
+            for solicitante, lista in vencidas.items()
+        }
+
+    def _crear_bloqueo(self, vencidas: List[SolicitudFondo], monto: Decimal) -> BloqueoAdeudo:
+        folios = [s.folio for s in vencidas]
+        return BloqueoAdeudo(
+            bloqueada=True,
+            comprobaciones_vencidas=len(vencidas),
+            monto_por_comprobar=monto,
+            folios_vencidos=folios,
+            limite_dias=self.limite_dias_comprobacion,
+            mensaje=(
+                f"Bloqueada: el residente tiene {len(vencidas)} comprobación(es) pendiente(s) con más de "
+                f"{self.limite_dias_comprobacion} días ({', '.join(folios)}). "
+                "Debe comprobar sus gastos anteriores antes de recibir un fondo nuevo."
+            ),
+        )
+
+    def _sin_bloqueo(self) -> BloqueoAdeudo:
+        return BloqueoAdeudo(bloqueada=False, limite_dias=self.limite_dias_comprobacion)
+
+    def bloqueo_de(self, solicitante_id: str) -> BloqueoAdeudo:
+        """Bloqueo actual del solicitante por comprobaciones vencidas (RF04)."""
+        bloqueos = self._bloqueos_por_solicitante(self._db.values())
+        return bloqueos.get(solicitante_id) or self._sin_bloqueo()
+
+    def anotar_bloqueos(self, solicitudes: List[SolicitudFondo]) -> List[SolicitudFondo]:
+        """Marca las solicitudes pendientes con el bloqueo de su solicitante para la bandeja de autorización."""
+        if not any(s.estado == EstadoSolicitud.PENDIENTE for s in solicitudes):
+            return solicitudes
+        bloqueos = self._bloqueos_por_solicitante(self._db.values())
+        for solicitud in solicitudes:
+            if solicitud.estado == EstadoSolicitud.PENDIENTE:
+                solicitud.bloqueo = bloqueos.get(solicitud.solicitante_id) or self._sin_bloqueo()
+        return solicitudes
 
     def _obtener_pendiente(self, solicitud_id: UUID, data: DecisionBase) -> SolicitudFondo:
         """Valida que la solicitud exista, siga pendiente y que el rol pueda decidirla (RF05)."""
@@ -171,6 +271,11 @@ class SolicitudFondoService:
     def aprobar_solicitud(self, solicitud_id: UUID, data: AprobacionCreate) -> SolicitudFondo:
         """Aprueba la solicitud registrando autorizador, fecha y monto final (HU05 criterio 1)."""
         solicitud = self._obtener_pendiente(solicitud_id, data)
+
+        # RF04: no se autoriza un fondo nuevo mientras el residente tenga comprobaciones vencidas
+        bloqueo = self.bloqueo_de(solicitud.solicitante_id)
+        if bloqueo.bloqueada:
+            raise SolicitudBloqueadaError(f"No se puede aprobar {solicitud.folio}. {bloqueo.mensaje}")
 
         monto_autorizado = data.monto_autorizado if data.monto_autorizado is not None else solicitud.monto_solicitado
         if monto_autorizado > solicitud.monto_solicitado:

@@ -112,6 +112,14 @@
             <option>Trámites</option>
             <option>Otros</option>
           </select>
+
+          <!-- RF14/HU15: quién absorbe el gasto que se pagó sin solicitud -->
+          <label for="clasificacion-gasto">¿Quién paga el gasto?</label>
+          <select id="clasificacion-gasto" name="clasificacion">
+            <option value="">Selecciona una opción</option>
+            <option value="cobrable_cliente">Cobrable al cliente</option>
+            <option value="fondo_contingencia">Fondo de contingencia (error propio)</option>
+          </select>
         </div>
 
         <label for="monto">Monto pagado</label>

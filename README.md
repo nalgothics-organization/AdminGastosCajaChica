@@ -53,10 +53,10 @@ Qué revisa cada herramienta, los umbrales acordados y el flujo de GitHub Action
 bash
 copy .env.example .env          # Windows; en Linux/macOS: cp .env.example .env
 docker compose up -d db
-python -m src.seed             # datos de ejemplo (opcional; --reset para empezar de cero)
+python -m src.seed             # usuarios y datos de ejemplo (requiere CONTRASENA_DEMO; --reset para empezar de cero)
 
 
-La API lee `DATABASE_URL` del archivo `.env`. Las tablas (`solicitudes`, `autorizaciones` y `comprobantes`) se crean al arrancar y ningún registro se borra físicamente. Las pruebas usan SQLite en memoria y no tocan PostgreSQL.
+La API lee `DATABASE_URL` del archivo `.env`. Las tablas (`usuarios`, `solicitudes`, `autorizaciones` y `comprobantes`) se crean al arrancar y ningún registro se borra físicamente. Las pruebas usan SQLite en memoria y no tocan PostgreSQL.
 
 ### Levantar la API
 
@@ -84,9 +84,28 @@ Abre http://127.0.0.1:8000/docs para probar los endpoints desde Swagger.
 | POST | /api/comprobantes/{id}/cerrar | Cerrar: factura → Comprobado; ticket o nota → Revisión contabilidad |
 | POST | /api/comprobantes/{id}/ajustes | Ajuste o reverso de un comprobante cerrado |
 | DELETE | /api/comprobantes/{id} | Descartar un borrador (soft delete) |
-| GET | /api/saldos | Saldos por obra: autorizado, comprobado, disponible y reembolsos pendientes |
+| GET | /api/saldos | Saldos por obra: autorizado, comprobado, disponible, reembolsos pendientes, por facturar al cliente y fondo de contingencia |
 
 Los datos se guardan en PostgreSQL y sobreviven al reiniciar la API. Las imágenes de comprobantes se guardan en la carpeta `UPLOADS_DIR` (por defecto `./uploads`, ver `.env.example`). Cada foto se lee con OCR ([RapidOCR](https://rapidai.github.io/RapidOCRDocs/)) antes de guardarse y se rechaza si sale borrosa, oscura o sin ningún monto; con `VALIDAR_LEGIBILIDAD=false` se desactiva.
+
+### Usuarios y roles
+
+Cada persona tiene un usuario con nombre, correo, rol (residente de obra, administración, dirección o contabilidad) y contraseña; el residente además tiene una obra asignada. `python -m src.seed` crea estos usuarios de demostración con la contraseña de `CONTRASENA_DEMO`:
+
+| Usuario | Nombre | Rol |
+| :--- | :--- | :--- |
+| `RESIDENTE-PAU` | Paula Rivas | Residente de obra (OBRA-NORTE-01) |
+| `RESIDENTE-JP` | Juan Pablo Ortiz | Residente de obra (OBRA-SUR-02) |
+| `RESIDENTE-LUIS` | Luis Torres | Residente de obra (OBRA-NORTE-01) |
+| `ADMIN-LAURA` | Laura Méndez | Administración |
+| `DIR-CARLOS` | Carlos Ruiz | Dirección |
+| `CONT-SOFIA` | Sofía Navarro | Contabilidad |
+
+Solo un residente de obra activo registra solicitudes y captura comprobantes. Para aprobar o rechazar se envía únicamente `autorizador_id` (el usuario); el nombre y el rol se toman de su registro, así que contabilidad o un residente reciben 403 y un usuario inexistente 422. Las contraseñas se guardan en texto plano por decisión del equipo para el prototipo: no uses contraseñas reales. Todavía no hay inicio de sesión ni pantallas filtradas por rol (RF15/HU20).
+
+Un fondo aprobado debe comprobarse dentro de `LIMITE_DIAS_COMPROBACION` días (por defecto 7). Si el residente tiene fondos sin comprobar por más tiempo, sus solicitudes nuevas aparecen como bloqueadas en la bandeja de autorización y `POST /api/solicitudes/{id}/aprobar` responde 423 (RF04/HU04).
+
+Al aprobar una solicitud, administración o dirección eligen si el gasto es **cobrable al cliente** o sale del **fondo de contingencia** de la obra (campo `clasificacion`, obligatorio). Los comprobantes de la solicitud heredan esa clasificación; un gasto pagado sin solicitud la indica en el formulario. El tablero de saldos muestra lo que hay que facturar al cliente y cuánto queda del fondo de contingencia (RF14/HU15). Al arrancar, la API agrega a las tablas existentes las columnas nuevas que acepten nulos, sin borrar datos.
 
 ### Pantallas del prototipo
 

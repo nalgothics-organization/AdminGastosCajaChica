@@ -393,6 +393,7 @@
       form.elements.obra_id.value = comprobante.obra_id;
       form.elements.etapa_construccion.value = comprobante.etapa_construccion;
       form.elements.partida_categoria.value = comprobante.partida_categoria;
+      form.elements.clasificacion.value = comprobante.clasificacion || "";
     }
     if (datos.tipo) {
       form.querySelector('input[name="tipo"][value="' + datos.tipo + '"]').checked = true;
@@ -430,6 +431,7 @@
       obra_id: sinSolicitud ? form.elements.obra_id.value : null,
       etapa_construccion: sinSolicitud ? form.elements.etapa_construccion.value : null,
       partida_categoria: sinSolicitud ? form.elements.partida_categoria.value : null,
+      clasificacion: sinSolicitud ? form.elements.clasificacion.value || null : null,
       tipo: tipo ? tipo.value : null,
       monto_comprobado: form.elements.monto_comprobado.value || null,
       fecha_gasto: form.elements.fecha_gasto.value || null,

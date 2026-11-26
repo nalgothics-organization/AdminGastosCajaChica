@@ -15,10 +15,12 @@ from src.models.solicitud import (
 )
 from src.services.solicitud_service import (
     AutorizadorNoPermitidoError,
+    SolicitudBloqueadaError,
     SolicitudNoEncontradaError,
     SolicitudNoPendienteError,
     solicitud_service,
 )
+from src.services.usuario_service import RolNoPermitidoError, UsuarioNoEncontradoError
 
 router = APIRouter()
 
@@ -38,14 +40,20 @@ RESPUESTAS_DECISION = {
     **RESPUESTA_404,
     status.HTTP_403_FORBIDDEN: {
         "model": ErrorResponse,
-        "description": "El rol del autorizador no alcanza el nivel que exige el monto de la solicitud.",
+        "description": (
+            "El usuario no es de Administración o Dirección, o su rol no alcanza el nivel que exige el monto."
+        ),
     },
     status.HTTP_409_CONFLICT: {
         "model": ErrorResponse,
         "description": "La solicitud ya fue aprobada o rechazada; no puede decidirse de nuevo.",
     },
+    status.HTTP_423_LOCKED: {
+        "model": ErrorResponse,
+        "description": "El solicitante tiene comprobaciones vencidas; no se autoriza un fondo nuevo (RF04).",
+    },
     status.HTTP_422_UNPROCESSABLE_ENTITY: {
-        "description": "Datos inválidos: rol desconocido, monto fuera de rango o falta el comentario del rechazo.",
+        "description": "Datos inválidos: usuario inexistente, monto fuera de rango o falta el comentario del rechazo.",
     },
 }
 
@@ -56,10 +64,14 @@ def _ejecutar(operacion, *args):
         return operacion(*args)
     except SolicitudNoEncontradaError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except AutorizadorNoPermitidoError as e:
+    except (AutorizadorNoPermitidoError, RolNoPermitidoError) as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    except UsuarioNoEncontradoError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     except SolicitudNoPendienteError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+    except SolicitudBloqueadaError as e:
+        raise HTTPException(status_code=status.HTTP_423_LOCKED, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 
@@ -77,30 +89,34 @@ def _ejecutar(operacion, *args):
     ),
     response_description="Solicitud registrada y notificación emitida.",
     responses={
+        status.HTTP_403_FORBIDDEN: {
+            "model": ErrorResponse,
+            "description": "El solicitante no es un residente de obra.",
+        },
         status.HTTP_422_UNPROCESSABLE_ENTITY: {
-            "description": "Datos inválidos: falta evidencia, montos no positivos o falta la firma de Dirección.",
+            "description": (
+                "Datos inválidos: solicitante inexistente, falta evidencia, montos no positivos "
+                "o falta la firma de Dirección."
+            ),
         },
     },
 )
 def registrar_solicitud(data: SolicitudFondoCreate):
-    try:
-        return solicitud_service.crear_solicitud(data)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(e),
-        )
+    return _ejecutar(solicitud_service.crear_solicitud, data)
 
 
 @router.get(
     "/solicitudes",
     response_model=List[SolicitudFondo],
     summary="Listar solicitudes activas",
-    description="Devuelve todas las solicitudes que no han sido eliminadas lógicamente.",
+    description=(
+        "Devuelve todas las solicitudes que no han sido eliminadas lógicamente. Las pendientes incluyen "
+        "`bloqueo`, que indica si el residente tiene comprobaciones vencidas y no puede recibir el fondo (RF04)."
+    ),
     response_description="Lista de solicitudes activas.",
 )
 def listar_solicitudes():
-    return solicitud_service.listar_solicitudes_activas()
+    return solicitud_service.anotar_bloqueos(solicitud_service.listar_solicitudes_activas())
 
 
 @router.get(
@@ -118,7 +134,7 @@ def obtener_solicitud(solicitud_id: UUID):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Solicitud con ID {solicitud_id} no encontrada.",
         )
-    return solicitud
+    return solicitud_service.anotar_bloqueos([solicitud])[0]
 
 
 @router.post(
@@ -129,7 +145,8 @@ def obtener_solicitud(solicitud_id: UUID):
         "Aprueba una solicitud pendiente (RF05/HU05) y registra quién autorizó, cuándo, "
         "el monto final autorizado y un comentario opcional. Si no se indica monto se autoriza "
         "el solicitado; nunca puede ser mayor. Administración decide montos de hasta 5,000 MXN "
-        "y Dirección cualquier monto."
+        "y Dirección cualquier monto. Se rechaza con 423 si el residente tiene comprobaciones "
+        "pendientes con más días que el límite configurado (RF04/HU04)."
     ),
     response_description="Solicitud aprobada con su registro de autorización.",
     responses=RESPUESTAS_DECISION,

@@ -9,11 +9,21 @@
 
   ### Added
 
+  - Usuarios con rol (base de RF15/HU20): modelo, tabla `usuarios` y `UsuarioService` con alta, consulta, autenticación por contraseña, cambio de contraseña y baja lógica. El seed crea un usuario por rol con la contraseña de `CONTRASENA_DEMO`. Solo un residente activo solicita fondos y captura comprobantes, y solo Administración o Dirección deciden solicitudes.
+  - Distinción entre gasto cobrable al cliente y fondo de contingencia (RF14/HU15, #36 y #37): al aprobar una solicitud se elige obligatoriamente la clasificación (`clasificacion` en `POST /api/solicitudes/{id}/aprobar`), los comprobantes la heredan y los gastos sin solicitud la indican en el formulario. `GET /api/saldos` agrega `gasto_cobrable_cliente`, `fondo_contingencia`, `gasto_contingencia` y `disponible_contingencia`, que se actualiza al guardar el comprobante. El catálogo de obras incluye el fondo de contingencia de cada obra.
+  - Al arrancar, la API agrega a las tablas existentes las columnas nuevas que aceptan nulos (`agregar_columnas_faltantes`), para no tener que recrear la base de datos.
+  - Bloqueo de fondos nuevos por comprobaciones vencidas (RF04/HU04, #15 y #16): si el residente tiene fondos aprobados sin comprobar por más de `LIMITE_DIAS_COMPROBACION` días (7 por defecto), su solicitud nueva aparece como bloqueada en la bandeja de autorización con el número de comprobaciones pendientes, el monto y los folios; la aprobación responde 423 y el residente ve el aviso al enviar y en "Mis solicitudes". Rechazar sigue permitido.
   - Análisis estático con Ruff y regla de complejidad C901 (máximo 10), ejecutado junto con las pruebas en el flujo `.github/workflows/calidad.yml` en cada pull request. Detalle en `docs/PRUEBAS.md`.
   - Revisión de dependencias con pip-audit en el flujo de calidad y configuración de Dependabot.
   - Primera versión del escaneo rápido de comprobantes (RNF05/HU21, #68 y #69): botón "Escanear comprobante" fijo en "Mi caja chica", solicitud activa precargada, subida en segundo plano con tiempo medido y aviso para repetir fotos borrosas u oscuras. Los umbrales de la revisión se calibraron con imágenes sintéticas y falta medir los 20 s en celular.
   - Revisión de la foto con OCR (RapidOCR) al escanear: se rechazan las fotos borrosas, oscuras o sin ningún monto, y la pantalla del celular se reduce a elegir solicitud y escanear (RNF05/HU21, #68 y #69).
   - Búsqueda de secretos con Gitleaks en el código y en todo el historial de Git en cada pull request.
+
+  ### Changed
+
+  - `POST /api/solicitudes/{id}/aprobar` y `/rechazar` solo reciben `autorizador_id`: el nombre y el rol del autorizador se toman de su usuario y se ignoran si vienen en la petición. La bandeja de autorización pide el usuario en vez del nombre y el rol.
+  - `solicitante_id` de solicitudes y comprobantes debe ser un usuario residente activo; se guarda en mayúsculas.
+  - `POST /api/solicitudes/{id}/aprobar` exige `clasificacion` (`cobrable_cliente` o `fondo_contingencia`); sin ella responde 422.
 
   ### Security
 

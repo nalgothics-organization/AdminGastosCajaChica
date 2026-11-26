@@ -13,22 +13,13 @@
     <p id="aviso" class="aviso" role="status" aria-live="polite" hidden></p>
 
     <section class="panel">
-      <div class="cuadricula-2">
-        <div>
-          <label for="rol">Rol</label>
-          <select id="rol">
-            <option value="Administración">Administración (hasta $5,000)</option>
-            <option value="Dirección">Dirección (cualquier monto)</option>
-          </select>
-        </div>
-        <div>
-          <label for="nombre">Tu nombre</label>
-          <input id="nombre" type="text" placeholder="Laura Méndez" autocomplete="off">
-        </div>
-      </div>
+      <label for="usuario">Tu usuario</label>
+      <input id="usuario" type="text" placeholder="ADMIN-LAURA" autocomplete="username">
+      <p class="nota">Tu nombre y tu rol se toman de tu usuario. Administración decide hasta $5,000; Dirección, cualquier monto.</p>
     </section>
 
     <h2>Pendientes</h2>
+    <p id="contador-bloqueadas" class="alerta rojo" hidden></p>
     <p id="vacio" class="nota" hidden>No hay solicitudes pendientes.</p>
     <div id="pendientes" class="rejilla"></div>
 

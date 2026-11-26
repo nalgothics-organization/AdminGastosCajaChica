@@ -11,9 +11,10 @@ from uuid import UUID
 
 from sqlalchemy import func, select
 
-from src.database import AutorizacionTabla, ComprobanteTabla, SessionLocal, SolicitudTabla
+from src.database import AutorizacionTabla, ComprobanteTabla, SessionLocal, SolicitudTabla, UsuarioTabla
 from src.models.comprobante import Comprobante, ComprobanteDatos
 from src.models.solicitud import Autorizacion, SolicitudFondo
+from src.models.usuario import Usuario
 
 
 def _utc(valor: Optional[datetime]) -> Optional[datetime]:
@@ -25,6 +26,62 @@ def _utc(valor: Optional[datetime]) -> Optional[datetime]:
 
 def _valor(enum_o_texto):
     return getattr(enum_o_texto, "value", enum_o_texto)
+
+
+class UsuarioRepositorio:
+    def get(self, usuario_id: UUID) -> Optional[Usuario]:
+        with SessionLocal() as sesion:
+            fila = sesion.get(UsuarioTabla, usuario_id)
+            return self._a_modelo(fila) if fila else None
+
+    def values(self) -> List[Usuario]:
+        with SessionLocal() as sesion:
+            filas = sesion.scalars(select(UsuarioTabla).order_by(UsuarioTabla.usuario))
+            return [self._a_modelo(f) for f in filas]
+
+    def _buscar(self, columna, valor: str) -> Optional[Usuario]:
+        """Busca también entre los dados de baja: el usuario y el correo no se reutilizan."""
+        with SessionLocal() as sesion:
+            fila = sesion.scalars(select(UsuarioTabla).where(columna == valor)).first()
+            return self._a_modelo(fila) if fila else None
+
+    def por_usuario(self, usuario: str) -> Optional[Usuario]:
+        return self._buscar(UsuarioTabla.usuario, usuario)
+
+    def por_email(self, email: str) -> Optional[Usuario]:
+        return self._buscar(UsuarioTabla.email, email)
+
+    def guardar(self, usuario: Usuario) -> Usuario:
+        with SessionLocal() as sesion, sesion.begin():
+            fila = sesion.get(UsuarioTabla, usuario.id) or UsuarioTabla(id=usuario.id)
+            fila.usuario = usuario.usuario
+            fila.nombre = usuario.nombre
+            fila.email = usuario.email
+            fila.rol = _valor(usuario.rol)
+            fila.contrasena = usuario.contrasena
+            fila.obra_id = usuario.obra_id
+            fila.activo = usuario.activo
+            fila.deleted_at = usuario.deleted_at
+            fila.created_at = usuario.created_at
+            fila.updated_at = usuario.updated_at
+            sesion.add(fila)
+        return usuario
+
+    @staticmethod
+    def _a_modelo(fila: UsuarioTabla) -> Usuario:
+        return Usuario(
+            id=fila.id,
+            usuario=fila.usuario,
+            nombre=fila.nombre,
+            email=fila.email,
+            rol=fila.rol,
+            contrasena=fila.contrasena,
+            obra_id=fila.obra_id,
+            activo=fila.activo,
+            deleted_at=_utc(fila.deleted_at),
+            created_at=_utc(fila.created_at),
+            updated_at=_utc(fila.updated_at),
+        )
 
 
 class SolicitudRepositorio:
@@ -79,6 +136,7 @@ class SolicitudRepositorio:
                     autorizador_nombre=decision.autorizador_nombre,
                     rol_autorizador=_valor(decision.rol_autorizador),
                     monto_autorizado=decision.monto_autorizado,
+                    clasificacion=_valor(decision.clasificacion),
                     comentario=decision.comentario,
                     fecha_decision=decision.fecha_decision,
                 )
@@ -99,6 +157,7 @@ class SolicitudRepositorio:
                 autorizador_nombre=a.autorizador_nombre,
                 rol_autorizador=a.rol_autorizador,
                 monto_autorizado=a.monto_autorizado,
+                clasificacion=a.clasificacion,
                 comentario=a.comentario,
                 fecha_decision=_utc(a.fecha_decision),
             )
@@ -156,6 +215,7 @@ class ComprobanteRepositorio:
             fila.obra_id = comprobante.obra_id
             fila.etapa_construccion = _valor(comprobante.etapa_construccion)
             fila.partida_categoria = comprobante.partida_categoria
+            fila.clasificacion = _valor(comprobante.clasificacion)
 
             datos = comprobante.datos
             fila.tipo = _valor(datos.tipo) if datos else None
@@ -194,6 +254,7 @@ class ComprobanteRepositorio:
                 obra_id=fila.obra_id if sin_solicitud else None,
                 etapa_construccion=fila.etapa_construccion if sin_solicitud else None,
                 partida_categoria=fila.partida_categoria if sin_solicitud else None,
+                clasificacion=fila.clasificacion if sin_solicitud else None,
             )
         return Comprobante(
             id=fila.id,
@@ -203,6 +264,7 @@ class ComprobanteRepositorio:
             obra_id=fila.obra_id,
             etapa_construccion=fila.etapa_construccion,
             partida_categoria=fila.partida_categoria,
+            clasificacion=fila.clasificacion,
             imagen_ruta=fila.imagen_ruta,
             estado=fila.estado,
             tipo_registro=fila.tipo_registro,

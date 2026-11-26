@@ -5,6 +5,11 @@
   const API = "/api";
   const CLAVE_RESIDENTE = "cajaChica.residente";
   const formatoMoneda = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
+  // Quién absorbe el gasto (RF14/HU15)
+  const CLASIFICACIONES = {
+    cobrable_cliente: "Cobrable al cliente",
+    fondo_contingencia: "Fondo de contingencia",
+  };
 
   async function llamar(ruta, opciones) {
     const respuesta = await fetch(API + ruta, opciones);
@@ -82,6 +87,7 @@
 
   window.Caja = {
     CLAVE_RESIDENTE,
+    CLASIFICACIONES,
     llamar,
     enviarJson,
     avisar,

@@ -2,7 +2,8 @@
 (function () {
   "use strict";
 
-  const { llamar, enviarJson, avisar, el, leer, guardar, etiquetaEstado, dinero, CLAVE_RESIDENTE } = window.Caja;
+  const { llamar, enviarJson, avisar, el, leer, guardar, etiquetaEstado, dinero, CLAVE_RESIDENTE, CLASIFICACIONES } =
+    window.Caja;
   const LIMITE_ADMINISTRACION = 5000;
   const $ = (id) => document.getElementById(id);
   let residente = leer(CLAVE_RESIDENTE);
@@ -50,16 +51,22 @@
 
   function crearTarjeta(solicitud) {
     const decision = solicitud.autorizacion;
+    const bloqueo = solicitud.bloqueo && solicitud.bloqueo.bloqueada ? solicitud.bloqueo : null;
     return el("li", {},
-      el("div", { className: "tarjeta" },
+      el("div", { className: "tarjeta" + (bloqueo ? " bloqueada" : "") },
         el("h3", { texto: solicitud.folio }),
         etiquetaEstado(solicitud.estado),
+        // RF04/HU04: el residente ve por qué su fondo no se autoriza todavía
+        bloqueo ? el("p", { className: "alerta rojo", texto: bloqueo.mensaje }) : null,
         el("p", { texto: solicitud.concepto }),
         el("dl", {},
           el("dt", { texto: "Obra" }), el("dd", { texto: solicitud.obra_id }),
           el("dt", { texto: "Solicitado" }), el("dd", { texto: dinero(solicitud.monto_solicitado) }),
           decision && decision.monto_autorizado
             ? [el("dt", { texto: "Autorizado" }), el("dd", { texto: dinero(decision.monto_autorizado) })]
+            : null,
+          decision && decision.clasificacion
+            ? [el("dt", { texto: "Se paga con" }), el("dd", { texto: CLASIFICACIONES[decision.clasificacion] })]
             : null,
           el("dt", { texto: "Autoriza" }), el("dd", { texto: solicitud.nivel_autorizacion })
         ),
@@ -101,7 +108,12 @@
     evento.preventDefault();
     try {
       const respuesta = await llamar("/solicitudes", enviarJson("POST", leerFormulario()));
-      avisar(respuesta.solicitud.folio + " enviada. " + respuesta.notificacion_enviada.mensaje);
+      const bloqueo = respuesta.solicitud.bloqueo;
+      if (bloqueo && bloqueo.bloqueada) {
+        avisar(respuesta.solicitud.folio + " enviada, pero no se autorizará: " + bloqueo.mensaje, true);
+      } else {
+        avisar(respuesta.solicitud.folio + " enviada. " + respuesta.notificacion_enviada.mensaje);
+      }
       $("form-solicitud").reset();
       $("vista-evidencia").hidden = true;
       $("campo-firma").hidden = true;

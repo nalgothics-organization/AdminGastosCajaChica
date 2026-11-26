@@ -26,6 +26,7 @@ DATOS_SIN_SOLICITUD = {
     "obra_id": "OBRA-SUR-02",
     "etapa_construccion": "estructura",
     "partida_categoria": "Materiales",
+    "clasificacion": "cobrable_cliente",
 }
 
 

@@ -53,10 +53,19 @@ Qué revisa cada herramienta, los umbrales acordados y el flujo de GitHub Action
 bash
 copy .env.example .env          # Windows; en Linux/macOS: cp .env.example .env
 docker compose up -d db
+python -m src.crear_tablas     # crea las tablas que falten, sin borrar datos
 python -m src.seed             # usuarios y datos de ejemplo (requiere CONTRASENA_DEMO; --reset para empezar de cero)
 
 
-La API lee `DATABASE_URL` del archivo `.env`. Las tablas (`usuarios`, `solicitudes`, `autorizaciones` y `comprobantes`) se crean al arrancar y ningún registro se borra físicamente. Las pruebas usan SQLite en memoria y no tocan PostgreSQL.
+La API lee `DATABASE_URL` del archivo `.env`. Las tablas (`usuarios`, `solicitudes`, `autorizaciones` y `comprobantes`) las crea `python -m src.crear_tablas`, y la API también las crea al arrancar si no existen. Ningún registro se borra físicamente: `usuarios`, `solicitudes` y `comprobantes` usan borrado lógico (`deleted_at` y `activo`), y `autorizaciones` no se modifica una vez creada. Solo `python -m src.seed --reset` vacía las tablas, y es únicamente para pruebas y datos de demostración. Las pruebas usan SQLite en memoria y no tocan PostgreSQL.
+
+Notas:
+
+- **Gastos:** no hay una tabla `gastos` aparte. Cada gasto se registra en `comprobantes`, con su monto, fecha, proveedor, concepto, obra, partida y clasificación (cobrable al cliente o fondo de contingencia). Las correcciones son registros nuevos de tipo Ajuste o Reverso que apuntan al comprobante original (`comprobante_origen_id`).
+- **Obras:** las obras y sus partidas viven en memoria con el catálogo de demostración; una obra registrada desde la pantalla se pierde al reiniciar la API.
+- **Puerto ocupado:** si ya tienes PostgreSQL instalado en Windows, ese servicio usa el puerto 5432 y responde `password authentication failed for user "cajachica"`. Cambia en `.env` el puerto del contenedor y el de la URL, por ejemplo `POSTGRES_PORT=5434` y `DATABASE_URL=postgresql+psycopg://cajachica:<tu contraseña>@localhost:5434/cajachica`, y vuelve a ejecutar `docker compose up -d db`.
+- **Contraseña cambiada después:** el contenedor toma `POSTGRES_PASSWORD` solo la primera vez que crea el volumen. Si la cambias después en `.env`, actualízala también dentro de la base: `docker exec cajachica-db psql -U cajachica -d cajachica -c "ALTER USER cajachica WITH PASSWORD '<nueva>'"`.
+- **Abrir las pantallas:** usa `http://127.0.0.1:8000/app/` (servidas por la API). Con Live Server de VS Code (puerto 5500) las llamadas a `/api` responden 405 porque ahí no hay API.
 
 ### Levantar la API
 
@@ -80,13 +89,22 @@ Abre http://127.0.0.1:8000/docs para probar los endpoints desde Swagger.
 | POST | /api/comprobantes/captura | Captura rápida: solo la foto del comprobante |
 | GET | /api/comprobantes | Listar comprobantes (filtros `solicitante_id`, `estado`) |
 | GET | /api/comprobantes/{id} | Obtener un comprobante por UUID |
+| GET | /api/comprobantes/{id}/imagen | Ver la foto que se subió del comprobante |
 | PUT | /api/comprobantes/{id}/datos | Completar datos (horas obligatorias en maquinaria y mano de obra) |
 | POST | /api/comprobantes/{id}/cerrar | Cerrar: factura → Comprobado; ticket o nota → Revisión contabilidad |
 | POST | /api/comprobantes/{id}/ajustes | Ajuste o reverso de un comprobante cerrado |
 | DELETE | /api/comprobantes/{id} | Descartar un borrador (soft delete) |
+| POST | /api/usuarios | Registrar un usuario con rol (nunca devuelve la contraseña) |
+| POST | /api/sesion | Iniciar sesión: 401 si el usuario o la contraseña no coinciden |
+| GET | /api/usuarios | Listar usuarios activos (filtro `rol`) |
+| GET | /api/usuarios/{usuario} | Obtener un usuario activo por su nombre de usuario |
+| PUT | /api/usuarios/{id}/contrasena | Cambiar la contraseña (exige la actual) |
+| DELETE | /api/usuarios/{id} | Dar de baja un usuario (soft delete) |
 | GET | /api/saldos | Saldos por obra: autorizado, comprobado, disponible, reembolsos pendientes, por facturar al cliente y fondo de contingencia |
 
-Los datos se guardan en PostgreSQL y sobreviven al reiniciar la API. Las imágenes de comprobantes se guardan en la carpeta `UPLOADS_DIR` (por defecto `./uploads`, ver `.env.example`). Cada foto se lee con OCR ([RapidOCR](https://rapidai.github.io/RapidOCRDocs/)) antes de guardarse y se rechaza si sale borrosa, oscura o sin ningún monto; con `VALIDAR_LEGIBILIDAD=false` se desactiva.
+Los datos se guardan en PostgreSQL y sobreviven al reiniciar la API. Las imágenes de comprobantes se guardan en la carpeta `UPLOADS_DIR` (por defecto `./uploads`, ver `.env.example`). Cada foto se lee con OCR ([RapidOCR](https://rapidai.github.io/RapidOCRDocs/)) antes de guardarse y se rechaza si sale borrosa, oscura o sin ningún monto; con `VALIDAR_LEGIBILIDAD=false` se desactiva. De esa misma lectura se precargan el proveedor, la fecha, el monto y el tipo (`lectura` del comprobante); lo que no se reconoce queda por completar. Desde "Comprobante enviado" se abre `comprobante.html` con la foto y los datos leídos. Si la lectura sale completa (los 4 datos, confianza de al menos 0.9, solicitud aprobada y partida sin horas), el comprobante se cierra solo: la factura queda *Comprobado* y el ticket pasa a *Revisión contabilidad*, con el concepto de la solicitud; con `CIERRE_AUTOMATICO=false` siempre lo confirma el residente. Un gasto sin foto no se puede cerrar.
+
+Un fondo aprobado debe comprobarse dentro de `LIMITE_DIAS_COMPROBACION` días (por defecto 7). Si el residente tiene fondos sin comprobar por más tiempo, sus solicitudes nuevas aparecen como bloqueadas en la bandeja de autorización y `POST /api/solicitudes/{id}/aprobar` responde 423 (RF04/HU04).
 
 ### Usuarios y roles
 
@@ -101,7 +119,7 @@ Cada persona tiene un usuario con nombre, correo, rol (residente de obra, admini
 | `DIR-CARLOS` | Carlos Ruiz | Dirección |
 | `CONT-SOFIA` | Sofía Navarro | Contabilidad |
 
-Solo un residente de obra activo registra solicitudes y captura comprobantes. Para aprobar o rechazar se envía únicamente `autorizador_id` (el usuario); el nombre y el rol se toman de su registro, así que contabilidad o un residente reciben 403 y un usuario inexistente 422. Las contraseñas se guardan en texto plano por decisión del equipo para el prototipo: no uses contraseñas reales. Todavía no hay inicio de sesión ni pantallas filtradas por rol (RF15/HU20).
+Solo un residente de obra activo registra solicitudes y captura comprobantes. Para aprobar o rechazar se envía únicamente `autorizador_id` (el usuario); el nombre y el rol se toman de su registro, así que contabilidad o un residente reciben 403 y un usuario inexistente 422. Las contraseñas se guardan en texto plano por decisión del equipo para el prototipo: no uses contraseñas reales. Las pantallas piden iniciar sesión y muestran solo los apartados del rol (RF15/HU20). La sesión del prototipo vive en el navegador: la API todavía no exige un token, así que cada acción vuelve a validar el rol del usuario que recibe.
 
 Un fondo aprobado debe comprobarse dentro de `LIMITE_DIAS_COMPROBACION` días (por defecto 7). Si el residente tiene fondos sin comprobar por más tiempo, sus solicitudes nuevas aparecen como bloqueadas en la bandeja de autorización y `POST /api/solicitudes/{id}/aprobar` responde 423 (RF04/HU04).
 
@@ -109,14 +127,22 @@ Al aprobar una solicitud, administración o dirección eligen si el gasto es **c
 
 ### Pantallas del prototipo
 
-Con la API arriba, abre `http://127.0.0.1:8000/app/`:
+Con la API arriba, abre `http://127.0.0.1:8000/app/`. Sin sesión te lleva a `login.html`, donde puedes entrar con un usuario de demostración o crear una cuenta. Cada rol ve solo sus pestañas:
 
-| Pantalla | Ruta | Historia |
-| --- | --- | --- |
-| Captura de comprobante | /app/index.html | HU07, HU16 |
-| Solicitar fondo | /app/solicitud.html | HU01, HU02 |
-| Bandeja de autorización | /app/autorizacion.html | HU05 |
-| Saldos por obra | /app/saldos.html | HU10 |
+| Pantalla | Ruta | Roles | Historia |
+| --- | --- | --- | --- |
+| Iniciar sesión / crear cuenta | /app/login.html | Todos | HU20 |
+| Mi caja chica (captura de comprobante) | /app/index.html | Residente | HU07, HU08, HU11, HU16, HU21 |
+| Nueva solicitud | /app/solicitud.html | Residente | HU01, HU02, HU04 |
+| Autorizaciones | /app/autorizacion.html | Administración, Dirección | HU04, HU05, HU15 |
+| Comprobantes (revisión, ajustes y reversos) | /app/revision.html | Contabilidad, Administración, Dirección | HU07 |
+| Saldos por obra | /app/saldos.html | Todos | HU10, HU15 |
+| Obras y partidas | /app/obras.html | Administración, Dirección | HU02 |
+| Usuarios | /app/usuarios.html | Administración, Dirección | HU20 |
+| Mi cuenta (cambio de contraseña) | /app/cuenta.html | Todos | HU20 |
+| Guía de pruebas | /app/pruebas.html | Todos | Todas |
+
+La **Guía de pruebas** lista, por historia, con qué usuario entrar, los pasos y el resultado esperado; el avance se marca y se guarda en el navegador.
 
 ### Gasto sin solicitud previa
 

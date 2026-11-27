@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Caja chica · Usuarios</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main class="ancho">
+    <h1>Usuarios y roles</h1>
+    <p class="nota">Cada rol ve solo sus apartados: el residente solicita y comprueba, Administración y Dirección autorizan, Contabilidad revisa (RF15/HU20). Dar de baja conserva el registro para la auditoría.</p>
+
+    <p id="aviso" class="aviso" role="status" aria-live="polite" hidden></p>
+
+    <div class="dos-columnas">
+      <section>
+        <div class="filtros-linea">
+          <label for="filtro-rol">Rol</label>
+          <select id="filtro-rol">
+            <option value="">Todos</option>
+            <option value="Residente de obra">Residente de obra</option>
+            <option value="Administración">Administración</option>
+            <option value="Dirección">Dirección</option>
+            <option value="Contabilidad">Contabilidad</option>
+          </select>
+        </div>
+        <div class="tabla-contenedor">
+          <table class="tabla">
+            <thead>
+              <tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Obra</th><th></th></tr>
+            </thead>
+            <tbody id="filas"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Dar de alta</h2>
+        <form id="form-usuario" novalidate>
+          <label for="nuevo-usuario">Usuario</label>
+          <input id="nuevo-usuario" name="usuario" type="text" autocomplete="off" placeholder="RESIDENTE-ANA" required>
+          <label for="nuevo-nombre">Nombre completo</label>
+          <input id="nuevo-nombre" name="nombre" type="text" autocomplete="off" required>
+          <label for="nuevo-email">Correo electrónico</label>
+          <input id="nuevo-email" name="email" type="email" autocomplete="off" required>
+          <label for="nuevo-rol">Rol</label>
+          <select id="nuevo-rol" name="rol">
+            <option value="Residente de obra">Residente de obra</option>
+            <option value="Administración">Administración</option>
+            <option value="Dirección">Dirección</option>
+            <option value="Contabilidad">Contabilidad</option>
+          </select>
+          <div id="campo-obra">
+            <label for="nuevo-obra">Obra asignada</label>
+            <select id="nuevo-obra" name="obra_id">
+              <option value="">Selecciona una obra</option>
+            </select>
+          </div>
+          <label for="nuevo-contrasena">Contraseña inicial</label>
+          <input id="nuevo-contrasena" name="contrasena" type="password" autocomplete="new-password" minlength="8" required>
+          <p class="nota">Mínimo 8 caracteres; la persona puede cambiarla en "Mi cuenta".</p>
+          <div class="acciones">
+            <button type="submit">Crear usuario</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+  <script src="sesion.js"></script>
+  <script src="shell.js"></script>
+  <script src="comun.js"></script>
+  <script src="usuarios.js"></script>
+</body>
+</html>

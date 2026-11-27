@@ -217,8 +217,6 @@ class SolicitudFondoService:
 
     def _crear_bloqueo(self, vencidas: List[SolicitudFondo], monto: Decimal) -> BloqueoAdeudo:
         folios = [s.folio for s in vencidas]
-        usuario = self._usuarios.obtener_por_usuario(vencidas[0].solicitante_id)
-        nombre = usuario.nombre if usuario else vencidas[0].solicitante_id
         return BloqueoAdeudo(
             bloqueada=True,
             comprobaciones_vencidas=len(vencidas),
@@ -226,7 +224,7 @@ class SolicitudFondoService:
             folios_vencidos=folios,
             limite_dias=self.limite_dias_comprobacion,
             mensaje=(
-                f"Bloqueada: {nombre} tiene {len(vencidas)} comprobación(es) pendiente(s) con más de "
+                f"Bloqueada: el residente tiene {len(vencidas)} comprobación(es) pendiente(s) con más de "
                 f"{self.limite_dias_comprobacion} días ({', '.join(folios)}). "
                 "Debe comprobar sus gastos anteriores antes de recibir un fondo nuevo."
             ),

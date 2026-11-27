@@ -7,9 +7,12 @@
   const CLAVE_AUTORIZADOR = "cajaChica.autorizador";
   const $ = (id) => document.getElementById(id);
 
-  // El servidor toma el nombre y el rol del registro del usuario; aquí solo se recuerda cuál es
+  // Quién decide sale de la sesión iniciada; el servidor toma el nombre y el rol de su registro
   function cargarIdentidad() {
-    $("usuario").value = leer(CLAVE_AUTORIZADOR);
+    const sesion = window.Sesion.actual();
+    $("usuario").value = sesion ? sesion.usuario : leer(CLAVE_AUTORIZADOR);
+    $("usuario-nombre").textContent = sesion ? sesion.nombre + " (" + sesion.usuario + ")" : "";
+    $("usuario-rol").textContent = sesion ? sesion.rol : "";
   }
 
   function identidad() {
@@ -90,8 +93,12 @@
 
     // Con comprobaciones vencidas no se aprueba; rechazar sigue disponible para cerrar la solicitud
     const bloqueo = solicitud.bloqueo && solicitud.bloqueo.bloqueada ? solicitud.bloqueo : null;
-    aprobar.disabled = Boolean(bloqueo);
     const soloDireccion = solicitud.nivel_autorizacion === "Dirección";
+    // Administración no decide lo que excede su límite; el servidor también lo rechaza con 403
+    const sesion = window.Sesion.actual();
+    const sinPermiso = soloDireccion && (!sesion || sesion.rol !== "Dirección");
+    aprobar.disabled = sinPermiso || Boolean(bloqueo);
+    rechazar.disabled = sinPermiso;
 
     return el("div", { className: "tarjeta" + (bloqueo ? " bloqueada" : "") },
       el("h3", { texto: solicitud.folio }),

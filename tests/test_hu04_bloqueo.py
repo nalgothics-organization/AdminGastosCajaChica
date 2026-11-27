@@ -27,6 +27,8 @@ OTRO_RESIDENTE = "RESIDENTE-LUIS"
 ADMINISTRACION = {
     "autorizador_id": "ADMIN-LAURA",
     "clasificacion": "cobrable_cliente",
+    "autorizador_nombre": "Laura Méndez",
+    "rol_autorizador": "Administración",
 }
 PAYLOAD_SOLICITUD = {
     "obra_id": "OBRA-NORTE-01",
@@ -95,7 +97,6 @@ class TestHU04Bloqueo(BaseBloqueoTestCase):
         for solicitud in (creada, consultada):
             self.assertTrue(solicitud["bloqueo"]["bloqueada"])
             self.assertIn("comprobar sus gastos anteriores", solicitud["bloqueo"]["mensaje"])
-            self.assertIn("Paula Rivas", solicitud["bloqueo"]["mensaje"])
 
     def test_criterio_3_bandeja_marca_bloqueada_con_numero_de_comprobaciones(self):
         """Dado que reviso las autorizaciones en la pantalla única, cuando un residente tiene

@@ -2,17 +2,17 @@
 (function () {
   "use strict";
 
-  const { llamar, enviarJson, avisar, el, leer, guardar, etiquetaEstado, dinero, CLAVE_RESIDENTE, CLASIFICACIONES } =
-    window.Caja;
+  const { llamar, enviarJson, avisar, el, etiquetaEstado, dinero, CLASIFICACIONES } = window.Caja;
   const LIMITE_ADMINISTRACION = 5000;
   const $ = (id) => document.getElementById(id);
-  let residente = leer(CLAVE_RESIDENTE);
+  // Quién solicita sale de la sesión iniciada (sesion.js); solo un residente ve esta pantalla
+  const sesion = window.Sesion.actual();
+  const residente = sesion && sesion.rol === window.Sesion.ROLES.RESIDENTE ? sesion.usuario : "";
 
   function mostrar() {
-    $("config").hidden = Boolean(residente);
     $("registro").hidden = !residente;
     $("mis-solicitudes").hidden = !residente;
-    $("residente-actual").textContent = residente ? "Solicitando como " + residente : "";
+    $("residente-actual").textContent = residente ? "Solicitando como " + sesion.nombre + " (" + residente + ")" : "";
     if (residente) {
       cargarSolicitudes();
     }
@@ -44,6 +44,11 @@
       const obras = await llamar("/catalogo/obras");
       $("obra").append(...obras.map((o) => el("option", { value: o.id, texto: o.nombre + " · " + o.id })));
       $("obra").addEventListener("change", mostrarDisponible);
+      // La obra asignada al residente queda elegida; puede cambiarla si apoya otra obra
+      if (sesion && sesion.obra_id && obras.some((o) => o.id === sesion.obra_id)) {
+        $("obra").value = sesion.obra_id;
+        mostrarDisponible();
+      }
     } catch (e) {
       avisar(e.message, true);
     }
@@ -70,9 +75,28 @@
             : null,
           el("dt", { texto: "Autoriza" }), el("dd", { texto: solicitud.nivel_autorizacion })
         ),
-        decision && decision.comentario ? el("p", { className: "nota", texto: decision.comentario }) : null
+        decision && decision.comentario ? el("p", { className: "nota", texto: decision.comentario }) : null,
+        solicitud.estado === "Pendiente" ? crearCancelar(solicitud) : null
       )
     );
+  }
+
+  // Solo una solicitud que nadie ha decidido se puede retirar; es un borrado lógico (AGENTS.md §8)
+  function crearCancelar(solicitud) {
+    const boton = el("button", { type: "button", className: "secundario", texto: "Retirar solicitud" });
+    boton.addEventListener("click", async () => {
+      if (!confirm("¿Retirar " + solicitud.folio + "? Ya no aparecerá en la bandeja de autorización.")) {
+        return;
+      }
+      try {
+        await llamar("/solicitudes/" + solicitud.id, { method: "DELETE" });
+        avisar(solicitud.folio + " retirada.");
+        cargarSolicitudes();
+      } catch (e) {
+        avisar(e.message, true);
+      }
+    });
+    return el("div", { className: "acciones inicio" }, boton);
   }
 
   async function cargarSolicitudes() {
@@ -124,14 +148,6 @@
     }
   }
 
-  $("guardar-residente").addEventListener("click", () => {
-    const valor = $("residente").value.trim();
-    if (valor) {
-      residente = valor;
-      guardar(CLAVE_RESIDENTE, valor);
-      mostrar();
-    }
-  });
   $("monto").addEventListener("input", () => {
     $("campo-firma").hidden = Number($("monto").value) <= LIMITE_ADMINISTRACION;
   });

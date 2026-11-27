@@ -4,7 +4,8 @@
   "use strict";
 
   const API = "/api";
-  const CLAVE_RESIDENTE = "cajaChica.residente";
+  // Quién captura sale de la sesión iniciada (sesion.js); solo un residente ve esta pantalla
+  const sesion = window.Sesion.actual();
   // Espejo de PARTIDAS_CON_HORAS (src/models/comprobante.py); el backend valida de todos modos
   const PARTIDAS_CON_HORAS = ["renta de maquinaria", "mano de obra"];
   const PROPIA = "propia"; // gasto que el residente pagó por su cuenta, sin solicitud previa
@@ -15,7 +16,7 @@
   const $ = (id) => document.getElementById(id);
   const moneda = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
   const dinero = (valor) => moneda.format(Number(valor));
-  let residente = leerResidente();
+  const residente = sesion && sesion.rol === window.Sesion.ROLES.RESIDENTE ? sesion.usuario : "";
   let comprobanteActual = null;
   let seleccion = null; // id de la solicitud elegida o PROPIA
   let solicitudes = [];
@@ -24,23 +25,6 @@
   let inicioEscaneo = 0; // instante en que se tocó "Escanear comprobante", para medir el tiempo (RNF05)
   let enRevision = null; // foto que salió oscura y espera la decisión del residente
   const envios = []; // subidas en segundo plano: { estado, segundos, archivo, solicitudId, inicio }
-
-  function leerResidente() {
-    try {
-      return localStorage.getItem(CLAVE_RESIDENTE) || "";
-    } catch (e) {
-      return "";
-    }
-  }
-
-  function guardarResidente(valor) {
-    residente = valor;
-    try {
-      localStorage.setItem(CLAVE_RESIDENTE, valor);
-    } catch (e) {
-      // Sin almacenamiento local el residente se pide de nuevo en la siguiente visita
-    }
-  }
 
   function avisar(mensaje, esError) {
     const aviso = $("aviso");
@@ -126,11 +110,10 @@
   }
 
   async function mostrarPantalla() {
-    $("config").hidden = Boolean(residente);
     $("mi-caja").hidden = !residente;
     $("formulario").hidden = true;
-    $("residente-actual").textContent = residente ? "Capturando como " + residente : "";
-    $("residente-movil").textContent = residente;
+    $("residente-actual").textContent = residente ? "Capturando como " + sesion.nombre + " (" + residente + ")" : "";
+    $("residente-movil").textContent = residente ? sesion.nombre : "";
     if (!residente) {
       return;
     }
@@ -296,16 +279,32 @@
     $("revision-foto").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  const RESULTADO_ENVIO = { "Comprobado": "comprobado", "Revisión contabilidad": "en revisión de contabilidad" };
+
+  // Si la foto se leyó completa, el comprobante ya quedó cerrado sin más pasos (RF08/HU08)
+  function resultadoDelEnvio(envio) {
+    return RESULTADO_ENVIO[envio.estadoComprobante] ? " y " + RESULTADO_ENVIO[envio.estadoComprobante] : "";
+  }
+
+  // Lleva a la pantalla donde se ven la foto enviada y los datos que leyó el OCR (RF11/HU11)
+  function enlaceAlComprobante(comprobanteId, texto) {
+    const enlace = el("a", "ver-comprobante", texto + " · Ver foto y datos");
+    enlace.href = "comprobante.html?id=" + encodeURIComponent(comprobanteId);
+    return enlace;
+  }
+
   function dibujarEnvios() {
     $("envios").replaceChildren(...envios.slice(-3).map((envio) => {
       const texto = envio.estado === "enviado"
-        ? "Comprobante enviado · " + envio.segundos + " s desde que tocaste Escanear"
+        ? "Comprobante enviado" + resultadoDelEnvio(envio) + " · " + envio.segundos + " s desde que tocaste Escanear"
         : envio.estado === "rechazado"
           ? envio.motivo
           : envio.estado === "error"
             ? "No se pudo enviar el comprobante"
             : "Comprobante recibido · revisando y subiendo en segundo plano…";
-      const fila = el("li", "envio " + envio.estado, texto);
+      const fila = envio.estado === "enviado" && envio.comprobanteId
+        ? el("li", "envio enviado", null, enlaceAlComprobante(envio.comprobanteId, texto))
+        : el("li", "envio " + envio.estado, texto);
       if (envio.estado === "rechazado") {
         // El servidor no pudo leer la foto: se repite con la cámara, sin reenviar la misma imagen
         const repetir = el("label", "boton", "Repetir foto");
@@ -342,7 +341,9 @@
     }
     datos.append("imagen", envio.archivo);
     try {
-      await llamar("/comprobantes/captura", { method: "POST", body: datos });
+      const comprobante = await llamar("/comprobantes/captura", { method: "POST", body: datos });
+      envio.comprobanteId = comprobante.id;
+      envio.estadoComprobante = comprobante.estado;
       envio.estado = "enviado";
       envio.segundos = ((performance.now() - envio.inicio) / 1000).toFixed(1);
       dibujarEnvios();
@@ -381,9 +382,12 @@
     const form = $("form-datos");
     form.reset();
     const datos = comprobante.datos || {};
-    form.elements.fecha_gasto.value = datos.fecha_gasto || new Date().toISOString().slice(0, 10);
-    form.elements.monto_comprobado.value = datos.monto_comprobado || "";
-    form.elements.proveedor.value = datos.proveedor || "";
+    // Lo que confirmó el residente manda; si todavía no hay datos, se precarga lo que leyó el OCR (RF11)
+    const lectura = comprobante.datos ? null : comprobante.lectura;
+    const fuente = lectura || datos;
+    form.elements.fecha_gasto.value = fuente.fecha_gasto || (lectura ? "" : new Date().toISOString().slice(0, 10));
+    form.elements.monto_comprobado.value = fuente.monto_comprobado || "";
+    form.elements.proveedor.value = fuente.proveedor || "";
     form.elements.concepto.value = datos.concepto || "";
     form.elements.horas.value = datos.horas || "";
     if (datos.unidad_horas) {
@@ -395,9 +399,11 @@
       form.elements.partida_categoria.value = comprobante.partida_categoria;
       form.elements.clasificacion.value = comprobante.clasificacion || "";
     }
-    if (datos.tipo) {
-      form.querySelector('input[name="tipo"][value="' + datos.tipo + '"]').checked = true;
+    const tipo = datos.tipo || (lectura && lectura.tipo);
+    if (tipo) {
+      form.querySelector('input[name="tipo"][value="' + tipo + '"]').checked = true;
     }
+    marcarPorCompletar(lectura);
 
     $("formulario-solicitud").textContent = solicitud
       ? "Solicitud " + solicitud.folio + " · " + solicitud.obra_id
@@ -406,6 +412,26 @@
 
     $("mi-caja").hidden = true;
     $("formulario").hidden = false;
+  }
+
+  const ROTULOS_LECTURA = {
+    tipo: "tipo", monto_comprobado: "monto", fecha_gasto: "fecha", proveedor: "proveedor",
+  };
+
+  // Resalta los campos que el OCR no pudo leer para que el residente los complete
+  function marcarPorCompletar(lectura) {
+    const form = $("form-datos");
+    ["fecha_gasto", "monto_comprobado", "proveedor", "concepto"].forEach((nombre) => {
+      form.elements[nombre].classList.toggle("por-completar", Boolean(lectura) && !form.elements[nombre].value);
+    });
+    const aviso = $("aviso-lectura");
+    aviso.hidden = !lectura;
+    if (lectura) {
+      // El concepto nunca se lee de la foto: siempre lo escribe el residente
+      const faltan = lectura.faltantes.map((campo) => ROTULOS_LECTURA[campo]).concat("concepto");
+      aviso.textContent = "Se llenó con lo que se leyó de la foto: confírmalo o corrígelo. Por completar: "
+        + faltan.join(", ") + ".";
+    }
   }
 
   function pagoSinSolicitud() {
@@ -484,18 +510,10 @@
     }
   }
 
-  $("guardar-residente").addEventListener("click", () => {
-    const valor = $("residente").value.trim();
-    if (valor) {
-      guardarResidente(valor);
-      mostrarPantalla();
-    }
-  });
-
+  // En el celular la barra superior no se ve: este botón cierra la sesión
   $("cambiar-residente").addEventListener("click", () => {
-    guardarResidente("");
-    seleccion = null;
-    mostrarPantalla();
+    window.Sesion.cerrar();
+    location.replace("login.html");
   });
 
   document.querySelectorAll(".dispara-escaneo").forEach((boton) => {
@@ -531,6 +549,21 @@
     }
   }
 
+  // Desde la pantalla de un comprobante enviado ("Completar datos") se abre su formulario ya precargado
+  async function abrirDesdeEnlace() {
+    const id = new URLSearchParams(location.search).get("abrir");
+    if (!id) {
+      return;
+    }
+    history.replaceState(null, "", location.pathname);
+    const comprobante = comprobantes.find((c) => c.id === id);
+    if (comprobante) {
+      await abrirFormulario(comprobante);
+    }
+  }
+
+  $("form-datos").addEventListener("input", (evento) => evento.target.classList.remove("por-completar"));
+
   const obrasListas = cargarObras();
-  mostrarPantalla();
+  mostrarPantalla().then(abrirDesdeEnlace);
 })();

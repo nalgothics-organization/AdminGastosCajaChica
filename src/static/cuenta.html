@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Caja chica · Mi cuenta</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main>
+    <h1>Mi cuenta</h1>
+
+    <p id="aviso" class="aviso" role="status" aria-live="polite" hidden></p>
+
+    <div class="dos-columnas">
+      <section class="panel">
+        <h2>Mis datos</h2>
+        <dl id="datos" class="tarjeta"></dl>
+        <h3>Lo que puedes hacer</h3>
+        <ul id="apartados"></ul>
+      </section>
+
+      <section class="panel">
+        <h2>Cambiar contraseña</h2>
+        <form id="form-contrasena" novalidate>
+          <label for="actual">Contraseña actual</label>
+          <input id="actual" name="actual" type="password" autocomplete="current-password" required>
+          <label for="nueva">Contraseña nueva</label>
+          <input id="nueva" name="nueva" type="password" autocomplete="new-password" minlength="8" required>
+          <label for="confirmar">Confirmar contraseña nueva</label>
+          <input id="confirmar" name="confirmar" type="password" autocomplete="new-password" minlength="8" required>
+          <div class="acciones">
+            <button type="submit">Cambiar contraseña</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+  <script src="sesion.js"></script>
+  <script src="shell.js"></script>
+  <script src="comun.js"></script>
+  <script src="cuenta.js"></script>
+</body>
+</html>

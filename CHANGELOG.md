@@ -17,12 +17,18 @@
   - Revisión de dependencias con pip-audit en el flujo de calidad y configuración de Dependabot.
   - Primera versión del escaneo rápido de comprobantes (RNF05/HU21, #68 y #69): botón "Escanear comprobante" fijo en "Mi caja chica", solicitud activa precargada, subida en segundo plano con tiempo medido y aviso para repetir fotos borrosas u oscuras. Los umbrales de la revisión se calibraron con imágenes sintéticas y falta medir los 20 s en celular.
   - Revisión de la foto con OCR (RapidOCR) al escanear: se rechazan las fotos borrosas, oscuras o sin ningún monto, y la pantalla del celular se reduce a elegir solicitud y escanear (RNF05/HU21, #68 y #69).
+  - Extracción de proveedor, fecha, monto y tipo del comprobante con OCR (RF11/HU11, #29 y #30): se guarda lo que se reconoce, lo demás queda por completar, y "Comprobante enviado" abre una pantalla con la foto y los datos leídos. Las columnas nuevas de la base se agregan solas al arrancar.
+  - Exigencia de comprobante y cierre al confirmar el escaneo (RF08/HU08, #23 y #24): un gasto sin foto no se cierra; si la foto se lee completa y con confianza alta, la factura queda comprobada y el ticket pasa a revisión de contabilidad sin pasos extra.
   - Búsqueda de secretos con Gitleaks en el código y en todo el historial de Git en cada pull request.
+  - Inicio de sesión y registro de cuenta (RF15/HU20): `POST /api/usuarios`, `POST /api/sesion`, consulta, cambio de contraseña y baja lógica de usuarios. Todas las pantallas piden sesión, muestran a quien entró y solo las pestañas de su rol.
+  - Pantallas nuevas: Comprobantes (revisión con filtros, detalle con foto y lectura OCR, ajustes y reversos), Obras y partidas, Usuarios, Mi cuenta y Guía de pruebas con los pasos para probar cada historia.
+  - Script de creación de tablas `python -m src.crear_tablas`: crea en PostgreSQL las tablas que falten y muestra cuáles tienen borrado lógico, sin borrar datos. El README explica dónde se guardan los gastos, el puerto ocupado por un PostgreSQL local y cómo abrir las pantallas.
 
   ### Changed
 
   - `POST /api/solicitudes/{id}/aprobar` y `/rechazar` solo reciben `autorizador_id`: el nombre y el rol del autorizador se toman de su usuario y se ignoran si vienen en la petición. La bandeja de autorización pide el usuario en vez del nombre y el rol.
   - `solicitante_id` de solicitudes y comprobantes debe ser un usuario residente activo; se guarda en mayúsculas.
+  - Mi caja chica, Nueva solicitud y Autorizaciones toman el usuario de la sesión en vez de pedirlo; el residente puede retirar una solicitud pendiente.
   - `POST /api/solicitudes/{id}/aprobar` exige `clasificacion` (`cobrable_cliente` o `fondo_contingencia`); sin ella responde 422.
 
   ### Security

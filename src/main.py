@@ -13,6 +13,7 @@ from src.api.evidencias import router as evidencias_router
 from src.api.obras import router as obras_router
 from src.api.saldos import router as saldos_router
 from src.api.solicitudes import router as solicitudes_router
+from src.api.usuarios import router as usuarios_router
 from src.database import crear_tablas
 
 STATIC_DIR = Path(__file__).parent / "static"
@@ -38,8 +39,9 @@ app.include_router(solicitudes_router, prefix="/api", tags=["Solicitudes"])
 app.include_router(comprobantes_router, prefix="/api", tags=["Comprobantes"])
 app.include_router(saldos_router, prefix="/api", tags=["Saldos"])
 app.include_router(catalogo_obras_router, prefix="/api", tags=["Obras"])
+app.include_router(usuarios_router, prefix="/api", tags=["Usuarios"])
 
-# Interfaces del prototipo: captura en obra (RNF01/HU16), solicitud, autorización y saldos
+# Interfaces del prototipo: inicio de sesión y pantallas por rol (RF15/HU20)
 app.mount("/app", StaticFiles(directory=STATIC_DIR, html=True), name="app")
 
 

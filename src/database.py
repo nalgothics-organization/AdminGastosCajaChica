@@ -16,6 +16,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    JSON,
     Numeric,
     String,
     Text,
@@ -146,6 +147,10 @@ class ComprobanteTabla(Base):
     horas: Mapped[Optional[Decimal]] = mapped_column(Numeric(8, 2))
     unidad_horas: Mapped[Optional[str]] = mapped_column(String(20))
 
+    # Lo que el OCR leyó de la foto (RF11); no sustituye a los datos confirmados por el residente
+    lectura: Mapped[Optional[dict]] = mapped_column(JSON)
+    cierre_automatico: Mapped[Optional[bool]] = mapped_column(Boolean)
+
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
     deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
@@ -153,11 +158,10 @@ class ComprobanteTabla(Base):
 
 
 def agregar_columnas_faltantes(motor=None) -> None:
-    """Agrega a las tablas existentes las columnas opcionales nuevas del modelo.
+    """Agrega a las tablas ya creadas las columnas nuevas (siempre opcionales), sin borrar ningún dato.
 
-    `create_all` crea las tablas que faltan pero no modifica las que ya existen; sin esto, una base
-    creada con una versión anterior fallaría al leer una columna nueva. Solo agrega columnas que
-    aceptan nulos, así que no toca ni borra datos existentes.
+    `create_all` solo crea tablas que no existen; así una base de PostgreSQL de una versión anterior
+    sigue funcionando sin tener que reiniciarla con `python -m src.seed --reset`.
     """
     motor = motor or engine
     inspector = inspect(motor)
@@ -167,10 +171,9 @@ def agregar_columnas_faltantes(motor=None) -> None:
                 continue
             existentes = {columna["name"] for columna in inspector.get_columns(tabla.name)}
             for columna in tabla.columns:
-                if columna.name in existentes or not columna.nullable:
-                    continue
-                tipo = columna.type.compile(dialect=motor.dialect)
-                conexion.execute(text(f"ALTER TABLE {tabla.name} ADD COLUMN {columna.name} {tipo}"))
+                if columna.name not in existentes and columna.nullable:
+                    tipo = columna.type.compile(dialect=motor.dialect)
+                    conexion.execute(text(f'ALTER TABLE "{tabla.name}" ADD COLUMN "{columna.name}" {tipo}'))
 
 
 def crear_tablas() -> None:

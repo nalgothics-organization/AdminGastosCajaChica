@@ -8,12 +8,6 @@
 </head>
 <body class="captura">
   <main>
-    <section id="config" class="panel" hidden>
-      <label for="residente">¿Quién captura? (solo la primera vez)</label>
-      <input id="residente" type="text" placeholder="ID de residente" autocomplete="off">
-      <button id="guardar-residente" type="button">Guardar</button>
-    </section>
-
     <section id="mi-caja" hidden>
       <!-- Solo en celular: quién captura, para elegir la solicitud y escanear sin nada más -->
       <div class="barra-movil">
@@ -21,7 +15,7 @@
           <small>Capturando como</small>
           <strong id="residente-movil"></strong>
         </div>
-        <button type="button" id="cambiar-residente" class="secundario">Cambiar</button>
+        <button type="button" id="cambiar-residente" class="secundario">Salir</button>
       </div>
 
       <div class="hero">
@@ -78,6 +72,7 @@
     <section id="formulario" class="panel" hidden>
       <h2>Datos del comprobante</h2>
       <form id="form-datos" novalidate>
+        <p id="aviso-lectura" class="nota aviso-lectura" hidden></p>
         <fieldset>
           <legend>Tipo</legend>
           <label><input type="radio" name="tipo" value="factura" required> Factura</label>
@@ -153,6 +148,7 @@
       </form>
     </section>
   </main>
+  <script src="sesion.js"></script>
   <script src="shell.js"></script>
   <script src="calidad.js"></script>
   <script src="app.js"></script>

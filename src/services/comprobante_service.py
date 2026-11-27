@@ -25,6 +25,7 @@ from src.models.comprobante import (
 )
 from src.models.solicitud import MENSAJE_CLASIFICACION, EstadoSolicitud
 from src.repositories import ComprobanteRepositorio
+from src.services.extraccion import extraer_datos
 from src.services.legibilidad import revisar_legibilidad
 from src.models.usuario import RolUsuario
 from src.services.solicitud_service import SolicitudFondoService, solicitud_service
@@ -39,6 +40,9 @@ FIRMAS_IMAGEN = {
 
 # Por debajo de este tamaño la foto difícilmente es legible
 TAMANO_MINIMO_IMAGEN_BYTES = 20 * 1024
+
+# Confianza media mínima del OCR para cerrar solo un comprobante: un monto mal leído quedaría cerrado
+CONFIANZA_CIERRE_AUTOMATICO = 0.9
 
 
 class ComprobanteNoEncontradoError(LookupError):
@@ -63,6 +67,8 @@ class ComprobanteService:
         self.tamano_maximo_bytes = int(os.getenv("MAX_IMAGEN_MB", "10")) * 1024 * 1024
         # Rechaza fotos borrosas, oscuras o que no parecen un comprobante (RNF05/HU21); se apaga en las pruebas
         self.validar_legibilidad = os.getenv("VALIDAR_LEGIBILIDAD", "true").strip().lower() != "false"
+        # Cierra solo el comprobante cuya foto se lee completa (RF08/HU08); con "false" siempre lo confirma el residente
+        self.cierre_automatico = os.getenv("CIERRE_AUTOMATICO", "true").strip().lower() != "false"
 
     def validar_imagen(self, contenido: bytes, content_type: str) -> str:
         """Valida formato y tamaño de la imagen; devuelve la extensión con la que se guarda."""
@@ -97,8 +103,10 @@ class ComprobanteService:
         solicitante_id = self._usuarios.exigir(solicitante_id, [RolUsuario.RESIDENTE], "comprobar gastos").usuario
         solicitud = self._solicitud_del_residente(solicitud_id, solicitante_id) if solicitud_id else None
         extension = self.validar_imagen(contenido, content_type)
+        lectura = None
         if revisar_texto and self.validar_legibilidad:
-            revisar_legibilidad(contenido)
+            # Una sola lectura de la foto sirve para validarla y para precargar monto, fecha, proveedor y tipo
+            lectura = extraer_datos(*revisar_legibilidad(contenido))
 
         comprobante_id = uuid4()
         self.uploads_dir.mkdir(parents=True, exist_ok=True)
@@ -115,15 +123,52 @@ class ComprobanteService:
             partida_categoria=solicitud.partida_categoria if solicitud else None,
             clasificacion=self._clasificacion_de(solicitud),
             imagen_ruta=str(ruta),
+            lectura=lectura,
         )
         self._db[comprobante.id] = comprobante
-        return comprobante
+        return self._cerrar_si_la_lectura_es_completa(comprobante, solicitud)
+
+    def _cerrar_si_la_lectura_es_completa(self, comprobante: Comprobante, solicitud) -> Comprobante:
+        """Al confirmar el escaneo, factura se cierra y ticket pasa a revisión sin más pasos (RF08/HU08).
+
+        Solo ocurre si la foto se leyó completa y con confianza alta, hay una solicitud aprobada y la partida
+        no pide horas (las horas no se leen de la foto). En cualquier otro caso queda por completar.
+        """
+        lectura = comprobante.lectura
+        if not (self.cierre_automatico and solicitud and lectura):
+            return comprobante
+        if lectura.faltantes or (lectura.confianza or 0) < CONFIANZA_CIERRE_AUTOMATICO or comprobante.requiere_horas:
+            return comprobante
+        try:
+            datos = ComprobanteDatos(
+                tipo=lectura.tipo,
+                monto_comprobado=lectura.monto_comprobado,
+                fecha_gasto=lectura.fecha_gasto,
+                proveedor=lectura.proveedor,
+                # El concepto no se lee de la foto: es el de la solicitud que se está comprobando
+                concepto=solicitud.concepto,
+                solicitud_id=solicitud.id,
+            )
+            self.completar_datos(comprobante.id, datos)
+            cerrado = self.cerrar(comprobante.id)
+        except ValueError:
+            return self._db[comprobante.id]
+        cerrado.cierre_automatico = True
+        return self._db.guardar(cerrado)
 
     def obtener_por_id(self, comprobante_id: UUID) -> Optional[Comprobante]:
         comprobante = self._db.get(comprobante_id)
         if comprobante and comprobante.activo:
             return comprobante
         return None
+
+    def ruta_imagen(self, comprobante_id: UUID) -> Optional[Path]:
+        """Ruta de la foto de un comprobante activo; solo se sirve lo que está dentro de la carpeta de fotos."""
+        comprobante = self.obtener_por_id(comprobante_id)
+        if comprobante is None:
+            return None
+        ruta = self.uploads_dir / Path(comprobante.imagen_ruta).name
+        return ruta if ruta.is_file() else None
 
     def listar(self, solicitante_id: Optional[str] = None, estado: Optional[EstadoComprobante] = None) -> List[Comprobante]:
         return [
@@ -222,6 +267,8 @@ class ComprobanteService:
     def cerrar(self, comprobante_id: UUID) -> Comprobante:
         """Cierra la comprobación: factura queda comprobada, ticket o nota pasa a revisión (RF08)."""
         comprobante = self._obtener_editable(comprobante_id)
+        if self.ruta_imagen(comprobante_id) is None:
+            raise ValueError("El gasto no cuenta con un comprobante adjunto: sube la foto antes de cerrarlo.")
         if comprobante.datos is None:
             raise ValueError("Complete los datos del comprobante antes de cerrarlo.")
 

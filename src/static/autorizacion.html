@@ -13,8 +13,8 @@
     <p id="aviso" class="aviso" role="status" aria-live="polite" hidden></p>
 
     <section class="panel">
-      <label for="usuario">Tu usuario</label>
-      <input id="usuario" type="text" placeholder="ADMIN-LAURA" autocomplete="username">
+      <p>Decides como <strong id="usuario-nombre"></strong> <span id="usuario-rol" class="etiqueta"></span></p>
+      <input id="usuario" type="hidden">
       <p class="nota">Tu nombre y tu rol se toman de tu usuario. Administración decide hasta $5,000; Dirección, cualquier monto.</p>
     </section>
 
@@ -26,6 +26,7 @@
     <h2>Decididas recientemente</h2>
     <ul id="decididas"></ul>
   </main>
+  <script src="sesion.js"></script>
   <script src="shell.js"></script>
   <script src="comun.js"></script>
   <script src="autorizacion.js"></script>

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Caja chica · Comprobantes</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main class="ancho">
+    <section class="hero">
+      <div>
+        <span class="insignia">Revisión y correcciones</span>
+        <h1>Comprobantes</h1>
+        <p>Revisa lo que capturaron los residentes. Un comprobante cerrado no se edita: se corrige con un ajuste o se anula con un reverso que lo referencia.</p>
+      </div>
+    </section>
+
+    <p id="aviso" class="aviso" role="status" aria-live="polite" hidden></p>
+
+    <div id="kpis" class="kpis tablero"></div>
+
+    <section class="panel filtros">
+      <div>
+        <label for="filtro-estado">Estado</label>
+        <select id="filtro-estado">
+          <option value="">Todos</option>
+          <option value="Revisión contabilidad" selected>Revisión contabilidad</option>
+          <option value="Comprobado">Comprobado</option>
+          <option value="Borrador">Borrador</option>
+        </select>
+      </div>
+      <div>
+        <label for="filtro-residente">Residente</label>
+        <select id="filtro-residente">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div>
+        <label for="filtro-obra">Obra</label>
+        <select id="filtro-obra">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <div>
+        <label for="filtro-registro">Registro</label>
+        <select id="filtro-registro">
+          <option value="">Todos</option>
+          <option value="original">Original</option>
+          <option value="ajuste">Ajuste</option>
+          <option value="reverso">Reverso</option>
+        </select>
+      </div>
+    </section>
+
+    <p id="vacio" class="nota" hidden>No hay comprobantes con esos filtros.</p>
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Capturado</th>
+            <th>Residente</th>
+            <th>Obra · partida</th>
+            <th>Registro</th>
+            <th>Tipo</th>
+            <th class="derecha">Monto</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="filas"></tbody>
+      </table>
+    </div>
+
+    <section id="detalle" class="panel" hidden>
+      <div class="encabezado-detalle">
+        <h2 id="detalle-titulo">Detalle</h2>
+        <button type="button" id="cerrar-detalle" class="secundario">Cerrar</button>
+      </div>
+      <div class="dos-columnas">
+        <div>
+          <img id="detalle-foto" class="foto-comprobante" alt="Foto del comprobante">
+          <p><a id="detalle-enlace" class="ver-comprobante" href="#">Abrir la pantalla del comprobante</a></p>
+        </div>
+        <div>
+          <dl id="detalle-datos" class="tarjeta"></dl>
+          <div id="detalle-historial"></div>
+        </div>
+      </div>
+
+      <form id="form-correccion" class="correccion" novalidate hidden>
+        <h3>Registrar corrección</h3>
+        <fieldset>
+          <legend>Tipo de corrección</legend>
+          <label><input type="radio" name="tipo_registro" value="ajuste" checked> Ajuste (corrige los datos)</label>
+          <label><input type="radio" name="tipo_registro" value="reverso"> Reverso (anula el comprobante)</label>
+        </fieldset>
+
+        <label for="motivo">Motivo</label>
+        <input id="motivo" name="motivo" type="text" minlength="5" required placeholder="Ej. el monto se leyó mal de la foto">
+
+        <div id="campos-ajuste">
+          <fieldset>
+            <legend>Tipo de comprobante</legend>
+            <label><input type="radio" name="tipo" value="factura"> Factura</label>
+            <label><input type="radio" name="tipo" value="ticket"> Ticket</label>
+            <label><input type="radio" name="tipo" value="nota_simple"> Nota simple</label>
+          </fieldset>
+          <div class="cuadricula-2">
+            <div>
+              <label for="aj-monto">Monto correcto</label>
+              <input id="aj-monto" name="monto_comprobado" type="number" min="0.01" step="0.01">
+            </div>
+            <div>
+              <label for="aj-fecha">Fecha del gasto</label>
+              <input id="aj-fecha" name="fecha_gasto" type="date">
+            </div>
+          </div>
+          <label for="aj-proveedor">Proveedor</label>
+          <input id="aj-proveedor" name="proveedor" type="text">
+          <label for="aj-concepto">Concepto</label>
+          <input id="aj-concepto" name="concepto" type="text">
+          <div id="aj-campo-horas" class="cuadricula-2" hidden>
+            <div>
+              <label for="aj-unidad">Horas de</label>
+              <select id="aj-unidad" name="unidad_horas">
+                <option value="maquinaria">Maquinaria</option>
+                <option value="trabajo">Trabajo</option>
+              </select>
+            </div>
+            <div>
+              <label for="aj-horas">Horas</label>
+              <input id="aj-horas" name="horas" type="number" min="0.1" step="0.1">
+            </div>
+          </div>
+        </div>
+
+        <div class="acciones">
+          <button type="submit">Registrar corrección</button>
+        </div>
+      </form>
+      <p id="sin-correccion" class="nota" hidden></p>
+    </section>
+  </main>
+  <script src="sesion.js"></script>
+  <script src="shell.js"></script>
+  <script src="comun.js"></script>
+  <script src="revision.js"></script>
+</body>
+</html>

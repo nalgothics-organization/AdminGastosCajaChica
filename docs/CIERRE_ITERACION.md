@@ -186,7 +186,12 @@ _Lo escribe @juanpismata11 mediante pull request: qué dice, qué muestra en pan
 
 ### 7:30 a 8:00 · Pendientes de los apartados por rol (@casizzy)
 
-_Lo escribe @casizzy mediante pull request: qué no se terminó, por qué, en qué iteración entra y qué se necesita del cliente._
+- **Qué dices:** "Los apartados por rol todavía no están terminados. Ya definimos con ustedes qué ve cada persona: el residente, administración, dirección y contabilidad. El trabajo está avanzado, pero aún no pasa la revisión del equipo, y por eso entra en Iteration 7. Para avanzar necesitamos que ustedes validen la tabla de qué apartados ve cada rol y la lista de personas con su rol."
+- **Qué haces en pantalla:**
+  1. Explicar de palabra, sin diapositivas, que los apartados por rol se presentan como propuesta.
+  2. Dar un ejemplo: el residente ve solo el saldo de su obra, mientras que administración, dirección y contabilidad ven todas las obras.
+  3. Pedir al cliente que valide la tabla de apartados por rol de `docs/CONTEXT.md` y la lista de personas con su rol.
+- **Criterio de aceptación / Estado:** HU20 (apartados visibles según el rol) no cumple todavía todos sus criterios, así que no se demuestra y se presenta como propuesta. Entra en Iteration 7, que es lo primero que se atiende en el orden propuesto.
 
 ### 8:00 a 12:00 · Preguntas del cliente
 
@@ -278,7 +283,14 @@ Es el cambio más amplio y depende de los apartados por rol, por lo que pasa a I
 
 ### Apartados por rol (@casizzy)
 
-_Pendiente: al menos dos preguntas con su respuesta, por pull request._
+**¿Qué ve cada persona al entrar a la aplicación?**
+Cada rol ve solo los apartados que le corresponden. El residente ve el escaneo de comprobantes, sus solicitudes y el saldo de su obra; administración ve las autorizaciones hasta $5,000, las entregas y la conciliación; dirección ve las autorizaciones de más de $5,000, y contabilidad revisa los tickets y las notas simples. Lo que no es de su rol no se le muestra y el sistema rechaza la acción.
+
+**¿Qué necesitan de nosotros para terminarlo?**
+Que validen la tabla de apartados por rol y la lista de personas con su rol. Con eso confirmamos que cada quien ve lo que necesita y nada más.
+
+**¿Cuándo estará listo?**
+Entra en Iteration 7, del 3 al 13 de diciembre, y es lo primero que atendemos. Va antes que la pantalla única porque esta depende de los apartados por rol.
 
 ## 7. Preguntas que quedaron sin respuesta
 

@@ -299,6 +299,11 @@ class SolicitudFondoService:
         if bloqueo.bloqueada:
             raise SolicitudBloqueadaError(f"No se puede aprobar {solicitud.folio}. {bloqueo.mensaje}")
 
+        # RF04: no se autoriza un fondo nuevo mientras el residente tenga comprobaciones vencidas
+        bloqueo = self.bloqueo_de(solicitud.solicitante_id)
+        if bloqueo.bloqueada:
+            raise SolicitudBloqueadaError(f"No se puede aprobar {solicitud.folio}. {bloqueo.mensaje}")
+
         monto_autorizado = data.monto_autorizado if data.monto_autorizado is not None else solicitud.monto_solicitado
         if monto_autorizado > solicitud.monto_solicitado:
             raise ValueError("El monto autorizado no puede ser mayor al monto solicitado.")

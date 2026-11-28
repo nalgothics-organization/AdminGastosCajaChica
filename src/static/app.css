@@ -524,6 +524,13 @@ button:disabled {
   color: var(--error);
 }
 
+/* Recurso ya entregado a la obra (RF06/HU06) */
+.etiqueta.entregado {
+  border-color: #b9ccf7;
+  background: #eaf1ff;
+  color: #1d4ed8;
+}
+
 .barra {
   height: 0.5rem;
   margin: 0.6rem 0;

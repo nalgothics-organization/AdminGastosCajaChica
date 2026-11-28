@@ -15,7 +15,7 @@ from uuid import uuid4
 
 from src.database import crear_tablas, reiniciar_tablas
 from src.models.comprobante import ComprobanteDatos
-from src.models.solicitud import AprobacionCreate, RechazoCreate, SolicitudFondoCreate
+from src.models.solicitud import AprobacionCreate, EntregaCreate, RechazoCreate, SolicitudFondoCreate
 from src.services.comprobante_service import comprobante_service
 from src.services.solicitud_service import solicitud_service
 
@@ -91,6 +91,17 @@ def aprobar(solicitud, nombre, rol, comentario=None, monto=None):
     )
 
 
+def entregar(solicitud, forma, referencia=None):
+    """Registra que Laura Méndez entregó el recurso de una solicitud aprobada (RF06)."""
+    solicitud_service.registrar_entrega(
+        solicitud.id,
+        EntregaCreate(
+            entregado_por_id="ADM-LAURA", entregado_por_nombre="Laura Méndez", rol_entrega="Administración",
+            forma_entrega=forma, fecha_entrega=date.today(), referencia=referencia,
+        ),
+    )
+
+
 def comprobar(residente, datos: ComprobanteDatos, solicitud=None, cerrar=True):
     """Captura la foto (vinculada a la solicitud elegida, si hay) y completa los datos."""
     comprobante = comprobante_service.capturar_rapido(
@@ -112,6 +123,7 @@ def cargar() -> None:
         "Renta de retroexcavadora para sondeo", "3500.00", "4000.00", "urgente", "fuga_tubo_01.jpg",
     )
     aprobar(maquinaria, "Laura Méndez", "Administración", "Se autoriza el monto cotizado.")
+    entregar(maquinaria, "Transferencia", "SPEI-20261127-0381")
     comprobar("RESIDENTE-PAU", ComprobanteDatos(
         tipo="nota_simple", monto_comprobado=Decimal("3200.00"), fecha_gasto=hoy - timedelta(days=1),
         proveedor="Maquinaria El Güero", concepto="Renta de retroexcavadora",
@@ -124,12 +136,20 @@ def cargar() -> None:
         firma="FIRMA-DIR-001",
     )
     aprobar(pintura, "Carlos Ruiz", "Dirección", "Aprobado dentro del presupuesto de acabados.")
+    entregar(pintura, "Efectivo")
     comprobar("RESIDENTE-JP", ComprobanteDatos(
         tipo="factura", monto_comprobado=Decimal("12400.00"), fecha_gasto=hoy - timedelta(days=2),
         proveedor="Pinturas del Centro", concepto="Pintura vinílica y sellador",
     ), pintura)
     # Una foto tomada en obra que todavía no se completa
     comprobante_service.capturar_rapido("RESIDENTE-JP", imagen_demo(), "image/png", revisar_texto=False)
+
+    # Aprobada y lista para registrar su entrega (apartado de entregas por registrar)
+    tuberia = solicitar(
+        "OBRA-NORTE-01", "RESIDENTE-PAU", "instalaciones", "Materiales",
+        "Tubería y conexiones de PVC para la línea hidráulica", "2400.00", "2600.00", "alta", "tuberia_06.jpg",
+    )
+    aprobar(tuberia, "Laura Méndez", "Administración")
 
     # Esperando decisión: una de Administración y una de Dirección
     solicitar(
@@ -172,7 +192,7 @@ def main() -> None:
         print("La base de datos ya tiene solicitudes; no se cargaron datos de ejemplo (usa --reset).")
         return
     cargar()
-    print("Datos de ejemplo cargados: 5 solicitudes, 4 comprobantes en 2 obras.")
+    print("Datos de ejemplo cargados: 6 solicitudes (2 entregadas, 1 por entregar), 4 comprobantes en 2 obras.")
 
 
 if __name__ == "__main__":

@@ -3,13 +3,13 @@ Reglas de codificación: UTF-8, LF, 4 espacios de indentación.
 """
 
 import re
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 
 from src.models.obra import es_partida_generica
 
@@ -217,6 +217,72 @@ class Autorizacion(BaseModel):
     fecha_decision: datetime = Field(default_factory=_ahora_utc)
 
 
+class FormaEntrega(str, Enum):
+    EFECTIVO = "Efectivo"
+    TRANSFERENCIA = "Transferencia"
+    TARJETA = "Tarjeta"
+
+
+# Con transferencia o tarjeta la referencia bancaria es obligatoria; en efectivo basta con marcarlo (HU06)
+FORMAS_CON_REFERENCIA = (FormaEntrega.TRANSFERENCIA, FormaEntrega.TARJETA)
+LONGITUD_MINIMA_REFERENCIA = 3
+
+
+class EntregaCreate(BaseModel):
+    """Datos que captura quien entrega el recurso de una solicitud aprobada (RF06/HU06)."""
+
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        json_schema_extra={
+            "examples": [
+                {
+                    "entregado_por_id": "ADM-LAURA",
+                    "entregado_por_nombre": "Laura Méndez",
+                    "rol_entrega": "Administración",
+                    "forma_entrega": "Transferencia",
+                    "fecha_entrega": "2026-11-27",
+                    "referencia": "SPEI-20261127-0381",
+                }
+            ]
+        },
+    )
+
+    entregado_por_id: str = Field(..., min_length=1, description="Identificador de quien entrega el dinero")
+    entregado_por_nombre: str = Field(..., min_length=3, description="Nombre de quien entrega el dinero")
+    rol_entrega: RolAutorizador = Field(..., description="Rol con el que se registra la entrega")
+    forma_entrega: FormaEntrega = Field(..., description="Efectivo, transferencia o tarjeta")
+    fecha_entrega: Optional[date] = Field(
+        default=None, description="Día en que salió el recurso; si se omite se toma el día de hoy"
+    )
+    referencia: Optional[str] = Field(
+        default=None,
+        max_length=120,
+        description="Referencia bancaria; obligatoria en transferencia o tarjeta, opcional en efectivo",
+    )
+
+    @model_validator(mode="after")
+    def validar_referencia(self) -> "EntregaCreate":
+        # Un texto vacío cuenta como "sin referencia"
+        self.referencia = self.referencia or None
+        if self.forma_entrega in FORMAS_CON_REFERENCIA and (
+            not self.referencia or len(self.referencia) < LONGITUD_MINIMA_REFERENCIA
+        ):
+            raise ValueError(f"Indica la referencia bancaria de la {self.forma_entrega.value.lower()}.")
+        return self
+
+
+class Entrega(BaseModel):
+    """Registro inmutable de cómo, cuándo y quién entregó el recurso de una solicitud aprobada."""
+
+    forma_entrega: FormaEntrega
+    fecha_entrega: date = Field(..., description="Día en que salió el recurso")
+    referencia: Optional[str] = Field(default=None, description="Referencia bancaria; vacía si fue efectivo sin folio")
+    entregado_por_id: str
+    entregado_por_nombre: str = Field(..., description="Persona que dispersó el recurso")
+    rol_entrega: RolAutorizador
+    fecha_registro: datetime = Field(default_factory=_ahora_utc, description="Momento en que se capturó el registro")
+
+
 class BloqueoAdeudo(BaseModel):
     """Comprobaciones vencidas del solicitante que impiden autorizar un fondo nuevo (RF04/HU04).
 
@@ -238,6 +304,9 @@ class SolicitudFondo(SolicitudFondoBase):
     nivel_autorizacion: str = Field(..., description="Nivel asignado según el monto: Administración o Dirección")
     estado: EstadoSolicitud = Field(default=EstadoSolicitud.PENDIENTE, description="Estado de la solicitud")
     autorizacion: Optional[Autorizacion] = Field(default=None, description="Decisión de aprobación o rechazo (RF05)")
+    entrega: Optional[Entrega] = Field(
+        default=None, description="Entrega del recurso; vacía mientras la solicitud aprobada no se entrega (RF06)"
+    )
     activo: bool = Field(default=True, description="Indicador para borrado lógico (soft delete)")
     deleted_at: Optional[datetime] = Field(default=None, description="Fecha de borrado lógico")
     created_at: datetime = Field(default_factory=_ahora_utc, description="Fecha de creación")

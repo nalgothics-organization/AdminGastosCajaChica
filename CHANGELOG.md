@@ -7,6 +7,12 @@
 
   ## [Unreleased]
 
+  ## [0.3.0] - 2026-11-27
+
+  Versión de cierre de Iteration 6, la que se presenta al cliente. Incluye dos de los cambios que pidió: el escaneo rápido de tickets y comprobantes (CC-03), con la validación de que cada gasto tenga un comprobante válido, y el bloqueo de fondos a residentes con comprobaciones vencidas (parte de CC-01). La pantalla única del administrador y los apartados por rol pasan a Iteration 7 (ver `docs/CIERRE_ITERACION.md`).
+
+  Esta versión no tiene cambios incompatibles para quien instala desde cero. Las columnas nuevas de la base de datos se agregan solas al arrancar sobre una base de la v0.2.0.
+
   ### Added
 
   - Bloqueo de fondos nuevos por comprobaciones vencidas (RF04/HU04, #15 y #16): si el residente tiene fondos aprobados sin comprobar por más de `LIMITE_DIAS_COMPROBACION` días (7 por defecto), su solicitud nueva aparece como bloqueada en la bandeja de autorización con el número de comprobaciones pendientes, el monto y los folios; la aprobación responde 423 y el residente ve el aviso al enviar y en "Mis solicitudes". Rechazar sigue permitido.
@@ -21,6 +27,10 @@
   ### Security
 
   - `evidencia_url` solo acepta una foto subida a la API o un enlace http(s); se rechazan `javascript:`, rutas con `../` y HTML.
+
+  ### Instalación
+
+  Descargar `AdminGastosCajaChica-v0.3.0.zip` de la [release v0.3.0](https://github.com/nalgothics-organization/AdminGastosCajaChica/releases/tag/v0.3.0) y comprobar su SHA-256 con el archivo `.sha256` adjunto. Después, descomprimirlo y ejecutar `powershell -ExecutionPolicy Bypass -File .\demo.ps1`. Requisitos: Python 3.10+ y Docker Desktop. Guía completa en `docs/BUILD.md`.
 
   ## [0.2.0] - 2026-11-20
 
@@ -81,7 +91,8 @@
 
   - Título de la categoría "Otros cambios" en `.github/release.yml` (#62).
 
-  [unreleased]: https://github.com/nalgothics-organization/AdminGastosCajaChica/compare/v0.2.0...HEAD
+  [unreleased]: https://github.com/nalgothics-organization/AdminGastosCajaChica/compare/v0.3.0...HEAD
+  [0.3.0]: https://github.com/nalgothics-organization/AdminGastosCajaChica/compare/v0.2.0...v0.3.0
   [0.2.0]: https://github.com/nalgothics-organization/AdminGastosCajaChica/compare/v0.1.0...v0.2.0
   [0.1.0]: https://github.com/nalgothics-organization/AdminGastosCajaChica/releases/tag/v0.1.0
 

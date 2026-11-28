@@ -44,7 +44,7 @@ Los requerimientos que estaban en la Iteration 5 sin iniciar pasan a la Iteratio
 
 ## Iteration 6
 
-**Fechas:** 16 al 29 de noviembre de 2026
+**Fechas:** 16 de noviembre al 2 de diciembre de 2026 (se extendió para cerrar el 2 de diciembre)
 
 **Objetivo:** Reunir en una sola pantalla, sin pestañas, todo el trabajo del administrador: autorizaciones con sus bloqueos, entregas del recurso, saldos por obra y alertas. La pantalla solo muestra los apartados de cada rol. Además, entregar un escaneo de tickets y comprobantes que se inicia desde un botón fijo y confirma en 20 segundos o menos.
 
@@ -59,11 +59,11 @@ Los requerimientos que estaban en la Iteration 5 sin iniciar pasan a la Iteratio
 | RNF05 - Escaneo rápido de comprobantes (#68) | HU21 (#69) | CC-03 | @PauAlba | 8 |
 | RF08 - Validación de comprobante (#23) | HU08 (#24) | CC-03 | @PauAlba | 8 |
 
-**Cierre (27 de noviembre de 2026):** se terminaron RF04, RF08 y RNF05 (22 de 50 h). RNF04, RF06 y RF15 pasan a Iteration 7 con el motivo comentado en cada tarjeta. Detalle en `docs/CIERRE_ITERACION.md`.
+**Cierre (2 de diciembre de 2026):** se terminaron RF04, RF06, RF08 y RNF05 (28 de 50 h). RNF04 y RF15 pasan a Iteration 7 con el motivo comentado en cada tarjeta. Detalle en `docs/CIERRE_ITERACION.md`.
 
 ## Iteration 7
 
-**Fechas:** 30 de noviembre al 13 de diciembre de 2026 (antes de la entrega final)
+**Fechas:** 3 al 13 de diciembre de 2026 (antes de la entrega final)
 
 **Objetivo:** Completar la pantalla única del administrador con la conciliación y terminar el escaneo con dos cosas: el OCR que precarga monto, fecha y proveedor, y la captura sin señal.
 
@@ -76,7 +76,6 @@ Los requerimientos que estaban en la Iteration 5 sin iniciar pasan a la Iteratio
 | RNF02 - Captura offline y sincronización (#40) | HU17 (#41) | CC-03 | @juanpismata11 | 16 |
 | RF15 - Apartados visibles según el rol (#66), viene de Iteration 6 | HU20 (#67) | CC-02 | @juanpismata11 | 10 |
 | RNF04 - Pantalla única por rol (#64), viene de Iteration 6 | HU19 (#65) | CC-01 | @jaaaaaaaaasiel | 12 |
-| RF06 - Registro de entrega del recurso (#19), viene de Iteration 6 | HU06 (#20) | CC-01 | @jaaaaaaaaasiel | 6 |
 
 ## Pospuestos
 

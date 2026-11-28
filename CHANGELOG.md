@@ -7,14 +7,15 @@
 
   ## [Unreleased]
 
-  ## [0.3.0] - 2026-11-27
+  ## [0.3.0] - 2026-12-02
 
-  Versión de cierre de Iteration 6, la que se presenta al cliente. Incluye dos de los cambios que pidió: el escaneo rápido de tickets y comprobantes (CC-03), con la validación de que cada gasto tenga un comprobante válido, y el bloqueo de fondos a residentes con comprobaciones vencidas (parte de CC-01). La pantalla única del administrador y los apartados por rol pasan a Iteration 7 (ver `docs/CIERRE_ITERACION.md`).
+  Versión de cierre de Iteration 6, la que se presenta al cliente. Incluye dos de los cambios que pidió: el escaneo rápido de tickets y comprobantes (CC-03), con la validación de que cada gasto tenga un comprobante válido, el bloqueo de fondos a residentes con comprobaciones vencidas y el registro de la entrega del dinero (parte de CC-01). La pantalla única del administrador y los apartados por rol pasan a Iteration 7 (ver `docs/CIERRE_ITERACION.md`).
 
   Esta versión no tiene cambios incompatibles para quien instala desde cero. Las columnas nuevas de la base de datos se agregan solas al arrancar sobre una base de la v0.2.0.
 
   ### Added
 
+  - Registro de la entrega del recurso (RF06/HU06, #19 y #20): desde la bandeja de autorización, administración registra la forma de entrega (efectivo, transferencia o tarjeta), la fecha, la referencia bancaria (obligatoria en transferencia y tarjeta) y quién entregó. Al aprobar, la solicitud aparece en "Entregas por registrar" sin recargar la página. Cada solicitud aprobada se entrega una sola vez y el registro no se modifica. Nuevo endpoint `POST /api/solicitudes/{id}/entrega` y tabla `entregas`, que se crea sola al arrancar.
   - Bloqueo de fondos nuevos por comprobaciones vencidas (RF04/HU04, #15 y #16): si el residente tiene fondos aprobados sin comprobar por más de `LIMITE_DIAS_COMPROBACION` días (7 por defecto), su solicitud nueva aparece como bloqueada en la bandeja de autorización con el número de comprobaciones pendientes, el monto y los folios; la aprobación responde 423 y el residente ve el aviso al enviar y en "Mis solicitudes". Rechazar sigue permitido.
   - Análisis estático con Ruff y regla de complejidad C901 (máximo 10), ejecutado junto con las pruebas en el flujo `.github/workflows/calidad.yml` en cada pull request. Detalle en `docs/PRUEBAS.md`.
   - Revisión de dependencias con pip-audit en el flujo de calidad y configuración de Dependabot.

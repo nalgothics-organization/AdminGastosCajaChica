@@ -143,7 +143,32 @@ _Lo escribe @jaaaaaaaaasiel mediante pull request: qué dice, qué muestra en pa
 
 ### 3:15 a 6:30 · Escaneo rápido y comprobante válido (@PauAlba)
 
-_Lo escribe @PauAlba mediante pull request: qué dice, qué muestra en pantalla y con qué datos de ejemplo._
+**Datos de ejemplo:** residente `RESIDENTE-PAU` (Paulina), obra **Torre Residencial Cimas Norte** y su solicitud aprobada **"Tubería y conexiones de PVC para la línea hidráulica"** por **$2,400**. Se escanean un ticket y una factura reales de una ferretería, elegidos y probados con la instalación de la v0.3.0 antes de presentar. La demostración se hace en el celular, con la pantalla proyectada o espejada.
+
+#### 3:15 a 5:00 · Escaneo rápido (HU21)
+
+- **Qué dices:** "El residente está en la obra, con prisa y con las manos ocupadas. Por eso, al abrir la aplicación en el celular solo ve lo necesario: la solicitud aprobada y un botón grande, **Escanear comprobante**, que siempre está a la vista. Aquí Paulina, residente de la obra Torre Residencial Cimas Norte, tiene aprobada la solicitud de tubería por $2,400. La aplicación ya sabe a qué solicitud y a qué obra pertenece el comprobante, así que no hay que escribir nada. Toco el botón, tomo la foto del ticket y confirmo con un toque. Puedo seguir trabajando: el comprobante se envía en segundo plano y en pantalla aparece cuántos segundos pasaron desde que toqué Escanear. La meta que acordamos es de 20 segundos o menos. Y si la foto sale mal, la aplicación no la deja pasar: aquí la tomé a oscuras y me pide repetirla con más luz, antes de guardarla."
+- **Qué haces en pantalla:**
+  1. En el celular, abrir la aplicación como `RESIDENTE-PAU`, elegir la solicitud de tubería y señalar el botón fijo **Escanear comprobante**.
+  2. Señalar la línea que dice a qué solicitud y obra se vincula el comprobante.
+  3. Tocar **Escanear comprobante**, fotografiar el ticket y confirmar la foto.
+  4. Mostrar el aviso de que se envió en segundo plano y el tiempo que tardó, escrito en pantalla.
+  5. Tomar una foto tapando la cámara y mostrar que pide repetirla; tocar **Repetir foto**.
+- **Criterio de aceptación que cumple:** el botón "Escanear comprobante" está fijo y visible sin desplazarse; con la foto, la obra y la solicitud activa ya vienen vinculadas y solo se confirma con un toque; la confirmación aparece sin esperar a que termine la subida; y una foto borrosa u oscura se rechaza antes de guardarla.
+
+> Nota para el ensayo: el tiempo real se lee en la pantalla del celular. La meta de 20 segundos o menos todavía debe medirse en el celular de la demostración y dejar la evidencia en la tarjeta #68. Si no se cumple, el escaneo rápido se presenta como propuesta y no como terminado.
+
+#### 5:00 a 6:30 · Comprobante válido y cierre automático (HU08)
+
+- **Qué dices:** "Un gasto solo cuenta si tiene su comprobante. La aplicación no permite cerrar un gasto sin foto, y lo que ven aquí pasa solo, sin pasos extra. Abro el ticket que acabo de escanear: la aplicación leyó el proveedor, la fecha y el monto, y como los cuatro datos se leyeron completos, el comprobante se cerró solo. Como es un ticket y no una factura, pasa automáticamente a revisión de contabilidad, porque hay proveedores que no dan factura. Ahora escaneo una factura: queda como comprobada, sin revisión adicional. Si la foto no se hubiera leído completa, no se cierra sola: queda por completar y el residente la confirma. Con esto, contabilidad solo revisa lo que de verdad lo necesita."
+- **Qué haces en pantalla:**
+  1. Abrir **Ver foto y datos** del ticket escaneado y mostrar lo que se leyó (proveedor, fecha, monto, tipo) y el estado **Revisión contabilidad**.
+  2. Escanear la factura con el mismo botón y mostrar el aviso **Comprobante enviado y comprobado**.
+  3. Abrir **Ver foto y datos** de la factura y mostrar su estado **Comprobado**.
+  4. Decir, sin mostrarlo, que un gasto sin foto no se puede cerrar y que una lectura incompleta queda por completar.
+- **Criterio de aceptación que cumple:** un gasto sin comprobante no se puede cerrar como comprobado; un ticket o una nota simple pasa solo a revisión de contabilidad; y un gasto con factura queda comprobado sin revisión adicional ni pasos extra.
+
+> Nota: la lectura automática de los datos (HU11) es la que permite el cierre automático, pero todavía le falta el criterio de captura sin señal (entra en Iteration 7). Se muestra como parte de este bloque y no se presenta como historia terminada.
 
 ### 6:30 a 7:30 · Saldo de la obra y pendientes de la pantalla única (@jaaaaaaaaasiel)
 
@@ -218,7 +243,17 @@ _Pendiente: al menos dos preguntas con su respuesta, por pull request._
 
 ### Escaneo rápido y comprobante válido (@PauAlba)
 
-_Pendiente: al menos dos preguntas con su respuesta, por pull request._
+**¿Qué pasa si la foto sale mal o el sistema no logra leer el ticket?**
+Si la foto sale borrosa, muy oscura o sin ningún monto, la aplicación no la guarda: avisa por qué y pide repetirla con un botón. Si la foto es buena pero no se alcanzan a leer todos los datos, el comprobante no se pierde: queda por completar y el residente lo termina a mano.
+
+**¿Y si el proveedor no da factura?**
+Es el caso del ticket o de la nota simple. El residente lo escanea igual y el gasto pasa solo a revisión de contabilidad, sin pasos extra. La factura, en cambio, queda comprobada de inmediato. Así contabilidad solo revisa lo que de verdad lo necesita.
+
+**¿Funciona en la obra si no hay señal de internet?**
+Todavía no. Hoy el escaneo necesita conexión: la foto se envía en segundo plano para que el residente siga trabajando, pero requiere señal. La captura sin señal, con envío automático al volver la conexión, es parte de lo que proponemos para Iteration 7.
+
+**¿Qué tan confiable es que el sistema lea bien el monto?**
+El comprobante se cierra solo únicamente cuando se leyeron proveedor, fecha, monto y tipo, con una confianza alta, y la solicitud ya estaba aprobada. En cualquier otro caso, el residente revisa y confirma los datos antes de cerrarlo. La lectura automática la seguimos afinando y es una de las partes que todavía no damos por terminada.
 
 ### Entrega del dinero, saldos y pantalla única (@jaaaaaaaaasiel)
 

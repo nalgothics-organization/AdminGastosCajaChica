@@ -139,7 +139,12 @@ _Lo escribe @juanpismata11 mediante pull request: qué dice, qué muestra en pan
 
 ### 2:15 a 3:15 · Registro de la entrega del dinero (@jaaaaaaaaasiel)
 
-_Lo escribe @jaaaaaaaaasiel mediante pull request: qué dice, qué muestra en pantalla y con qué datos de ejemplo._
+- **Qué dices:** "Una vez aprobada la solicitud, administración registra desde la bandeja de autorización cómo se entregó el recurso —efectivo, tarjeta o transferencia—, junto con la referencia, la fecha y quién realizó la entrega. Aquí tomamos la solicitud aprobada para la obra Remodelación segundo piso de Liverpool Plaza Mayor, a cargo de Jorge Luis Osorio, por $3,500; al guardar el registro, queda asentado quién dispersó el dinero y la solicitud aparece lista para registrar entrega sin necesidad de recargar la página."
+- **Qué haces en pantalla:**
+  1. Abrir la bandeja de autorización y ubicar la solicitud aprobada de **Jorge Luis Osorio** en **Remodelación segundo piso de Liverpool Plaza Mayor** por **$3,500**.
+  2. Registrar la entrega indicando método (efectivo, tarjeta o transferencia), referencia, fecha y responsable desde el apartado correspondiente.
+  3. Mostrar que el registro guarda a la persona que dispersó el recurso y que la solicitud aparece lista sin recargar la página.
+- **Criterio de aceptación que cumple:** se cubre añadir referencia bancaria o marcar efectivo en una solicitud autorizada, consultar el nombre de quien dispersó el recurso al revisar la solicitud y ver la solicitud lista para registrar entrega sin cambiar de pantalla ni recargar.
 
 ### 3:15 a 6:30 · Escaneo rápido y comprobante válido (@PauAlba)
 
@@ -172,7 +177,12 @@ _Lo escribe @jaaaaaaaaasiel mediante pull request: qué dice, qué muestra en pa
 
 ### 6:30 a 7:30 · Saldo de la obra y pendientes de la pantalla única (@jaaaaaaaaasiel)
 
-_Lo escribe @jaaaaaaaaasiel mediante pull request: qué dice y qué muestra en el saldo, y cómo explica lo pendiente de CC-01 como propuesta._
+- **Qué dices (6:30 a 7:00 · HU10):** "Ahora veamos cómo impacta en el saldo de la obra el comprobante que acaba de subir Paulina. En la obra Remodelación segundo piso de Liverpool Plaza Mayor, a cargo de Jorge Luis Osorio, teníamos un saldo inicial de $5,000; al actualizar la vista con el comprobante de $3,500, el rubro de gastado sube de inmediato y el saldo disponible se ajusta automáticamente sin hacer cuentas manuales."
+- **Qué dices (7:00 a 7:30 · Propuesta pantalla única CC-01):** "En cuanto a la pantalla única del administrador, aún no está terminada porque es el cambio más grande y depende de los apartados por rol; pasa a Iteration 7 y hoy la traemos como propuesta. Para avanzarla, necesitamos que nos confirmen el orden de prioridad de sus apartados: autorizaciones, entregas, conciliación, saldos y alertas."
+- **Qué haces en pantalla:**
+  1. De **6:30 a 7:00**, abrir el saldo/tablero de **Remodelación segundo piso de Liverpool Plaza Mayor** (**Jorge Luis Osorio**), actualizar la vista y señalar el saldo inicial (**$5,000**), el comprobante (**$3,500**) y el impacto inmediato en **gastado**.
+  2. De **7:00 a 7:30**, explicar de palabra (sin diapositivas) que la pantalla única (**CC-01**) se presenta como propuesta, entra en **Iteration 7** y requiere confirmar el orden de prioridad de autorizaciones, entregas, conciliación, saldos y alertas (con validación interna y con el cliente en la presentación).
+- **Criterio de aceptación / Estado:** en HU10 se cumple que, al subir un comprobante nuevo y actualizar la aplicación, el saldo de "gastado" se afecta inmediatamente; la pantalla única se presenta como propuesta pendiente para Iteration 7.
 
 ### 7:30 a 8:00 · Pendientes de los apartados por rol (@casizzy)
 
@@ -257,7 +267,14 @@ El comprobante se cierra solo únicamente cuando se leyeron proveedor, fecha, mo
 
 ### Entrega del dinero, saldos y pantalla única (@jaaaaaaaaasiel)
 
-_Pendiente: al menos dos preguntas con su respuesta, por pull request._
+**¿Qué tan rápido se refleja el cambio en el saldo cuando un residente sube un comprobante?**
+El cálculo del monto gastado y la actualización del saldo ocurren de forma inmediata en cuanto el comprobante queda registrado y se actualiza la vista de la obra. No requiere cálculos manuales ni esperar a un corte al final del día.
+
+**¿Cómo queda registrado quién entregó el dinero y por qué medio salió?**
+Al registrar la entrega en la bandeja de autorización se guarda el método (efectivo, tarjeta o transferencia), su referencia, la fecha y el nombre de quien dispersó el recurso. Así cualquier consulta posterior muestra exactamente quién realizó la entrega.
+
+**¿Por qué todavía no está terminada la pantalla única y qué necesitan de nosotros?**
+Es el cambio más amplio y depende de los apartados por rol, por lo que pasa a Iteration 7 y hoy la presentamos como propuesta. Para avanzarla necesitamos que nos confirmen el orden de prioridad de sus apartados: autorizaciones, entregas, conciliación, saldos y alertas.
 
 ### Apartados por rol (@casizzy)
 

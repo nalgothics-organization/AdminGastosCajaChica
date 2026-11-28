@@ -75,7 +75,7 @@ Los requerimientos que estaban en la Iteration 5 sin iniciar pasan a la Iteratio
 | RF11 - Extracción automática de datos (OCR) (#29) | HU11 (#30) | CC-03 | @PauAlba | 16 |
 | RNF02 - Captura offline y sincronización (#40) | HU17 (#41) | CC-03 | @juanpismata11 | 16 |
 | RF15 - Apartados visibles según el rol (#66), viene de Iteration 6 | HU20 (#67) | CC-02 | @juanpismata11 | 10 |
-| RNF04 - Pantalla única por rol (#64), viene de Iteration 6 | HU19 (#65) | CC-01 | @jaaaaaaaaasiel | 12 |
+| RNF04 - Pantalla única por rol (#64), viene de Iteration 6 | HU19 (#65) | CC-01 | @PauAlba | 12 |
 
 ## Pospuestos
 

@@ -8,6 +8,12 @@
 </head>
 <body class="captura">
   <main>
+    <section id="config" class="panel" hidden>
+      <label for="residente">¿Quién captura? (solo la primera vez)</label>
+      <input id="residente" type="text" placeholder="ID de residente" autocomplete="off">
+      <button id="guardar-residente" type="button">Guardar</button>
+    </section>
+
     <section id="mi-caja" hidden>
       <!-- Solo en celular: quién captura, para elegir la solicitud y escanear sin nada más -->
       <div class="barra-movil">
@@ -15,7 +21,7 @@
           <small>Capturando como</small>
           <strong id="residente-movil"></strong>
         </div>
-        <button type="button" id="cambiar-residente" class="secundario">Salir</button>
+        <button type="button" id="cambiar-residente" class="secundario">Cambiar</button>
       </div>
 
       <div class="hero">
@@ -107,14 +113,6 @@
             <option>Trámites</option>
             <option>Otros</option>
           </select>
-
-          <!-- RF14/HU15: quién absorbe el gasto que se pagó sin solicitud -->
-          <label for="clasificacion-gasto">¿Quién paga el gasto?</label>
-          <select id="clasificacion-gasto" name="clasificacion">
-            <option value="">Selecciona una opción</option>
-            <option value="cobrable_cliente">Cobrable al cliente</option>
-            <option value="fondo_contingencia">Fondo de contingencia (error propio)</option>
-          </select>
         </div>
 
         <label for="monto">Monto pagado</label>
@@ -148,7 +146,6 @@
       </form>
     </section>
   </main>
-  <script src="sesion.js"></script>
   <script src="shell.js"></script>
   <script src="calidad.js"></script>
   <script src="app.js"></script>

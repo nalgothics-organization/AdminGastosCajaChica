@@ -119,7 +119,7 @@ Cada persona tiene un usuario con nombre, correo, rol (residente de obra, admini
 | `DIR-CARLOS` | Carlos Ruiz | Dirección |
 | `CONT-SOFIA` | Sofía Navarro | Contabilidad |
 
-Solo un residente de obra activo registra solicitudes y captura comprobantes. Para aprobar o rechazar se envía únicamente `autorizador_id` (el usuario); el nombre y el rol se toman de su registro, así que contabilidad o un residente reciben 403 y un usuario inexistente 422. Las contraseñas se guardan en texto plano por decisión del equipo para el prototipo: no uses contraseñas reales. Las pantallas piden iniciar sesión y muestran solo los apartados del rol (RF15/HU20). La sesión del prototipo vive en el navegador: la API todavía no exige un token, así que cada acción vuelve a validar el rol del usuario que recibe.
+Solo un residente de obra activo registra solicitudes y captura comprobantes. Para aprobar o rechazar se envía únicamente `autorizador_id` (el usuario); el nombre y el rol se toman de su registro, así que contabilidad o un residente reciben 403 y un usuario inexistente 422. Las contraseñas se guardan en texto plano por decisión del equipo para el prototipo: no uses contraseñas reales. La API todavía no exige un token, así que cada acción vuelve a validar el rol del usuario que recibe; las pantallas con inicio de sesión y apartados por rol pasan a Iteration 7.
 
 Un fondo aprobado debe comprobarse dentro de `LIMITE_DIAS_COMPROBACION` días (por defecto 7). Si el residente tiene fondos sin comprobar por más tiempo, sus solicitudes nuevas aparecen como bloqueadas en la bandeja de autorización y `POST /api/solicitudes/{id}/aprobar` responde 423 (RF04/HU04).
 
@@ -127,22 +127,14 @@ Al aprobar una solicitud, administración o dirección eligen si el gasto es **c
 
 ### Pantallas del prototipo
 
-Con la API arriba, abre `http://127.0.0.1:8000/app/`. Sin sesión te lleva a `login.html`, donde puedes entrar con un usuario de demostración o crear una cuenta. Cada rol ve solo sus pestañas:
+Con la API arriba, abre `http://127.0.0.1:8000/app/`:
 
-| Pantalla | Ruta | Roles | Historia |
-| --- | --- | --- | --- |
-| Iniciar sesión / crear cuenta | /app/login.html | Todos | HU20 |
-| Mi caja chica (captura de comprobante) | /app/index.html | Residente | HU07, HU08, HU11, HU16, HU21 |
-| Nueva solicitud | /app/solicitud.html | Residente | HU01, HU02, HU04 |
-| Autorizaciones | /app/autorizacion.html | Administración, Dirección | HU04, HU05, HU15 |
-| Comprobantes (revisión, ajustes y reversos) | /app/revision.html | Contabilidad, Administración, Dirección | HU07 |
-| Saldos por obra | /app/saldos.html | Todos | HU10, HU15 |
-| Obras y partidas | /app/obras.html | Administración, Dirección | HU02 |
-| Usuarios | /app/usuarios.html | Administración, Dirección | HU20 |
-| Mi cuenta (cambio de contraseña) | /app/cuenta.html | Todos | HU20 |
-| Guía de pruebas | /app/pruebas.html | Todos | Todas |
-
-La **Guía de pruebas** lista, por historia, con qué usuario entrar, los pasos y el resultado esperado; el avance se marca y se guarda en el navegador.
+| Pantalla | Ruta | Historia |
+| --- | --- | --- |
+| Captura de comprobante | /app/index.html | HU07, HU16 |
+| Solicitar fondo | /app/solicitud.html | HU01, HU02 |
+| Bandeja de autorización | /app/autorizacion.html | HU05 |
+| Saldos por obra | /app/saldos.html | HU10 |
 
 ### Gasto sin solicitud previa
 

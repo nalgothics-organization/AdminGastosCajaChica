@@ -96,6 +96,9 @@ class SolicitudTabla(Base):
     autorizacion: Mapped[Optional["AutorizacionTabla"]] = relationship(
         back_populates="solicitud", uselist=False, lazy="joined"
     )
+    entrega: Mapped[Optional["EntregaTabla"]] = relationship(
+        back_populates="solicitud", uselist=False, lazy="joined"
+    )
 
 
 class AutorizacionTabla(Base):
@@ -116,6 +119,24 @@ class AutorizacionTabla(Base):
     fecha_decision: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     solicitud: Mapped[SolicitudTabla] = relationship(back_populates="autorizacion")
+
+
+class EntregaTabla(Base):
+    """Entrega del recurso de una solicitud aprobada (RF06); una sola por solicitud y no se modifica."""
+
+    __tablename__ = "entregas"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    solicitud_id: Mapped[UUID] = mapped_column(ForeignKey("solicitudes.id"), unique=True)
+    forma_entrega: Mapped[str] = mapped_column(String(20))
+    fecha_entrega: Mapped[date] = mapped_column(Date)
+    referencia: Mapped[Optional[str]] = mapped_column(String(120))
+    entregado_por_id: Mapped[str] = mapped_column(String(60))
+    entregado_por_nombre: Mapped[str] = mapped_column(String(120))
+    rol_entrega: Mapped[str] = mapped_column(String(20))
+    fecha_registro: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+    solicitud: Mapped[SolicitudTabla] = relationship(back_populates="entrega")
 
 
 class ComprobanteTabla(Base):

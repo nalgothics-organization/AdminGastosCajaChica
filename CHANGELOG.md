@@ -7,11 +7,18 @@
 
   ## [Unreleased]
 
+  ## [0.3.0] - 2026-12-02
+
+  Versión de cierre de Iteration 6, la que se presenta al cliente. Incluye dos de los cambios que pidió: el escaneo rápido de tickets y comprobantes (CC-03), con la validación de que cada gasto tenga un comprobante válido, el bloqueo de fondos a residentes con comprobaciones vencidas y el registro de la entrega del dinero (parte de CC-01). La pantalla única del administrador y los apartados por rol pasan a Iteration 7 (ver `docs/CIERRE_ITERACION.md`).
+
+  Esta versión no tiene cambios incompatibles para quien instala desde cero. Las columnas nuevas de la base de datos se agregan solas al arrancar sobre una base de la v0.2.0.
+
   ### Added
 
   - Usuarios con rol (base de RF15/HU20): modelo, tabla `usuarios` y `UsuarioService` con alta, consulta, autenticación por contraseña, cambio de contraseña y baja lógica. El seed crea un usuario por rol con la contraseña de `CONTRASENA_DEMO`. Solo un residente activo solicita fondos y captura comprobantes, y solo Administración o Dirección deciden solicitudes.
   - Distinción entre gasto cobrable al cliente y fondo de contingencia (RF14/HU15, #36 y #37): al aprobar una solicitud se elige obligatoriamente la clasificación (`clasificacion` en `POST /api/solicitudes/{id}/aprobar`), los comprobantes la heredan y los gastos sin solicitud la indican en el formulario. `GET /api/saldos` agrega `gasto_cobrable_cliente`, `fondo_contingencia`, `gasto_contingencia` y `disponible_contingencia`, que se actualiza al guardar el comprobante. El catálogo de obras incluye el fondo de contingencia de cada obra.
   - Al arrancar, la API agrega a las tablas existentes las columnas nuevas que aceptan nulos (`agregar_columnas_faltantes`), para no tener que recrear la base de datos.
+  - Registro de la entrega del recurso (RF06/HU06, #19 y #20): desde la bandeja de autorización, administración registra la forma de entrega (efectivo, transferencia o tarjeta), la fecha, la referencia bancaria (obligatoria en transferencia y tarjeta) y quién entregó. Al aprobar, la solicitud aparece en "Entregas por registrar" sin recargar la página. Cada solicitud aprobada se entrega una sola vez y el registro no se modifica. Nuevo endpoint `POST /api/solicitudes/{id}/entrega` y tabla `entregas`, que se crea sola al arrancar.
   - Bloqueo de fondos nuevos por comprobaciones vencidas (RF04/HU04, #15 y #16): si el residente tiene fondos aprobados sin comprobar por más de `LIMITE_DIAS_COMPROBACION` días (7 por defecto), su solicitud nueva aparece como bloqueada en la bandeja de autorización con el número de comprobaciones pendientes, el monto y los folios; la aprobación responde 423 y el residente ve el aviso al enviar y en "Mis solicitudes". Rechazar sigue permitido.
   - Análisis estático con Ruff y regla de complejidad C901 (máximo 10), ejecutado junto con las pruebas en el flujo `.github/workflows/calidad.yml` en cada pull request. Detalle en `docs/PRUEBAS.md`.
   - Revisión de dependencias con pip-audit en el flujo de calidad y configuración de Dependabot.
@@ -20,20 +27,22 @@
   - Extracción de proveedor, fecha, monto y tipo del comprobante con OCR (RF11/HU11, #29 y #30): se guarda lo que se reconoce, lo demás queda por completar, y "Comprobante enviado" abre una pantalla con la foto y los datos leídos. Las columnas nuevas de la base se agregan solas al arrancar.
   - Exigencia de comprobante y cierre al confirmar el escaneo (RF08/HU08, #23 y #24): un gasto sin foto no se cierra; si la foto se lee completa y con confianza alta, la factura queda comprobada y el ticket pasa a revisión de contabilidad sin pasos extra.
   - Búsqueda de secretos con Gitleaks en el código y en todo el historial de Git en cada pull request.
-  - Inicio de sesión y registro de cuenta (RF15/HU20): `POST /api/usuarios`, `POST /api/sesion`, consulta, cambio de contraseña y baja lógica de usuarios. Todas las pantallas piden sesión, muestran a quien entró y solo las pestañas de su rol.
-  - Pantallas nuevas: Comprobantes (revisión con filtros, detalle con foto y lectura OCR, ajustes y reversos), Obras y partidas, Usuarios, Mi cuenta y Guía de pruebas con los pasos para probar cada historia.
+  - Inicio de sesión y registro de cuenta (RF15/HU20): `POST /api/usuarios`, `POST /api/sesion`, consulta, cambio de contraseña y baja lógica de usuarios. Las pantallas con inicio de sesión y apartados por rol pasan a Iteration 7.
   - Script de creación de tablas `python -m src.crear_tablas`: crea en PostgreSQL las tablas que falten y muestra cuáles tienen borrado lógico, sin borrar datos. El README explica dónde se guardan los gastos, el puerto ocupado por un PostgreSQL local y cómo abrir las pantallas.
 
   ### Changed
 
   - `POST /api/solicitudes/{id}/aprobar` y `/rechazar` solo reciben `autorizador_id`: el nombre y el rol del autorizador se toman de su usuario y se ignoran si vienen en la petición. La bandeja de autorización pide el usuario en vez del nombre y el rol.
   - `solicitante_id` de solicitudes y comprobantes debe ser un usuario residente activo; se guarda en mayúsculas.
-  - Mi caja chica, Nueva solicitud y Autorizaciones toman el usuario de la sesión en vez de pedirlo; el residente puede retirar una solicitud pendiente.
   - `POST /api/solicitudes/{id}/aprobar` exige `clasificacion` (`cobrable_cliente` o `fondo_contingencia`); sin ella responde 422.
 
   ### Security
 
   - `evidencia_url` solo acepta una foto subida a la API o un enlace http(s); se rechazan `javascript:`, rutas con `../` y HTML.
+
+  ### Instalación
+
+  Descargar `AdminGastosCajaChica-v0.3.0.zip` de la [release v0.3.0](https://github.com/nalgothics-organization/AdminGastosCajaChica/releases/tag/v0.3.0) y comprobar su SHA-256 con el archivo `.sha256` adjunto. Después, descomprimirlo y ejecutar `powershell -ExecutionPolicy Bypass -File .\demo.ps1`. Requisitos: Python 3.10+ y Docker Desktop. Guía completa en `docs/BUILD.md`.
 
   ## [0.2.0] - 2026-11-20
 
@@ -94,7 +103,8 @@
 
   - Título de la categoría "Otros cambios" en `.github/release.yml` (#62).
 
-  [unreleased]: https://github.com/nalgothics-organization/AdminGastosCajaChica/compare/v0.2.0...HEAD
+  [unreleased]: https://github.com/nalgothics-organization/AdminGastosCajaChica/compare/v0.3.0...HEAD
+  [0.3.0]: https://github.com/nalgothics-organization/AdminGastosCajaChica/compare/v0.2.0...v0.3.0
   [0.2.0]: https://github.com/nalgothics-organization/AdminGastosCajaChica/compare/v0.1.0...v0.2.0
   [0.1.0]: https://github.com/nalgothics-organization/AdminGastosCajaChica/releases/tag/v0.1.0
 

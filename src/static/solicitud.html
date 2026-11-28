@@ -13,6 +13,12 @@
 
     <p id="aviso" class="aviso" role="status" aria-live="polite" hidden></p>
 
+    <section id="config" class="panel" hidden>
+      <label for="residente">¿Quién solicita? (solo la primera vez)</label>
+      <input id="residente" type="text" placeholder="ID de residente" autocomplete="off">
+      <button id="guardar-residente" type="button">Guardar</button>
+    </section>
+
     <div class="dos-columnas">
     <section id="registro" class="panel" hidden>
       <p id="residente-actual" class="nota"></p>
@@ -104,7 +110,6 @@
       <ul id="lista-solicitudes"></ul>
     </section>
   </main>
-  <script src="sesion.js"></script>
   <script src="shell.js"></script>
   <script src="comun.js"></script>
   <script src="solicitud.js"></script>

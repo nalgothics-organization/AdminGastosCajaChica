@@ -4,8 +4,7 @@
   "use strict";
 
   const API = "/api";
-  // Quién captura sale de la sesión iniciada (sesion.js); solo un residente ve esta pantalla
-  const sesion = window.Sesion.actual();
+  const CLAVE_RESIDENTE = "cajaChica.residente";
   // Espejo de PARTIDAS_CON_HORAS (src/models/comprobante.py); el backend valida de todos modos
   const PARTIDAS_CON_HORAS = ["renta de maquinaria", "mano de obra"];
   const PROPIA = "propia"; // gasto que el residente pagó por su cuenta, sin solicitud previa
@@ -16,7 +15,7 @@
   const $ = (id) => document.getElementById(id);
   const moneda = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
   const dinero = (valor) => moneda.format(Number(valor));
-  const residente = sesion && sesion.rol === window.Sesion.ROLES.RESIDENTE ? sesion.usuario : "";
+  let residente = leerResidente();
   let comprobanteActual = null;
   let seleccion = null; // id de la solicitud elegida o PROPIA
   let solicitudes = [];
@@ -25,6 +24,23 @@
   let inicioEscaneo = 0; // instante en que se tocó "Escanear comprobante", para medir el tiempo (RNF05)
   let enRevision = null; // foto que salió oscura y espera la decisión del residente
   const envios = []; // subidas en segundo plano: { estado, segundos, archivo, solicitudId, inicio }
+
+  function leerResidente() {
+    try {
+      return localStorage.getItem(CLAVE_RESIDENTE) || "";
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function guardarResidente(valor) {
+    residente = valor;
+    try {
+      localStorage.setItem(CLAVE_RESIDENTE, valor);
+    } catch (e) {
+      // Sin almacenamiento local el residente se pide de nuevo en la siguiente visita
+    }
+  }
 
   function avisar(mensaje, esError) {
     const aviso = $("aviso");
@@ -110,10 +126,11 @@
   }
 
   async function mostrarPantalla() {
+    $("config").hidden = Boolean(residente);
     $("mi-caja").hidden = !residente;
     $("formulario").hidden = true;
-    $("residente-actual").textContent = residente ? "Capturando como " + sesion.nombre + " (" + residente + ")" : "";
-    $("residente-movil").textContent = residente ? sesion.nombre : "";
+    $("residente-actual").textContent = residente ? "Capturando como " + residente : "";
+    $("residente-movil").textContent = residente;
     if (!residente) {
       return;
     }
@@ -397,7 +414,6 @@
       form.elements.obra_id.value = comprobante.obra_id;
       form.elements.etapa_construccion.value = comprobante.etapa_construccion;
       form.elements.partida_categoria.value = comprobante.partida_categoria;
-      form.elements.clasificacion.value = comprobante.clasificacion || "";
     }
     const tipo = datos.tipo || (lectura && lectura.tipo);
     if (tipo) {
@@ -457,7 +473,6 @@
       obra_id: sinSolicitud ? form.elements.obra_id.value : null,
       etapa_construccion: sinSolicitud ? form.elements.etapa_construccion.value : null,
       partida_categoria: sinSolicitud ? form.elements.partida_categoria.value : null,
-      clasificacion: sinSolicitud ? form.elements.clasificacion.value || null : null,
       tipo: tipo ? tipo.value : null,
       monto_comprobado: form.elements.monto_comprobado.value || null,
       fecha_gasto: form.elements.fecha_gasto.value || null,
@@ -510,10 +525,18 @@
     }
   }
 
-  // En el celular la barra superior no se ve: este botón cierra la sesión
+  $("guardar-residente").addEventListener("click", () => {
+    const valor = $("residente").value.trim();
+    if (valor) {
+      guardarResidente(valor);
+      mostrarPantalla();
+    }
+  });
+
   $("cambiar-residente").addEventListener("click", () => {
-    window.Sesion.cerrar();
-    location.replace("login.html");
+    guardarResidente("");
+    seleccion = null;
+    mostrarPantalla();
   });
 
   document.querySelectorAll(".dispara-escaneo").forEach((boton) => {

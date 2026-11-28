@@ -127,25 +127,5 @@ class TestAdministracionDeUsuarios(unittest.TestCase):
         self.assertEqual(self.client.post("/api/usuarios", json=repetido).status_code, 409)
 
 
-class TestPantallas(unittest.TestCase):
-    def setUp(self):
-        self.client = TestClient(app)
-
-    def test_todas_las_pantallas_cargan_la_sesion_antes_que_la_estructura(self):
-        for pagina in (
-            "index.html", "solicitud.html", "autorizacion.html", "saldos.html", "comprobante.html",
-            "revision.html", "obras.html", "usuarios.html", "cuenta.html", "pruebas.html",
-        ):
-            with self.subTest(pagina=pagina):
-                html = self.client.get(f"/app/{pagina}").text
-                self.assertIn('<script src="sesion.js">', html)
-                self.assertLess(html.index('src="sesion.js"'), html.index('src="shell.js"'))
-
-    def test_la_pantalla_de_acceso_no_usa_la_estructura(self):
-        html = self.client.get("/app/login.html").text
-        self.assertIn('<script src="login.js">', html)
-        self.assertNotIn("shell.js", html)
-
-
 if __name__ == "__main__":
     unittest.main()

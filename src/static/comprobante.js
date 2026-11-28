@@ -91,7 +91,7 @@
     pintarDatos(comprobante);
 
     const completar = $("completar");
-    completar.hidden = comprobante.estado !== "Borrador" || !esResidente();
+    completar.hidden = comprobante.estado !== "Borrador";
     completar.href = "index.html?abrir=" + encodeURIComponent(comprobante.id);
     $("vista").hidden = false;
   }
@@ -112,18 +112,6 @@
     } catch (e) {
       mostrarMensaje("No se pudo cargar el comprobante. Revisa tu conexión.");
     }
-  }
-
-  function esResidente() {
-    const sesion = window.Sesion && window.Sesion.actual();
-    return Boolean(sesion) && sesion.rol === window.Sesion.ROLES.RESIDENTE;
-  }
-
-  // Contabilidad, Administración y Dirección llegan desde la lista de comprobantes
-  if (!esResidente()) {
-    const volver = document.querySelector("a.volver");
-    volver.href = "revision.html";
-    volver.textContent = "← Volver a comprobantes";
   }
 
   cargar();

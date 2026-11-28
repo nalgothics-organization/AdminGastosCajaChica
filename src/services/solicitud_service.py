@@ -7,12 +7,13 @@ Implementa:
 - Aprobación y rechazo con trazabilidad del autorizador (RF05/HU05).
 - Clasificación del gasto al aprobar: cobrable al cliente o fondo de contingencia (RF14/HU15).
 - Solicitante y autorizador son usuarios activos con el rol que exige cada acción.
+- Registro de la entrega física o digital del recurso aprobado (RF06/HU06).
 - Soft delete e inmutabilidad según AGENTS.md.
 """
 
 import os
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Dict, Iterable, List, Optional, Tuple
 from uuid import UUID
@@ -24,6 +25,8 @@ from src.models.solicitud import (
     BloqueoAdeudo,
     DecisionAutorizacion,
     DecisionBase,
+    Entrega,
+    EntregaCreate,
     EstadoSolicitud,
     NotificacionNivelAutorizacion,
     RechazoCreate,
@@ -51,7 +54,11 @@ class AutorizadorNoPermitidoError(RolNoPermitidoError):
 
 
 class SolicitudBloqueadaError(Exception):
-    """El solicitante tiene comprobaciones vencidas; no se le autoriza un fondo nuevo (RF04)."""
+    """El solicitante tiene comprobaciones vencidas; no se le autoriza ni entrega un fondo nuevo (RF04)."""
+
+
+class EntregaNoPermitidaError(Exception):
+    """La solicitud no está aprobada o ya tiene su entrega; el registro de entrega no se modifica (RF06)."""
 
 
 ROLES_AUTORIZADORES = (RolUsuario.ADMINISTRACION, RolUsuario.DIRECCION)
@@ -190,11 +197,14 @@ class SolicitudFondoService:
             comprobado[comprobante.solicitud_id] += comprobante.datos.monto_comprobado
         return comprobado
 
-    def _bloqueos_por_solicitante(self, solicitudes: Iterable[SolicitudFondo]) -> Dict[str, BloqueoAdeudo]:
+    def _bloqueos_por_solicitante(
+        self, solicitudes: Iterable[SolicitudFondo], solo_entregadas: bool = False
+    ) -> Dict[str, BloqueoAdeudo]:
         """Calcula el bloqueo de cada solicitante a partir de sus fondos aprobados sin comprobar.
 
         Una comprobación está vencida cuando el fondo se aprobó hace más de `limite_dias_comprobacion`
-        días y lo comprobado todavía no cubre el monto autorizado (RF04/HU04).
+        días y lo comprobado todavía no cubre el monto autorizado (RF04/HU04). Con `solo_entregadas`
+        únicamente cuentan los fondos que ya se entregaron: el dinero que nunca salió no se debe comprobar.
         """
         comprobado = self._comprobado_por_solicitud()
         fecha_limite = self.reloj() - timedelta(days=self.limite_dias_comprobacion)
@@ -204,6 +214,8 @@ class SolicitudFondoService:
         for solicitud in solicitudes:
             autorizacion = solicitud.autorizacion
             if not solicitud.activo or solicitud.estado != EstadoSolicitud.APROBADO or not autorizacion:
+                continue
+            if solo_entregadas and not solicitud.entrega:
                 continue
             faltante = (autorizacion.monto_autorizado or Decimal("0.00")) - comprobado[solicitud.id]
             if faltante > 0 and autorizacion.fecha_decision < fecha_limite:
@@ -233,9 +245,15 @@ class SolicitudFondoService:
     def _sin_bloqueo(self) -> BloqueoAdeudo:
         return BloqueoAdeudo(bloqueada=False, limite_dias=self.limite_dias_comprobacion)
 
-    def bloqueo_de(self, solicitante_id: str) -> BloqueoAdeudo:
-        """Bloqueo actual del solicitante por comprobaciones vencidas (RF04)."""
-        bloqueos = self._bloqueos_por_solicitante(self._db.values())
+    def bloqueo_de(
+        self, solicitante_id: str, excepto: Optional[UUID] = None, solo_entregadas: bool = False
+    ) -> BloqueoAdeudo:
+        """Bloqueo actual del solicitante por comprobaciones vencidas (RF04).
+
+        `excepto` deja fuera una solicitud (la que se está entregando) para que no se bloquee a sí misma.
+        """
+        solicitudes = [s for s in self._db.values() if s.id != excepto]
+        bloqueos = self._bloqueos_por_solicitante(solicitudes, solo_entregadas)
         return bloqueos.get(solicitante_id) or self._sin_bloqueo()
 
     def anotar_bloqueos(self, solicitudes: List[SolicitudFondo]) -> List[SolicitudFondo]:
@@ -327,6 +345,51 @@ class SolicitudFondoService:
             comentario=data.comentario,
         )
         return self._registrar_decision(solicitud, EstadoSolicitud.RECHAZADO, autorizacion)
+
+    def _validar_fecha_entrega(self, solicitud: SolicitudFondo, fecha: Optional[date]) -> date:
+        """La entrega no puede ser futura ni anterior a la autorización (RF06)."""
+        hoy = self.reloj().date()
+        fecha = fecha or hoy
+        if fecha > hoy:
+            raise ValueError("La fecha de entrega no puede ser futura.")
+        # Las fechas de decisión se guardan en UTC y la del residente es local; un día de margen evita
+        # rechazar una entrega hecha la misma tarde de la autorización
+        primer_dia = solicitud.autorizacion.fecha_decision.date() - timedelta(days=1)
+        if fecha < primer_dia:
+            raise ValueError("La fecha de entrega no puede ser anterior a la autorización de la solicitud.")
+        return fecha
+
+    def registrar_entrega(self, solicitud_id: UUID, data: EntregaCreate) -> SolicitudFondo:
+        """Registra cómo, cuándo y quién entregó el recurso de una solicitud aprobada (HU06)."""
+        solicitud = self.obtener_por_id(solicitud_id)
+        if not solicitud:
+            raise SolicitudNoEncontradaError(f"Solicitud con ID {solicitud_id} no encontrada.")
+
+        if solicitud.estado != EstadoSolicitud.APROBADO:
+            raise EntregaNoPermitidaError(
+                f"La solicitud {solicitud.folio} está en estado {solicitud.estado.value}; "
+                "solo se entrega el recurso de una solicitud aprobada."
+            )
+        if solicitud.entrega:
+            raise EntregaNoPermitidaError(f"La solicitud {solicitud.folio} ya tiene su entrega registrada.")
+
+        # RF04: tampoco se entrega un fondo nuevo a quien tiene comprobaciones vencidas de fondos ya entregados
+        bloqueo = self.bloqueo_de(solicitud.solicitante_id, excepto=solicitud.id, solo_entregadas=True)
+        if bloqueo.bloqueada:
+            raise SolicitudBloqueadaError(f"No se puede entregar {solicitud.folio}. {bloqueo.mensaje}")
+
+        entrega = Entrega(
+            forma_entrega=data.forma_entrega,
+            fecha_entrega=self._validar_fecha_entrega(solicitud, data.fecha_entrega),
+            referencia=data.referencia,
+            entregado_por_id=data.entregado_por_id,
+            entregado_por_nombre=data.entregado_por_nombre,
+            rol_entrega=data.rol_entrega,
+            fecha_registro=self.reloj(),
+        )
+        solicitud.entrega = entrega
+        solicitud.updated_at = entrega.fecha_registro
+        return self._db.guardar(solicitud)
 
     def soft_delete(self, solicitud_id: UUID) -> bool:
         """Regla de Negocio Sección 8: Prohibido hard delete, solo soft delete."""

@@ -221,6 +221,7 @@ class TestSwaggerDocumentacion(BaseApiTestCase):
         ("delete", "/api/solicitudes/{solicitud_id}"),
         ("post", "/api/solicitudes/{solicitud_id}/aprobar"),
         ("post", "/api/solicitudes/{solicitud_id}/rechazar"),
+        ("post", "/api/solicitudes/{solicitud_id}/entrega"),
         ("post", "/api/comprobantes/captura"),
         ("get", "/api/comprobantes"),
         ("get", "/api/comprobantes/{comprobante_id}"),
@@ -273,6 +274,15 @@ class TestSwaggerDocumentacion(BaseApiTestCase):
             operacion = self.openapi["paths"]["/api/solicitudes/{solicitud_id}"][metodo]
             with self.subTest(metodo=metodo):
                 self.assertIn("404", operacion["responses"])
+
+    def test_entrega_documenta_sus_respuestas_de_error(self):
+        """RF06: la documentación explica el 404, 409, 422 y 423 del registro de entrega."""
+        operacion = self.openapi["paths"]["/api/solicitudes/{solicitud_id}/entrega"]["post"]
+
+        for codigo in ("201", "404", "409", "422", "423"):
+            with self.subTest(codigo=codigo):
+                self.assertIn(codigo, operacion["responses"])
+        self.assertTrue(self.openapi["components"]["schemas"]["EntregaCreate"].get("examples"))
 
     def test_registro_incluye_ejemplo_de_payload(self):
         esquema = self.openapi["components"]["schemas"]["SolicitudFondoCreate"]

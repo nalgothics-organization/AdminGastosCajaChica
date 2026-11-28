@@ -29,7 +29,7 @@ async def lifespan(_: FastAPI):
 app = FastAPI(
     title="Admin Gastos y Caja Chica API",
     description="API para la administración de gastos y caja chica en frentes de obra",
-    version="0.2.0",
+    version="0.3.0",
     lifespan=lifespan,
 )
 

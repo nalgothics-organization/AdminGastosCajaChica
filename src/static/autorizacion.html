@@ -13,9 +13,19 @@
     <p id="aviso" class="aviso" role="status" aria-live="polite" hidden></p>
 
     <section class="panel">
-      <p>Decides como <strong id="usuario-nombre"></strong> <span id="usuario-rol" class="etiqueta"></span></p>
-      <input id="usuario" type="hidden">
-      <p class="nota">Tu nombre y tu rol se toman de tu usuario. Administración decide hasta $5,000; Dirección, cualquier monto.</p>
+      <div class="cuadricula-2">
+        <div>
+          <label for="rol">Rol</label>
+          <select id="rol">
+            <option value="Administración">Administración (hasta $5,000)</option>
+            <option value="Dirección">Dirección (cualquier monto)</option>
+          </select>
+        </div>
+        <div>
+          <label for="nombre">Tu nombre</label>
+          <input id="nombre" type="text" placeholder="Laura Méndez" autocomplete="off">
+        </div>
+      </div>
     </section>
 
     <h2>Pendientes</h2>
@@ -23,10 +33,17 @@
     <p id="vacio" class="nota" hidden>No hay solicitudes pendientes.</p>
     <div id="pendientes" class="rejilla"></div>
 
+    <!-- Apartado de entregas en la misma pantalla: al aprobar, la solicitud aparece aquí sin recargar (HU06) -->
+    <h2>Entregas por registrar <span id="contador-entregas" class="etiqueta" hidden></span></h2>
+    <p id="vacio-entregas" class="nota" hidden>No hay solicitudes aprobadas por entregar.</p>
+    <div id="por-entregar" class="rejilla"></div>
+
+    <h2>Entregas registradas</h2>
+    <ul id="entregadas"></ul>
+
     <h2>Decididas recientemente</h2>
     <ul id="decididas"></ul>
   </main>
-  <script src="sesion.js"></script>
   <script src="shell.js"></script>
   <script src="comun.js"></script>
   <script src="autorizacion.js"></script>

@@ -1,4 +1,4 @@
-// Tablero de saldos por obra en tiempo real (RF10/HU10) con el fondo de contingencia (RF14/HU15).
+// Tablero de saldos por obra en tiempo real (RF10/HU10).
 (function () {
   "use strict";
 
@@ -13,7 +13,6 @@
     const disponible = Number(saldo.disponible_caja_chica);
     const porComprobar = Number(saldo.por_comprobar);
     const sinSolicitud = Number(saldo.gasto_sin_solicitud);
-    const contingencia = Number(saldo.disponible_contingencia);
 
     return el("div", { className: "tarjeta" },
       el("h3", { texto: saldo.nombre }),
@@ -34,14 +33,6 @@
         el("dt", { texto: "Pagado sin solicitud (por reponer)" }),
         el("dd", { className: sinSolicitud > 0 ? "negativo" : "", texto: dinero(saldo.gasto_sin_solicitud) }),
         el("dt", { texto: "En revisión de contabilidad" }), el("dd", { texto: String(saldo.comprobantes_en_revision) })
-      ),
-      el("h4", { texto: "Cobro al cliente y contingencia" }),
-      el("dl", {},
-        el("dt", { texto: "Por facturar al cliente" }), el("dd", { texto: dinero(saldo.gasto_cobrable_cliente) }),
-        el("dt", { texto: "Fondo de contingencia" }), el("dd", { texto: dinero(saldo.fondo_contingencia) }),
-        el("dt", { texto: "Cargado a contingencia" }), el("dd", { texto: dinero(saldo.gasto_contingencia) }),
-        el("dt", { texto: "Contingencia disponible" }),
-        el("dd", { className: contingencia < 0 ? "negativo" : "", texto: dinero(saldo.disponible_contingencia) })
       )
     );
   }

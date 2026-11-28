@@ -73,34 +73,62 @@ RF12 (HU12, HU13), RF13 (HU14), RF14 (HU15) y RNF03 (HU18). No forman parte de l
 
 ## 4. Guion de la presentación
 
-**Reglas que sigue el guion:** la versión v0.3.0 está instalada antes de empezar y con datos de ejemplo cargados; se habla de lo que el usuario puede hacer, no de tecnología; no se muestran código, terminal ni tablero; máximo tres diapositivas. Al minuto 12 se detiene la presentación.
+**Reglas que sigue el guion:** la versión v0.3.0 está instalada antes de empezar y con datos de ejemplo cargados; se habla de lo que el usuario puede hacer, no de tecnología; no se muestran código, terminal ni tablero. No hay diapositivas: todo se presenta con la aplicación funcionando. Al minuto 12 se detiene la presentación.
 
 **Cuida el tiempo:** @casizzy (avisa con la mano al minuto 6, al minuto 8 y al minuto 11).
 
 | Minuto | Bloque | Responsable | Qué se muestra |
 | :--- | :--- | :--- | :--- |
-| 0:00 a 1:00 | Apertura | @bladeRunner08 | Diapositivas 1 (objetivo y compromiso) y 2 (planeado contra terminado) |
+| 0:00 a 1:00 | Apertura: el proyecto en general y su diagrama de flujo | @bladeRunner08 | Diagrama de flujo de la aplicación |
 | 1:00 a 2:30 | Demostración: bloqueo por comprobaciones vencidas (HU04, CC-01) | @juanpismata11 | Aplicación |
 | 2:30 a 4:30 | Demostración: escaneo rápido de comprobantes (HU21, CC-03) | @PauAlba | Aplicación en el celular |
 | 4:30 a 6:15 | Demostración: comprobante válido y cierre automático (HU08, CC-03) | @PauAlba | Aplicación |
 | 6:15 a 7:00 | Demostración: el saldo de la obra refleja el comprobante (HU10) | @jaaaaaaaaasiel | Aplicación |
-| 7:00 a 7:30 | Pendientes: pantalla única y registro de entregas (CC-01) | @jaaaaaaaaasiel | Diapositiva 3 (manejo de propuestas) |
-| 7:30 a 8:00 | Pendientes: apartados por rol (CC-02) | @casizzy | Diapositiva 3 |
+| 7:00 a 7:30 | Pendientes: pantalla única y registro de entregas (CC-01) | @jaaaaaaaaasiel | Se explica de palabra |
+| 7:30 a 8:00 | Pendientes: apartados por rol (CC-02) | @casizzy | Se explica de palabra |
 | 8:00 a 12:00 | Preguntas del cliente | Todos; modera @bladeRunner08 | Aplicación, si hace falta mostrar algo |
 
 El orden de la demostración sigue el uso real: el residente pide dinero, comprueba su gasto escaneando el ticket, el comprobante se valida y la dirección ve el saldo de la obra al momento. Empieza por los cambios que pidió el cliente.
 
 ### 0:00 a 1:00 · Apertura (@bladeRunner08)
 
-> Buenos días. Somos el equipo del módulo de Administración de Gastos y Caja Chica: Stella, Juan Pablo, Jaasiel, Paulina y yo, Mariano.
+Es una introducción breve al proyecto en general. El diagrama de flujo sirve de mapa: explica cómo se mueve el dinero de caja chica dentro de la aplicación, y cada demostración que sigue es un paso de ese mapa.
+
+> Buenos días. Somos Stella, Juan Pablo, Jaasiel, Paulina y Mariano, y desarrollamos el módulo de Administración de Gastos y Caja Chica para sus obras.
 >
-> En la presentación anterior ustedes nos pidieron tres cambios: reunir todo en una sola pantalla, que cada persona vea solo lo que le toca y que escanear un ticket sea rápido y sencillo. Con eso armamos esta iteración.
+> La idea del proyecto es que el dinero que sale para la obra quede siempre comprobado: que no se pierdan tickets y que dirección sepa en todo momento cuánto se lleva gastado en cada obra, sin esperar a fin de mes.
 >
-> Nos comprometimos a seis cosas: la pantalla única del administrador, el registro de la entrega del dinero, el bloqueo a quien debe comprobaciones, los apartados por rol, el escaneo rápido y la validación de que cada gasto tenga un comprobante válido.
+> *(Muestra el diagrama de flujo)* Para explicar cómo funciona la aplicación usamos este diagrama de flujo. El residente pide un fondo, administración o dirección lo autoriza, se le entrega el dinero, el residente escanea el ticket en la obra, el sistema revisa que el comprobante sea válido y el saldo de la obra se actualiza al momento.
 >
-> Terminamos tres de las seis: el escaneo rápido, la validación del comprobante y el bloqueo por comprobaciones vencidas, y eso es lo que les vamos a mostrar funcionando. Al final les explicamos qué quedó pendiente, por qué y qué necesitamos de ustedes para terminarlo antes de la entrega de diciembre.
+> En verde está lo que ya funciona y en gris lo que les vamos a proponer para la siguiente iteración. Esta vez nos enfocamos en los cambios que nos pidieron, sobre todo en un escaneo más rápido.
 >
-> Empezamos con Juan Pablo.
+> Vamos a recorrer el flujo en ese orden. Empieza Juan Pablo con la solicitud del fondo.
+
+**Diagrama de flujo simplificado.** Se muestra como imagen en la misma computadora de la demostración, antes de abrir la aplicación. Es una versión corta de `docs/DIAGRAMA_FLUJO.md` en el lenguaje del cliente, sin identificadores de requerimientos. Verde: terminado y se demuestra. Gris: propuesta para Iteration 7.
+
+```mermaid
+flowchart LR
+  classDef hecho fill:#e3f6ee,stroke:#0f8a5f,color:#111a30
+  classDef propuesta fill:#eeeeee,stroke:#9e9e9e,color:#555555,stroke-dasharray:4 3
+
+  A["El residente pide un fondo"] --> B{"¿Debe comprobaciones vencidas?"}
+  B -- "Sí" --> X["Se bloquea hasta que compruebe"]
+  B -- "No" --> C["Administración o dirección autoriza"]
+  C --> D["Se registra la entrega del dinero"]
+  D --> E["El residente escanea el ticket en la obra"]
+  E --> F{"¿Es factura?"}
+  F -- "Sí" --> G["Queda comprobado"]
+  F -- "Ticket o nota" --> H["Pasa a revisión de contabilidad"]
+  G --> I["Se concilia lo entregado contra lo gastado"]
+  H --> I
+  G --> J["El saldo de la obra se actualiza al momento"]
+  H --> J
+
+  class A,B,X,C,E,F,G,H,J hecho
+  class D,I propuesta
+```
+
+La pantalla única del administrador y los apartados por rol no son un paso del flujo: cambian dónde y quién ve cada paso. Se explican como propuesta en el bloque de pendientes.
 
 ### 1:00 a 2:30 · Bloqueo por comprobaciones vencidas (@juanpismata11)
 
@@ -197,7 +225,7 @@ Se llena durante la presentación. Cada pregunta se contesta al cliente por Slac
 
 - [ ] La release v0.3.0 está publicada con su paquete y su archivo SHA-256.
 - [ ] La aplicación está instalada desde ese paquete en la computadora y el celular que se usan, con los datos de ejemplo recién cargados.
-- [ ] Están listas las tres diapositivas: objetivo y compromiso, planeado contra terminado, manejo de propuestas.
+- [ ] Está lista la imagen del diagrama de flujo simplificado, abierta en la computadora de la demostración.
 - [ ] Hay un video corto de la demostración, grabado con el mismo paquete, guardado sin depender de internet.
 - [ ] Se ensayó con cronómetro al menos una vez. Duración del ensayo: ____ min.
 

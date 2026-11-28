@@ -11,9 +11,9 @@ from uuid import UUID
 
 from sqlalchemy import func, select
 
-from src.database import AutorizacionTabla, ComprobanteTabla, SessionLocal, SolicitudTabla
+from src.database import AutorizacionTabla, ComprobanteTabla, EntregaTabla, SessionLocal, SolicitudTabla
 from src.models.comprobante import Comprobante, ComprobanteDatos, LecturaComprobante
-from src.models.solicitud import Autorizacion, SolicitudFondo
+from src.models.solicitud import Autorizacion, Entrega, SolicitudFondo
 
 
 def _utc(valor: Optional[datetime]) -> Optional[datetime]:
@@ -82,6 +82,19 @@ class SolicitudRepositorio:
                     comentario=decision.comentario,
                     fecha_decision=decision.fecha_decision,
                 )
+
+            # La entrega también se inserta una sola vez (RF06)
+            if solicitud.entrega and fila.entrega is None:
+                entrega = solicitud.entrega
+                fila.entrega = EntregaTabla(
+                    forma_entrega=_valor(entrega.forma_entrega),
+                    fecha_entrega=entrega.fecha_entrega,
+                    referencia=entrega.referencia,
+                    entregado_por_id=entrega.entregado_por_id,
+                    entregado_por_nombre=entrega.entregado_por_nombre,
+                    rol_entrega=_valor(entrega.rol_entrega),
+                    fecha_registro=entrega.fecha_registro,
+                )
             sesion.add(fila)
         return solicitud
 
@@ -102,6 +115,18 @@ class SolicitudRepositorio:
                 comentario=a.comentario,
                 fecha_decision=_utc(a.fecha_decision),
             )
+        entrega = None
+        if fila.entrega:
+            e = fila.entrega
+            entrega = Entrega(
+                forma_entrega=e.forma_entrega,
+                fecha_entrega=e.fecha_entrega,
+                referencia=e.referencia,
+                entregado_por_id=e.entregado_por_id,
+                entregado_por_nombre=e.entregado_por_nombre,
+                rol_entrega=e.rol_entrega,
+                fecha_registro=_utc(e.fecha_registro),
+            )
         return SolicitudFondo(
             id=fila.id,
             folio=fila.folio,
@@ -118,6 +143,7 @@ class SolicitudRepositorio:
             nivel_autorizacion=fila.nivel_autorizacion,
             estado=fila.estado,
             autorizacion=autorizacion,
+            entrega=entrega,
             activo=fila.activo,
             deleted_at=_utc(fila.deleted_at),
             created_at=_utc(fila.created_at),

@@ -1,4 +1,4 @@
-"""Endpoints REST para el módulo de Solicitudes de Fondo (RF01/HU01, RF05/HU05).
+"""Endpoints REST para el módulo de Solicitudes de Fondo (RF01/HU01, RF05/HU05, RF06/HU06).
 """
 
 from typing import List
@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 from src.models.solicitud import (
     AprobacionCreate,
+    EntregaCreate,
     RechazoCreate,
     SolicitudFondo,
     SolicitudFondoCreate,
@@ -15,6 +16,7 @@ from src.models.solicitud import (
 )
 from src.services.solicitud_service import (
     AutorizadorNoPermitidoError,
+    EntregaNoPermitidaError,
     SolicitudBloqueadaError,
     SolicitudNoEncontradaError,
     SolicitudNoPendienteError,
@@ -55,6 +57,22 @@ RESPUESTAS_DECISION = {
 }
 
 
+RESPUESTAS_ENTREGA = {
+    **RESPUESTA_404,
+    status.HTTP_409_CONFLICT: {
+        "model": ErrorResponse,
+        "description": "La solicitud no está aprobada o ya tiene su entrega registrada.",
+    },
+    status.HTTP_423_LOCKED: {
+        "model": ErrorResponse,
+        "description": "El solicitante tiene comprobaciones vencidas; no se le entrega un fondo nuevo (RF04).",
+    },
+    status.HTTP_422_UNPROCESSABLE_ENTITY: {
+        "description": "Datos inválidos: falta la referencia bancaria, la fecha es futura o anterior a la autorización.",
+    },
+}
+
+
 def _ejecutar(operacion, *args):
     """Traduce las excepciones de negocio del servicio a respuestas HTTP."""
     try:
@@ -63,7 +81,7 @@ def _ejecutar(operacion, *args):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except AutorizadorNoPermitidoError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
-    except SolicitudNoPendienteError as e:
+    except (SolicitudNoPendienteError, EntregaNoPermitidaError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
     except SolicitudBloqueadaError as e:
         raise HTTPException(status_code=status.HTTP_423_LOCKED, detail=str(e))
@@ -162,6 +180,25 @@ def aprobar_solicitud(solicitud_id: UUID, data: AprobacionCreate):
 )
 def rechazar_solicitud(solicitud_id: UUID, data: RechazoCreate):
     return _ejecutar(solicitud_service.rechazar_solicitud, solicitud_id, data)
+
+
+@router.post(
+    "/solicitudes/{solicitud_id}/entrega",
+    response_model=SolicitudFondo,
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar la entrega del recurso",
+    description=(
+        "Registra cómo salió el dinero de una solicitud aprobada (RF06/HU06): forma de entrega (efectivo, "
+        "transferencia o tarjeta), fecha, referencia bancaria y la persona que lo entregó. La referencia es "
+        "obligatoria en transferencia y tarjeta; en efectivo basta con marcarlo. Cada solicitud se entrega una "
+        "sola vez (409) y solo si está aprobada. Se rechaza con 423 si el residente tiene comprobaciones "
+        "vencidas de fondos ya entregados (RF04/HU04). La solicitud devuelve el registro en `entrega`."
+    ),
+    response_description="Solicitud con su registro de entrega.",
+    responses=RESPUESTAS_ENTREGA,
+)
+def registrar_entrega(solicitud_id: UUID, data: EntregaCreate):
+    return _ejecutar(solicitud_service.registrar_entrega, solicitud_id, data)
 
 
 @router.delete(

@@ -59,6 +59,8 @@ Los requerimientos que estaban en la Iteration 5 sin iniciar pasan a la Iteratio
 | RNF05 - Escaneo rápido de comprobantes (#68) | HU21 (#69) | CC-03 | @PauAlba | 8 |
 | RF08 - Validación de comprobante (#23) | HU08 (#24) | CC-03 | @PauAlba | 8 |
 
+**Cierre (27 de noviembre de 2026):** se terminaron RF04, RF08 y RNF05 (22 de 50 h). RNF04, RF06 y RF15 pasan a Iteration 7 con el motivo comentado en cada tarjeta. Detalle en `docs/CIERRE_ITERACION.md`.
+
 ## Iteration 7
 
 **Fechas:** 30 de noviembre al 13 de diciembre de 2026 (antes de la entrega final)
@@ -72,6 +74,9 @@ Los requerimientos que estaban en la Iteration 5 sin iniciar pasan a la Iteratio
 | RF09 - Conciliación de sobrantes y faltantes (#25) | HU09 (#26) | CC-01 | @jaaaaaaaaasiel | 12 |
 | RF11 - Extracción automática de datos (OCR) (#29) | HU11 (#30) | CC-03 | @PauAlba | 16 |
 | RNF02 - Captura offline y sincronización (#40) | HU17 (#41) | CC-03 | @juanpismata11 | 16 |
+| RF15 - Apartados visibles según el rol (#66), viene de Iteration 6 | HU20 (#67) | CC-02 | @juanpismata11 | 10 |
+| RNF04 - Pantalla única por rol (#64), viene de Iteration 6 | HU19 (#65) | CC-01 | @jaaaaaaaaasiel | 12 |
+| RF06 - Registro de entrega del recurso (#19), viene de Iteration 6 | HU06 (#20) | CC-01 | @jaaaaaaaaasiel | 6 |
 
 ## Pospuestos
 

@@ -1,6 +1,6 @@
 # Cierre de iteración y presentación al cliente
 
-> **Iteración que se cierra:** Iteration 6 (16 al 29 de noviembre de 2026)
+> **Iteración que se cierra:** Iteration 6 (16 de noviembre al 2 de diciembre de 2026)
 > **Versión que se presenta:** v0.3.0, instalada desde el paquete de la release antes de empezar
 > **Presentación:** 12 minutos como máximo
 >
@@ -12,9 +12,9 @@
 
 | | Planeado | Terminado | Pasa a Iteration 7 |
 | :--- | ---: | ---: | ---: |
-| Tarjetas | 15 | 8 (53 %) | 7 |
-| Horas estimadas (todas las tarjetas) | 201 h | 105 h (52 %) | 96 h |
-| Requerimientos RF/RNF (sin contar los CC) | 6 · 50 h | 3 · 22 h (44 %) | 3 · 28 h |
+| Tarjetas | 15 | 10 (67 %) | 5 |
+| Horas estimadas (todas las tarjetas) | 201 h | 117 h (58 %) | 84 h |
+| Requerimientos RF/RNF (sin contar los CC) | 6 · 50 h | 4 · 28 h (56 %) | 2 · 22 h |
 
 Las tarjetas de cambio del cliente (CC-01 40 h, CC-02 13 h y CC-03 48 h) agrupan las horas de sus requerimientos, así que la fila de requerimientos es la que mide mejor el avance real. El mismo comparativo está publicado como status update de cierre en el tablero del proyecto.
 
@@ -27,6 +27,7 @@ Las tarjetas de cambio del cliente (CC-01 40 h, CC-02 13 h y CC-03 48 h) agrupan
 | RNF05 - Escaneo rápido de comprobantes (#68) | HU21 (#69) | CC-03 | El residente escanea un ticket desde un botón siempre visible, solo confirma con un toque y el sistema le pide repetir la foto si salió borrosa u oscura. | @PauAlba | #90 |
 | RF08 - Validación de comprobante (#23) | HU08 (#24) | CC-03 | Un gasto sin foto no se puede cerrar; la factura queda comprobada y el ticket o la nota simple pasa a revisión de contabilidad, sin pasos extra. | @PauAlba | #102 |
 | RF04 - Bloqueo por comprobaciones vencidas (#15) | HU04 (#16) | CC-01 | El residente con comprobaciones vencidas no recibe fondos nuevos y administración lo ve marcado en la bandeja de autorización, con los folios pendientes. | @juanpismata11 | #101 |
+| RF06 - Registro de entrega del recurso (#19) | HU06 (#20) | CC-01 | Administración registra, desde la bandeja de autorización, si entregó el dinero en efectivo, tarjeta o transferencia, con su referencia, la fecha y quién lo entregó. La solicitud aprobada aparece lista para registrar su entrega sin recargar la página. | @jaaaaaaaaasiel | #106 |
 
 También se cerraron el análisis de CC-02 (#73) y de CC-03 (#74), y quedaron integradas las revisiones de calidad y seguridad de la investigación #86 (#87, #88, #89, #98, #99).
 
@@ -42,6 +43,7 @@ También se cerraron el análisis de CC-02 (#73) y de CC-03 (#74), y quedaron in
 | RF10 - Saldos por obra en tiempo real | HU10 | Iteration 4 |
 | RNF01 - Captura con mínimos toques | HU16 | Iteration 4 |
 | RF04 - Bloqueo por comprobaciones vencidas | HU04 | Iteration 6 |
+| RF06 - Registro de entrega del recurso | HU06 | Iteration 6 |
 | RF08 - Validación de comprobante | HU08 | Iteration 6 |
 | RNF05 - Escaneo rápido de comprobantes | HU21 | Iteration 6 |
 
@@ -49,15 +51,14 @@ También se cerraron el análisis de CC-02 (#73) y de CC-03 (#74), y quedaron in
 
 ### Pasa de Iteration 6 a Iteration 7
 
-Cada tarjeta quedó en Backlog de Iteration 7 con un comentario que explica por qué no se terminó.
+Cada tarjeta quedó en Backlog de Iteration 7 con un comentario que explica por qué no se terminó. Si alguna se integra con un pull request aprobado antes del 2 de diciembre, regresa a Iteration 6 en Done, como pasó con RF06.
 
 | Requerimiento | Historia | Cambio | Por qué no se terminó | Qué se necesita del cliente | Entra en |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | RNF04 - Pantalla única por rol (#64) | HU19 (#65) | CC-01 (#72) | Es el cambio más grande (40 h en total) y al cierre no había un pull request integrado. Depende de los apartados por rol. | Confirmar el orden de prioridad de los apartados del administrador: autorizaciones, entregas, conciliación, saldos y alertas. | Iteration 7 |
-| RF06 - Registro de entrega del recurso (#19) | HU06 (#20) | CC-01 | El registro de la entrega vive dentro de la pantalla única, que no quedó integrada. | Confirmar qué formas de entrega usan (efectivo, tarjeta, transferencia) y qué referencia piden para cada una. | Iteration 7 |
 | RF15 - Apartados visibles según el rol (#66) | HU20 (#67) | CC-02 | El trabajo existe en la rama `feat/15-apartados-segun-rol-y-docker`, pero al cierre no tenía pull request ni aprobación, así que no cumple la definición de terminado. | Validar la matriz de apartados por rol de `docs/CONTEXT.md` y la lista de personas con su rol. | Iteration 7 |
 
-### Ya planeado para Iteration 7 (30 de noviembre al 13 de diciembre)
+### Ya planeado para Iteration 7 (3 al 13 de diciembre)
 
 | Requerimiento | Historia | Cambio | Estado al cierre de Iteration 6 |
 | :--- | :--- | :--- | :--- |
@@ -65,7 +66,7 @@ Cada tarjeta quedó en Backlog de Iteration 7 con un comentario que explica por 
 | RF11 - Extracción automática de datos (OCR) (#29) | HU11 (#30) | CC-03 | Integrado con el PR #100; falta su criterio de captura sin señal, que depende de RNF02 |
 | RNF02 - Captura offline y sincronización (#40) | HU17 (#41) | CC-03 | Sin iniciar |
 
-**Carga de Iteration 7:** 6 requerimientos y 72 h, de las que unas 56 h siguen por hacer porque RF11 ya está integrado. Orden propuesto: apartados por rol, pantalla única, entregas y conciliación dentro de esa pantalla y, al final, la captura sin señal. Si no alcanza la capacidad, RNF02 es lo primero que se propone posponer, siempre con el acuerdo del cliente.
+**Carga de Iteration 7:** 5 requerimientos y 66 h, de las que unas 50 h siguen por hacer porque RF11 ya está integrado. Orden propuesto: apartados por rol, pantalla única, conciliación dentro de esa pantalla y, al final, la captura sin señal. Si no alcanza la capacidad, RNF02 es lo primero que se propone posponer, siempre con el acuerdo del cliente.
 
 ### Pospuestos (Backlog sin iteración, etiqueta `POSPUESTO`)
 
@@ -80,15 +81,16 @@ RF12 (HU12, HU13), RF13 (HU14), RF14 (HU15) y RNF03 (HU18). No forman parte de l
 | Minuto | Bloque | Responsable | Qué se muestra |
 | :--- | :--- | :--- | :--- |
 | 0:00 a 1:00 | Apertura: el proyecto en general y su diagrama de flujo | @bladeRunner08 | Diagrama de flujo de la aplicación |
-| 1:00 a 2:30 | Demostración: bloqueo por comprobaciones vencidas (HU04, CC-01) | @juanpismata11 | Aplicación |
-| 2:30 a 4:30 | Demostración: escaneo rápido de comprobantes (HU21, CC-03) | @PauAlba | Aplicación en el celular |
-| 4:30 a 6:15 | Demostración: comprobante válido y cierre automático (HU08, CC-03) | @PauAlba | Aplicación |
-| 6:15 a 7:00 | Demostración: el saldo de la obra refleja el comprobante (HU10) | @jaaaaaaaaasiel | Aplicación |
-| 7:00 a 7:30 | Pendientes: pantalla única y registro de entregas (CC-01) | @jaaaaaaaaasiel | Se explica de palabra |
+| 1:00 a 2:15 | Demostración: bloqueo por comprobaciones vencidas (HU04, CC-01) | @juanpismata11 | Aplicación |
+| 2:15 a 3:15 | Demostración: registro de la entrega del dinero (HU06, CC-01) | @jaaaaaaaaasiel | Aplicación |
+| 3:15 a 5:00 | Demostración: escaneo rápido de comprobantes (HU21, CC-03) | @PauAlba | Aplicación en el celular |
+| 5:00 a 6:30 | Demostración: comprobante válido y cierre automático (HU08, CC-03) | @PauAlba | Aplicación |
+| 6:30 a 7:00 | Demostración: el saldo de la obra refleja el comprobante (HU10) | @jaaaaaaaaasiel | Aplicación |
+| 7:00 a 7:30 | Pendientes: pantalla única (CC-01) | @jaaaaaaaaasiel | Se explica de palabra |
 | 7:30 a 8:00 | Pendientes: apartados por rol (CC-02) | @casizzy | Se explica de palabra |
 | 8:00 a 12:00 | Preguntas del cliente | Todos; modera @bladeRunner08 | Aplicación, si hace falta mostrar algo |
 
-El orden de la demostración sigue el uso real: el residente pide dinero, comprueba su gasto escaneando el ticket, el comprobante se valida y la dirección ve el saldo de la obra al momento. Empieza por los cambios que pidió el cliente.
+El orden de la demostración sigue el uso real: el residente pide dinero, administración registra cómo se lo entregó, el residente comprueba su gasto escaneando el ticket, el comprobante se valida y la dirección ve el saldo de la obra al momento. Empieza por los cambios que pidió el cliente.
 
 ### 0:00 a 1:00 · Apertura (@bladeRunner08)
 
@@ -125,20 +127,25 @@ flowchart LR
   H --> J
 
   class A,B,X,C,E,F,G,H,J hecho
-  class D,I propuesta
+  class I propuesta
+  class D hecho
 ```
 
 La pantalla única del administrador y los apartados por rol no son un paso del flujo: cambian dónde y quién ve cada paso. Se explican como propuesta en el bloque de pendientes.
 
-### 1:00 a 2:30 · Bloqueo por comprobaciones vencidas (@juanpismata11)
+### 1:00 a 2:15 · Bloqueo por comprobaciones vencidas (@juanpismata11)
 
 _Lo escribe @juanpismata11 mediante pull request: qué dice, qué muestra en pantalla y con qué datos de ejemplo._
 
-### 2:30 a 6:15 · Escaneo rápido y comprobante válido (@PauAlba)
+### 2:15 a 3:15 · Registro de la entrega del dinero (@jaaaaaaaaasiel)
+
+_Lo escribe @jaaaaaaaaasiel mediante pull request: qué dice, qué muestra en pantalla y con qué datos de ejemplo._
+
+### 3:15 a 6:30 · Escaneo rápido y comprobante válido (@PauAlba)
 
 _Lo escribe @PauAlba mediante pull request: qué dice, qué muestra en pantalla y con qué datos de ejemplo._
 
-### 6:15 a 7:30 · Saldo de la obra y pendientes de la pantalla única (@jaaaaaaaaasiel)
+### 6:30 a 7:30 · Saldo de la obra y pendientes de la pantalla única (@jaaaaaaaaasiel)
 
 _Lo escribe @jaaaaaaaaasiel mediante pull request: qué dice y qué muestra en el saldo, y cómo explica lo pendiente de CC-01 como propuesta._
 
@@ -161,6 +168,14 @@ Solo se presenta como terminado lo que cumple su definición de terminado y todo
 - **Dado** que reviso las autorizaciones en la pantalla única, **cuando** un residente tiene comprobaciones vencidas, **entonces** su solicitud aparece marcada como bloqueada con el número de comprobaciones pendientes.
 
 > Nota: la pantalla única todavía no existe. El tercer criterio se muestra en la bandeja de autorización, que es donde hoy se autoriza; se dice así, sin llamarla pantalla única.
+
+### HU06 - Registro de entrega física o digital (RF06 · CC-01) · @jaaaaaaaaasiel
+
+- **Dado** que una solicitud está autorizada, **cuando** entrego el recurso, **entonces** el sistema me permite añadir la referencia bancaria o marcar efectivo.
+- **Dado** que se guarda el registro de entrega, **cuando** se consulta la solicitud, **entonces** aparece el nombre de la persona que dispersó el recurso.
+- **Dado** que acabo de aprobar una solicitud en la pantalla única, **cuando** reviso el apartado de entregas, **entonces** la solicitud aparece lista para registrar su entrega sin cambiar de pantalla.
+
+> Nota: igual que en HU04, el tercer criterio se muestra en la bandeja de autorización, en su apartado "Entregas por registrar", sin llamarla pantalla única.
 
 ### HU21 - Escaneo rápido de tickets y comprobantes (RNF05 · CC-03) · @PauAlba
 
@@ -188,8 +203,8 @@ Cada integrante agrega por pull request al menos dos preguntas de la parte que p
 
 ### Apertura y compromiso (@bladeRunner08)
 
-**¿Por qué terminaron solo la mitad de lo que se comprometieron?**
-Los tres cambios que pidieron sumaban más de 100 horas y los repartimos entre esta iteración y la siguiente. Priorizamos lo que el residente usa todos los días en obra: escanear el ticket y que el gasto quede comprobado. La pantalla única y los apartados por rol dependen uno del otro y los terminamos juntos en la siguiente iteración, antes de la entrega de diciembre.
+**¿Por qué no terminaron todo lo que se comprometieron?**
+Los tres cambios que pidieron sumaban más de 100 horas y los repartimos entre esta iteración y la siguiente. Terminamos cuatro de seis compromisos y priorizamos lo que se usa todos los días: escanear el ticket, que el gasto quede comprobado y registrar cómo se entregó el dinero. La pantalla única y los apartados por rol dependen uno del otro y los terminamos juntos en la siguiente iteración, antes de la entrega de diciembre.
 
 **¿Lo que vimos hoy ya lo pueden usar en la empresa?**
 Sí, como prueba. Es la versión 0.3.0, se instala con el paquete que publicamos y tiene datos de ejemplo. Para usarlo con sus obras reales nos falta que validen la lista de personas con su rol y el orden de los apartados de la pantalla del administrador.
@@ -205,7 +220,7 @@ _Pendiente: al menos dos preguntas con su respuesta, por pull request._
 
 _Pendiente: al menos dos preguntas con su respuesta, por pull request._
 
-### Saldos y pantalla única (@jaaaaaaaaasiel)
+### Entrega del dinero, saldos y pantalla única (@jaaaaaaaaasiel)
 
 _Pendiente: al menos dos preguntas con su respuesta, por pull request._
 

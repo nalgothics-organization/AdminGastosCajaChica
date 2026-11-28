@@ -23,7 +23,7 @@ RESIDENTE = "RESIDENTE-PAU"
 JPEG_VALIDO = b"\xff\xd8\xff\xe0" + b"\x00" * (25 * 1024)
 
 
-def crear_solicitud_aprobada(partida="Renta de Maquinaria", solicitante=RESIDENTE):
+def crear_solicitud_aprobada(partida="Renta de Maquinaria", solicitante=RESIDENTE, clasificacion="cobrable_cliente"):
     respuesta = solicitud_service.crear_solicitud(
         SolicitudFondoCreate(
             obra_id="OBRA-NORTE-01",
@@ -41,8 +41,7 @@ def crear_solicitud_aprobada(partida="Renta de Maquinaria", solicitante=RESIDENT
         respuesta.solicitud.id,
         AprobacionCreate(
             autorizador_id="ADMIN-LAURA",
-            autorizador_nombre="Laura Méndez",
-            rol_autorizador="Administración",
+            clasificacion=clasificacion,
         ),
     )
 

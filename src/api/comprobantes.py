@@ -14,6 +14,7 @@ from src.services.comprobante_service import (
     EstadoNoEditableError,
     comprobante_service,
 )
+from src.services.usuario_service import RolNoPermitidoError, UsuarioNoEncontradoError
 
 router = APIRouter()
 
@@ -51,6 +52,10 @@ def _ejecutar(operacion, *args):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except EstadoNoEditableError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+    except RolNoPermitidoError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    except UsuarioNoEncontradoError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 

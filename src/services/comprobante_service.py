@@ -3,6 +3,7 @@ Implementa:
 - Captura rápida con solo la fotografía y vinculado automático a la solicitud (RNF01/HU16).
 - Formulario de comprobación con horas de maquinaria o de trabajo condicionales (RF07/HU07).
 - Gasto por cuenta del residente: se puede comprobar sin solicitud previa y queda en revisión.
+- Clasificación cobrable al cliente o fondo de contingencia heredada de la solicitud (RF14/HU15).
 - Inmutabilidad de comprobantes cerrados y correcciones por Ajuste/Reverso (AGENTS.md §8).
 """
 
@@ -22,11 +23,13 @@ from src.models.comprobante import (
     TipoRegistro,
     partida_requiere_horas,
 )
-from src.models.solicitud import EstadoSolicitud
+from src.models.solicitud import MENSAJE_CLASIFICACION, EstadoSolicitud
 from src.repositories import ComprobanteRepositorio
 from src.services.extraccion import extraer_datos
 from src.services.legibilidad import revisar_legibilidad
+from src.models.usuario import RolUsuario
 from src.services.solicitud_service import SolicitudFondoService, solicitud_service
+from src.services.usuario_service import UsuarioService, usuario_service as usuario_service_default
 
 # Firmas binarias de los formatos aceptados; no se confía solo en el content-type del cliente
 FIRMAS_IMAGEN = {
@@ -55,9 +58,11 @@ class ComprobanteService:
         self,
         solicitudes: SolicitudFondoService = solicitud_service,
         uploads_dir: Optional[str] = None,
+        usuarios: Optional[UsuarioService] = None,
     ):
         self._db = ComprobanteRepositorio()
         self._solicitudes = solicitudes
+        self._usuarios = usuarios or usuario_service_default
         self.uploads_dir = Path(uploads_dir or os.getenv("UPLOADS_DIR", "./uploads"))
         self.tamano_maximo_bytes = int(os.getenv("MAX_IMAGEN_MB", "10")) * 1024 * 1024
         # Rechaza fotos borrosas, oscuras o que no parecen un comprobante (RNF05/HU21); se apaga en las pruebas
@@ -92,9 +97,10 @@ class ComprobanteService:
         a ella; si no, se elige al completar los datos. La foto debe leerse con OCR y traer un monto
         (RNF05/HU21); `revisar_texto=False` la omite solo para los datos de demostración.
         """
-        solicitante_id = solicitante_id.strip()
-        if not solicitante_id:
+        if not solicitante_id or not solicitante_id.strip():
             raise ValueError("El residente que captura es obligatorio.")
+        # Solo un residente de obra activo comprueba sus gastos
+        solicitante_id = self._usuarios.exigir(solicitante_id, [RolUsuario.RESIDENTE], "comprobar gastos").usuario
         solicitud = self._solicitud_del_residente(solicitud_id, solicitante_id) if solicitud_id else None
         extension = self.validar_imagen(contenido, content_type)
         lectura = None
@@ -115,6 +121,7 @@ class ComprobanteService:
             obra_id=solicitud.obra_id if solicitud else None,
             etapa_construccion=solicitud.etapa_construccion if solicitud else None,
             partida_categoria=solicitud.partida_categoria if solicitud else None,
+            clasificacion=self._clasificacion_de(solicitud),
             imagen_ruta=str(ruta),
             lectura=lectura,
         )
@@ -194,6 +201,8 @@ class ComprobanteService:
                     "Seleccione la solicitud de fondo que respalda este gasto o indique la obra, "
                     "la etapa y la partida si lo pagó por su cuenta."
                 )
+            if datos.clasificacion is None:
+                raise ValueError(MENSAJE_CLASIFICACION)
             return None
         return self._solicitud_del_residente(solicitud_id, comprobante.solicitante_id)
 
@@ -207,6 +216,13 @@ class ComprobanteService:
         if solicitud.estado != EstadoSolicitud.APROBADO:
             raise ValueError("Solo se pueden comprobar gastos de solicitudes aprobadas.")
         return solicitud
+
+    @staticmethod
+    def _clasificacion_de(solicitud):
+        """La clasificación la decidió administración al aprobar la solicitud (RF14)."""
+        if solicitud is None or solicitud.autorizacion is None:
+            return None
+        return solicitud.autorizacion.clasificacion
 
     @staticmethod
     def _validar_horas(datos: ComprobanteDatos, requiere_horas: bool) -> None:
@@ -228,18 +244,21 @@ class ComprobanteService:
             comprobante.obra_id = solicitud.obra_id
             comprobante.etapa_construccion = solicitud.etapa_construccion
             comprobante.partida_categoria = solicitud.partida_categoria
+            comprobante.clasificacion = self._clasificacion_de(solicitud)
             # La clasificación ya la aporta la solicitud; los datos no la repiten
             comprobante.datos = datos.model_copy(update={
                 "solicitud_id": solicitud.id,
                 "obra_id": None,
                 "etapa_construccion": None,
                 "partida_categoria": None,
+                "clasificacion": None,
             })
         else:
             comprobante.solicitud_id = None
             comprobante.obra_id = datos.obra_id
             comprobante.etapa_construccion = datos.etapa_construccion
             comprobante.partida_categoria = datos.partida_categoria
+            comprobante.clasificacion = datos.clasificacion
             comprobante.datos = datos
         comprobante.requiere_horas = requiere_horas
         comprobante.updated_at = datetime.now(timezone.utc)
@@ -281,7 +300,17 @@ class ComprobanteService:
             self._validar_horas(datos, bool(original.requiere_horas))
             datos = datos.model_copy(update={"solicitud_id": original.solicitud_id})
             if original.solicitud_id is not None:
-                datos = datos.model_copy(update={"obra_id": None, "etapa_construccion": None, "partida_categoria": None})
+                datos = datos.model_copy(update={
+                    "obra_id": None, "etapa_construccion": None, "partida_categoria": None, "clasificacion": None,
+                })
+            else:
+                # El ajuste corrige montos y datos; la obra y la clasificación siguen siendo las del original
+                datos = datos.model_copy(update={
+                    "obra_id": original.obra_id,
+                    "etapa_construccion": original.etapa_construccion,
+                    "partida_categoria": original.partida_categoria,
+                    "clasificacion": original.clasificacion,
+                })
 
         # Toda corrección pasa por revisión de contabilidad
         registro = Comprobante(
@@ -291,6 +320,7 @@ class ComprobanteService:
             obra_id=original.obra_id,
             etapa_construccion=original.etapa_construccion,
             partida_categoria=original.partida_categoria,
+            clasificacion=original.clasificacion,
             imagen_ruta=original.imagen_ruta,
             estado=EstadoComprobante.REVISION_CONTABILIDAD,
             tipo_registro=correccion.tipo_registro,

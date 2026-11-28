@@ -52,6 +52,25 @@ class Base(DeclarativeBase):
     pass
 
 
+class UsuarioTabla(Base):
+    """Personas que usan el sistema con su rol; nunca se borran físicamente (baja lógica)."""
+
+    __tablename__ = "usuarios"
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    usuario: Mapped[str] = mapped_column(String(40), unique=True, index=True)
+    nombre: Mapped[str] = mapped_column(String(120))
+    email: Mapped[str] = mapped_column(String(120), unique=True, index=True)
+    rol: Mapped[str] = mapped_column(String(30), index=True)
+    # Texto plano por decisión del equipo para el prototipo (ver README)
+    contrasena: Mapped[str] = mapped_column(String(128))
+    obra_id: Mapped[Optional[str]] = mapped_column(String(60))
+    activo: Mapped[bool] = mapped_column(Boolean, default=True)
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class SolicitudTabla(Base):
     __tablename__ = "solicitudes"
 
@@ -94,6 +113,8 @@ class AutorizacionTabla(Base):
     autorizador_nombre: Mapped[str] = mapped_column(String(120))
     rol_autorizador: Mapped[str] = mapped_column(String(20))
     monto_autorizado: Mapped[Optional[Decimal]] = mapped_column(Numeric(14, 2))
+    # Cobrable al cliente o fondo de contingencia (RF14); nula en los rechazos
+    clasificacion: Mapped[Optional[str]] = mapped_column(String(30))
     comentario: Mapped[Optional[str]] = mapped_column(Text)
     fecha_decision: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
@@ -135,6 +156,8 @@ class ComprobanteTabla(Base):
     obra_id: Mapped[Optional[str]] = mapped_column(String(60), index=True)
     etapa_construccion: Mapped[Optional[str]] = mapped_column(String(30))
     partida_categoria: Mapped[Optional[str]] = mapped_column(String(80))
+    # Cobrable al cliente o fondo de contingencia (RF14); sale de la solicitud o del formulario
+    clasificacion: Mapped[Optional[str]] = mapped_column(String(30))
 
     # Datos del formulario de comprobación (RF07); nulos mientras el comprobante es un borrador sin datos
     tipo: Mapped[Optional[str]] = mapped_column(String(20))
@@ -155,21 +178,22 @@ class ComprobanteTabla(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
-def agregar_columnas_faltantes() -> None:
+def agregar_columnas_faltantes(motor=None) -> None:
     """Agrega a las tablas ya creadas las columnas nuevas (siempre opcionales), sin borrar ningún dato.
 
     `create_all` solo crea tablas que no existen; así una base de PostgreSQL de una versión anterior
     sigue funcionando sin tener que reiniciarla con `python -m src.seed --reset`.
     """
-    inspector = inspect(engine)
-    with engine.begin() as conexion:
+    motor = motor or engine
+    inspector = inspect(motor)
+    with motor.begin() as conexion:
         for tabla in Base.metadata.sorted_tables:
             if not inspector.has_table(tabla.name):
                 continue
             existentes = {columna["name"] for columna in inspector.get_columns(tabla.name)}
             for columna in tabla.columns:
                 if columna.name not in existentes and columna.nullable:
-                    tipo = columna.type.compile(dialect=engine.dialect)
+                    tipo = columna.type.compile(dialect=motor.dialect)
                     conexion.execute(text(f'ALTER TABLE "{tabla.name}" ADD COLUMN "{columna.name}" {tipo}'))
 
 

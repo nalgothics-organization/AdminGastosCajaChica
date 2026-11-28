@@ -10,7 +10,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
-from src.models.solicitud import EtapaConstruccion
+from src.models.solicitud import ClasificacionGasto, EtapaConstruccion
 
 
 def _ahora_utc() -> datetime:
@@ -67,13 +67,17 @@ class ComprobanteDatos(BaseModel):
                     "horas": "4.5",
                     "unidad_horas": "maquinaria",
                     "solicitud_id": None,
+                    "obra_id": "OBRA-NORTE-01",
+                    "etapa_construccion": "cimentación",
+                    "partida_categoria": "Renta de Maquinaria",
+                    "clasificacion": "fondo_contingencia",
                 }
             ]
         },
     )
 
     tipo: TipoComprobante = Field(..., description="Tipo de comprobante")
-    monto_comprobado: Decimal = Field(..., gt=0, description="Monto pagado según el comprobante")
+    monto_comprobado: Decimal = Field(..., gt=0, description="Monto pagado según ejl comprobante")
     fecha_gasto: date = Field(..., description="Fecha en que se realizó el gasto")
     proveedor: str = Field(..., min_length=2, description="Proveedor o persona que recibió el pago")
     concepto: str = Field(..., min_length=3, description="Concepto del gasto")
@@ -90,6 +94,10 @@ class ComprobanteDatos(BaseModel):
     )
     partida_categoria: Optional[str] = Field(
         default=None, description="Partida del gasto; obligatoria si no hay solicitud"
+    )
+    clasificacion: Optional[ClasificacionGasto] = Field(
+        default=None,
+        description="Cobrable al cliente o fondo de contingencia; obligatoria si no hay solicitud (RF14)",
     )
 
     @field_validator("fecha_gasto")
@@ -159,6 +167,9 @@ class Comprobante(BaseModel):
     obra_id: Optional[str] = Field(default=None, description="Obra a la que se carga el gasto (RF02)")
     etapa_construccion: Optional[EtapaConstruccion] = Field(default=None, description="Etapa del gasto (RF02)")
     partida_categoria: Optional[str] = Field(default=None, description="Partida del gasto (RF02)")
+    clasificacion: Optional[ClasificacionGasto] = Field(
+        default=None, description="Cobrable al cliente o fondo de contingencia (RF14)"
+    )
     imagen_ruta: str = Field(..., description="Ruta de la imagen almacenada")
     estado: EstadoComprobante = Field(default=EstadoComprobante.BORRADOR)
     tipo_registro: TipoRegistro = Field(default=TipoRegistro.ORIGINAL)

@@ -1,5 +1,6 @@
 """Saldos por obra en tiempo real (RF10/HU10).
 
+También desglosa lo que se cobra al cliente y lo que sale del fondo de contingencia (RF14/HU15).
 El saldo se calcula al consultarlo a partir de las solicitudes aprobadas y de los comprobantes
 cerrados, así que siempre refleja el último movimiento.
 Reglas de codificación: UTF-8, LF, 4 espacios de indentación.
@@ -11,7 +12,7 @@ from typing import Dict, List
 from pydantic import BaseModel, Field
 
 from src.models.comprobante import ESTADOS_CERRADOS, TipoRegistro, comprobantes_vigentes
-from src.models.solicitud import EstadoSolicitud
+from src.models.solicitud import ClasificacionGasto, EstadoSolicitud
 from src.services.comprobante_service import ComprobanteService, comprobante_service
 from src.services.obra_catalogo import OBRAS
 from src.services.solicitud_service import SolicitudFondoService, solicitud_service
@@ -37,6 +38,12 @@ class SaldoObra(BaseModel):
     solicitudes_pendientes: int = 0
     comprobantes_en_revision: int = 0
     porcentaje_gastado: Decimal = Field(default=CERO, description="Comprobado entre autorizado, de 0 a 100 o más")
+    gasto_cobrable_cliente: Decimal = Field(default=CERO, description="Gasto comprobado que se factura al cliente")
+    fondo_contingencia: Decimal = Field(default=CERO, description="Fondo de contingencia asignado a la obra")
+    gasto_contingencia: Decimal = Field(default=CERO, description="Gasto comprobado cargado al fondo de contingencia")
+    disponible_contingencia: Decimal = Field(
+        default=CERO, description="Fondo de contingencia menos lo cargado a él; negativo si se excedió"
+    )
 
 
 class SaldoService:
@@ -51,7 +58,12 @@ class SaldoService:
     def por_obra(self) -> List[SaldoObra]:
         # Todas las obras del catálogo aparecen aunque no tengan movimientos
         saldos: Dict[str, SaldoObra] = {
-            o.id: SaldoObra(obra_id=o.id, nombre=o.nombre, presupuesto_caja_chica=o.presupuesto_caja_chica)
+            o.id: SaldoObra(
+                obra_id=o.id,
+                nombre=o.nombre,
+                presupuesto_caja_chica=o.presupuesto_caja_chica,
+                fondo_contingencia=o.fondo_contingencia,
+            )
             for o in OBRAS
         }
 
@@ -82,10 +94,15 @@ class SaldoService:
         ]
         for comprobante in comprobantes_vigentes(cerrados):
             saldo = self._saldo_de(saldos, comprobante.obra_id)
+            monto = comprobante.datos.monto_comprobado
             if comprobante.solicitud_id is None:
-                saldo.gasto_sin_solicitud += comprobante.datos.monto_comprobado
+                saldo.gasto_sin_solicitud += monto
             else:
-                saldo.comprobado += comprobante.datos.monto_comprobado
+                saldo.comprobado += monto
+            if comprobante.clasificacion == ClasificacionGasto.FONDO_CONTINGENCIA:
+                saldo.gasto_contingencia += monto
+            elif comprobante.clasificacion == ClasificacionGasto.COBRABLE_CLIENTE:
+                saldo.gasto_cobrable_cliente += monto
 
         for comprobante in cerrados:
             if comprobante.estado.value == "Revisión contabilidad" and comprobante.tipo_registro != TipoRegistro.REVERSO:
@@ -100,6 +117,7 @@ class SaldoService:
         """
         saldo.por_comprobar = saldo.autorizado - saldo.comprobado
         saldo.disponible_caja_chica = saldo.presupuesto_caja_chica - saldo.autorizado
+        saldo.disponible_contingencia = saldo.fondo_contingencia - saldo.gasto_contingencia
         if saldo.presupuesto_caja_chica > 0:
             saldo.porcentaje_autorizado = (
                 saldo.autorizado * 100 / saldo.presupuesto_caja_chica

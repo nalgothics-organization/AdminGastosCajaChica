@@ -15,6 +15,9 @@
 
   ### Added
 
+  - Usuarios con rol (base de RF15/HU20): modelo, tabla `usuarios` y `UsuarioService` con alta, consulta, autenticación por contraseña, cambio de contraseña y baja lógica. El seed crea un usuario por rol con la contraseña de `CONTRASENA_DEMO`. Solo un residente activo solicita fondos y captura comprobantes, y solo Administración o Dirección deciden solicitudes.
+  - Distinción entre gasto cobrable al cliente y fondo de contingencia (RF14/HU15, #36 y #37): al aprobar una solicitud se elige obligatoriamente la clasificación (`clasificacion` en `POST /api/solicitudes/{id}/aprobar`), los comprobantes la heredan y los gastos sin solicitud la indican en el formulario. `GET /api/saldos` agrega `gasto_cobrable_cliente`, `fondo_contingencia`, `gasto_contingencia` y `disponible_contingencia`, que se actualiza al guardar el comprobante. El catálogo de obras incluye el fondo de contingencia de cada obra.
+  - Al arrancar, la API agrega a las tablas existentes las columnas nuevas que aceptan nulos (`agregar_columnas_faltantes`), para no tener que recrear la base de datos.
   - Registro de la entrega del recurso (RF06/HU06, #19 y #20): desde la bandeja de autorización, administración registra la forma de entrega (efectivo, transferencia o tarjeta), la fecha, la referencia bancaria (obligatoria en transferencia y tarjeta) y quién entregó. Al aprobar, la solicitud aparece en "Entregas por registrar" sin recargar la página. Cada solicitud aprobada se entrega una sola vez y el registro no se modifica. Nuevo endpoint `POST /api/solicitudes/{id}/entrega` y tabla `entregas`, que se crea sola al arrancar.
   - Bloqueo de fondos nuevos por comprobaciones vencidas (RF04/HU04, #15 y #16): si el residente tiene fondos aprobados sin comprobar por más de `LIMITE_DIAS_COMPROBACION` días (7 por defecto), su solicitud nueva aparece como bloqueada en la bandeja de autorización con el número de comprobaciones pendientes, el monto y los folios; la aprobación responde 423 y el residente ve el aviso al enviar y en "Mis solicitudes". Rechazar sigue permitido.
   - Análisis estático con Ruff y regla de complejidad C901 (máximo 10), ejecutado junto con las pruebas en el flujo `.github/workflows/calidad.yml` en cada pull request. Detalle en `docs/PRUEBAS.md`.
@@ -24,6 +27,14 @@
   - Extracción de proveedor, fecha, monto y tipo del comprobante con OCR (RF11/HU11, #29 y #30): se guarda lo que se reconoce, lo demás queda por completar, y "Comprobante enviado" abre una pantalla con la foto y los datos leídos. Las columnas nuevas de la base se agregan solas al arrancar.
   - Exigencia de comprobante y cierre al confirmar el escaneo (RF08/HU08, #23 y #24): un gasto sin foto no se cierra; si la foto se lee completa y con confianza alta, la factura queda comprobada y el ticket pasa a revisión de contabilidad sin pasos extra.
   - Búsqueda de secretos con Gitleaks en el código y en todo el historial de Git en cada pull request.
+  - Inicio de sesión y registro de cuenta (RF15/HU20): `POST /api/usuarios`, `POST /api/sesion`, consulta, cambio de contraseña y baja lógica de usuarios. Las pantallas con inicio de sesión y apartados por rol pasan a Iteration 7.
+  - Script de creación de tablas `python -m src.crear_tablas`: crea en PostgreSQL las tablas que falten y muestra cuáles tienen borrado lógico, sin borrar datos. El README explica dónde se guardan los gastos, el puerto ocupado por un PostgreSQL local y cómo abrir las pantallas.
+
+  ### Changed
+
+  - `POST /api/solicitudes/{id}/aprobar` y `/rechazar` solo reciben `autorizador_id`: el nombre y el rol del autorizador se toman de su usuario y se ignoran si vienen en la petición. La bandeja de autorización pide el usuario en vez del nombre y el rol.
+  - `solicitante_id` de solicitudes y comprobantes debe ser un usuario residente activo; se guarda en mayúsculas.
+  - `POST /api/solicitudes/{id}/aprobar` exige `clasificacion` (`cobrable_cliente` o `fondo_contingencia`); sin ella responde 422.
 
   ### Security
 

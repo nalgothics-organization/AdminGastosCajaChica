@@ -56,7 +56,7 @@ class SolicitudFondoBase(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
     obra_id: str = Field(..., description="Identificador de la obra activa")
-    solicitante_id: str = Field(..., description="Identificador del residente de obra solicitante")
+    solicitante_id: str = Field(..., description="Usuario del residente de obra que solicita (por ejemplo RESIDENTE-PAU)")
     etapa_construccion: EtapaConstruccion = Field(..., description="Etapa constructiva")
     partida_categoria: str = Field(..., description="Partida o categoría del gasto")
     concepto: str = Field(..., min_length=3, description="Concepto detallado de la compra o servicio")
@@ -130,6 +130,18 @@ class NotificacionNivelAutorizacion(BaseModel):
     timestamp: datetime = Field(default_factory=_ahora_utc)
 
 
+class ClasificacionGasto(str, Enum):
+    """Quién absorbe el gasto (RF14/HU15)."""
+
+    COBRABLE_CLIENTE = "cobrable_cliente"
+    FONDO_CONTINGENCIA = "fondo_contingencia"
+
+
+MENSAJE_CLASIFICACION = (
+    'Debe elegir si el gasto es "cobrable al cliente" o sale del "fondo de contingencia".'
+)
+
+
 class RolAutorizador(str, Enum):
     ADMINISTRACION = "Administración"
     DIRECCION = "Dirección"
@@ -144,13 +156,16 @@ LONGITUD_MINIMA_COMENTARIO_RECHAZO = 5
 
 
 class DecisionBase(BaseModel):
-    """Datos del autorizador que toma la decisión (RF05/HU05)."""
+    """Quién toma la decisión (RF05/HU05).
+
+    Solo se indica el usuario; su nombre y su rol se toman de su registro para que no se puedan inventar.
+    """
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    autorizador_id: str = Field(..., min_length=1, description="Identificador del usuario autorizador")
-    autorizador_nombre: str = Field(..., min_length=3, description="Nombre de quien autoriza o rechaza")
-    rol_autorizador: RolAutorizador = Field(..., description="Rol con el que se toma la decisión")
+    autorizador_id: str = Field(
+        ..., min_length=1, description="Usuario de Administración o Dirección que decide (por ejemplo ADMIN-LAURA)"
+    )
 
 
 class AprobacionCreate(DecisionBase):
@@ -159,9 +174,8 @@ class AprobacionCreate(DecisionBase):
             "examples": [
                 {
                     "autorizador_id": "ADMIN-LAURA",
-                    "autorizador_nombre": "Laura Méndez",
-                    "rol_autorizador": "Administración",
                     "monto_autorizado": "3000.00",
+                    "clasificacion": "cobrable_cliente",
                     "comentario": "Se autoriza el monto cotizado por el proveedor.",
                 }
             ]
@@ -173,7 +187,20 @@ class AprobacionCreate(DecisionBase):
         gt=0,
         description="Monto final autorizado; si se omite se autoriza el monto solicitado",
     )
+    # validate_default para que la ausencia de la clasificación dé el mensaje de negocio
+    clasificacion: Optional[ClasificacionGasto] = Field(
+        default=None,
+        validate_default=True,
+        description="Si el gasto se cobra al cliente o sale del fondo de contingencia de la obra (RF14)",
+    )
     comentario: Optional[str] = Field(default=None, description="Comentario opcional de la aprobación")
+
+    @field_validator("clasificacion")
+    @classmethod
+    def validar_clasificacion_obligatoria(cls, v: Optional[ClasificacionGasto]) -> ClasificacionGasto:
+        if v is None:
+            raise ValueError(MENSAJE_CLASIFICACION)
+        return v
 
 
 class RechazoCreate(DecisionBase):
@@ -182,8 +209,6 @@ class RechazoCreate(DecisionBase):
             "examples": [
                 {
                     "autorizador_id": "DIR-CARLOS",
-                    "autorizador_nombre": "Carlos Ruiz",
-                    "rol_autorizador": "Dirección",
                     "comentario": "El gasto no corresponde a la etapa actual de la obra.",
                 }
             ]
@@ -206,13 +231,19 @@ class RechazoCreate(DecisionBase):
 
 
 class Autorizacion(BaseModel):
-    """Registro inmutable de quién decidió, cuándo, por cuánto y por qué."""
+    """Registro inmutable de quién decidió, cuándo, por cuánto y por qué.
+
+    Guarda el nombre y el rol que tenía el usuario al decidir, aunque después cambien.
+    """
 
     decision: DecisionAutorizacion
-    autorizador_id: str
-    autorizador_nombre: str
-    rol_autorizador: RolAutorizador
+    autorizador_id: str = Field(..., description="Usuario que decidió")
+    autorizador_nombre: str = Field(..., description="Nombre del usuario al momento de decidir")
+    rol_autorizador: RolAutorizador = Field(..., description="Rol del usuario al momento de decidir")
     monto_autorizado: Optional[Decimal] = Field(default=None, description="Monto final; vacío si se rechazó")
+    clasificacion: Optional[ClasificacionGasto] = Field(
+        default=None, description="Cobrable al cliente o fondo de contingencia; vacío si se rechazó"
+    )
     comentario: Optional[str] = Field(default=None)
     fecha_decision: datetime = Field(default_factory=_ahora_utc)
 

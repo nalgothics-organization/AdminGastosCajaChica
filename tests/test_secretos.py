@@ -9,7 +9,7 @@ import subprocess
 import unittest
 
 RAIZ = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-VARIABLES_SECRETAS = ("SECRET_KEY", "POSTGRES_PASSWORD")
+VARIABLES_SECRETAS = ("SECRET_KEY", "POSTGRES_PASSWORD", "CONTRASENA_DEMO")
 
 
 def leer_variables(nombre_archivo):

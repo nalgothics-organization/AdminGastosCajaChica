@@ -236,6 +236,12 @@ class TestSwaggerDocumentacion(BaseApiTestCase):
         ("post", "/api/obras"),
         ("delete", "/api/obras/{obra_id}"),
         ("get", "/api/obras/{obra_id}/partidas"),
+        ("post", "/api/usuarios"),
+        ("get", "/api/usuarios"),
+        ("get", "/api/usuarios/{nombre_usuario}"),
+        ("put", "/api/usuarios/{usuario_id}/contrasena"),
+        ("delete", "/api/usuarios/{usuario_id}"),
+        ("post", "/api/sesion"),
     }
 
     def setUp(self):

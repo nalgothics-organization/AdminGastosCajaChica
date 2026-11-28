@@ -26,6 +26,7 @@ from tests.test_hu16_captura_rapida import RESIDENTE, crear_solicitud_aprobada
 OTRO_RESIDENTE = "RESIDENTE-LUIS"
 ADMINISTRACION = {
     "autorizador_id": "ADMIN-LAURA",
+    "clasificacion": "cobrable_cliente",
     "autorizador_nombre": "Laura Méndez",
     "rol_autorizador": "Administración",
 }

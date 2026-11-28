@@ -27,13 +27,11 @@ from tests.test_api_solicitudes import BaseApiTestCase
 
 ADMINISTRACION = {
     "autorizador_id": "ADMIN-LAURA",
-    "autorizador_nombre": "Laura Méndez",
-    "rol_autorizador": "Administración",
+    "clasificacion": "cobrable_cliente",
 }
 DIRECCION = {
     "autorizador_id": "DIR-CARLOS",
-    "autorizador_nombre": "Carlos Ruiz",
-    "rol_autorizador": "Dirección",
+    "clasificacion": "cobrable_cliente",
 }
 COMENTARIO_RECHAZO = "El gasto no corresponde a la etapa actual de la obra."
 
@@ -177,12 +175,31 @@ class TestHU05ReglasDeNegocio(BaseAutorizacionTestCase):
         self.assertEqual(self.aprobar(alta, **DIRECCION).status_code, 200)
         self.assertEqual(self.rechazar(baja, **DIRECCION, comentario=COMENTARIO_RECHAZO).status_code, 200)
 
-    def test_rol_desconocido_devuelve_422(self):
+    def test_solo_administracion_o_direccion_deciden(self):
+        """El rol sale del registro del usuario: contabilidad y residentes no deciden solicitudes."""
         solicitud_id = self.crear_pendiente()
 
-        response = self.aprobar(solicitud_id, rol_autorizador="Contabilidad")
+        for usuario in ("CONT-SOFIA", "RESIDENTE-JP"):
+            with self.subTest(usuario=usuario):
+                self.assertEqual(self.aprobar(solicitud_id, autorizador_id=usuario).status_code, 403)
+                rechazo = self.rechazar(solicitud_id, autorizador_id=usuario, comentario=COMENTARIO_RECHAZO)
+                self.assertEqual(rechazo.status_code, 403)
+        self.assertEqual(self.estado_actual(solicitud_id), "Pendiente")
+
+    def test_no_se_puede_suplantar_el_rol_desde_la_peticion(self):
+        solicitud_id = self.crear_pendiente_direccion()
+
+        response = self.aprobar(solicitud_id, rol_autorizador="Dirección", autorizador_nombre="Carlos Ruiz")
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_autorizador_inexistente_devuelve_422(self):
+        solicitud_id = self.crear_pendiente()
+
+        response = self.aprobar(solicitud_id, autorizador_id="NADIE")
 
         self.assertEqual(response.status_code, 422)
+        self.assertIn("NADIE", response.json()["detail"])
 
     def test_solicitud_inexistente_o_eliminada_devuelve_404(self):
         eliminada = self.crear_pendiente()

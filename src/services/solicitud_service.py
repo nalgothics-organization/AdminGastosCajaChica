@@ -5,6 +5,8 @@ Implementa:
 - Asociación obligatoria a obra activa, etapa y partida presupuestal (RF02/HU02).
 - Bloqueo de fondos nuevos por comprobaciones vencidas (RF04/HU04).
 - Aprobación y rechazo con trazabilidad del autorizador (RF05/HU05).
+- Clasificación del gasto al aprobar: cobrable al cliente o fondo de contingencia (RF14/HU15).
+- Solicitante y autorizador son usuarios activos con el rol que exige cada acción.
 - Registro de la entrega física o digital del recurso aprobado (RF06/HU06).
 - Soft delete e inmutabilidad según AGENTS.md.
 """
@@ -13,7 +15,7 @@ import os
 from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional, Tuple
 from uuid import UUID
 
 from src.models.comprobante import ESTADOS_CERRADOS, comprobantes_vigentes
@@ -33,8 +35,10 @@ from src.models.solicitud import (
     SolicitudFondoCreate,
     SolicitudFondoResponse,
 )
+from src.models.usuario import RolUsuario, Usuario
 from src.repositories import ComprobanteRepositorio, SolicitudRepositorio
 from src.services.obra_service import ObraService, obra_service as obra_service_default
+from src.services.usuario_service import RolNoPermitidoError, UsuarioService, usuario_service as usuario_service_default
 
 
 class SolicitudNoEncontradaError(LookupError):
@@ -45,7 +49,7 @@ class SolicitudNoPendienteError(Exception):
     """La solicitud ya fue decidida; las correcciones se registran como ajuste (AGENTS.md §8)."""
 
 
-class AutorizadorNoPermitidoError(Exception):
+class AutorizadorNoPermitidoError(RolNoPermitidoError):
     """El rol del autorizador no alcanza el nivel que exige el monto de la solicitud."""
 
 
@@ -56,6 +60,8 @@ class SolicitudBloqueadaError(Exception):
 class EntregaNoPermitidaError(Exception):
     """La solicitud no está aprobada o ya tiene su entrega; el registro de entrega no se modifica (RF06)."""
 
+
+ROLES_AUTORIZADORES = (RolUsuario.ADMINISTRACION, RolUsuario.DIRECCION)
 
 # Días que tiene un residente para comprobar un fondo aprobado antes de que se le bloqueen fondos nuevos
 LIMITE_DIAS_COMPROBACION_DEFAULT = 7
@@ -73,9 +79,11 @@ def _limite_dias_configurado() -> int:
 
 
 class SolicitudFondoService:
-    def __init__(self, obra_service: Optional[ObraService] = None):
+    def __init__(self, obra_service: Optional[ObraService] = None, usuario_service: Optional[UsuarioService] = None):
         # Catálogo de obras para validar obra activa y partida presupuestal (RF02)
         self._obra_service = obra_service or obra_service_default
+        # Quien solicita y quien autoriza deben ser usuarios activos con el rol adecuado
+        self._usuarios = usuario_service or usuario_service_default
         self._db = SolicitudRepositorio()
         # Solo se leen los comprobantes para saber qué tanto se ha comprobado de cada fondo (RF04)
         self._comprobantes = ComprobanteRepositorio()
@@ -118,6 +126,7 @@ class SolicitudFondoService:
 
     def crear_solicitud(self, data: SolicitudFondoCreate) -> SolicitudFondoResponse:
         """Registra una solicitud de fondo, valida evidencia, genera folio y notifica."""
+        solicitante = self._usuarios.exigir(data.solicitante_id, [RolUsuario.RESIDENTE], "solicitar fondos")
         # Asociación obligatoria a obra activa y partida presupuestal de esa obra
         obra = self._obra_service.obtener_obra_activa(data.obra_id)
         partida = self._obra_service.obtener_partida(obra.id, data.partida_categoria)
@@ -136,7 +145,7 @@ class SolicitudFondoService:
         nueva_solicitud = SolicitudFondo(
             folio=folio,
             obra_id=obra.id,
-            solicitante_id=data.solicitante_id,
+            solicitante_id=solicitante.usuario,
             etapa_construccion=data.etapa_construccion,
             partida_categoria=partida.nombre,
             concepto=data.concepto,
@@ -257,8 +266,11 @@ class SolicitudFondoService:
                 solicitud.bloqueo = bloqueos.get(solicitud.solicitante_id) or self._sin_bloqueo()
         return solicitudes
 
-    def _obtener_pendiente(self, solicitud_id: UUID, data: DecisionBase) -> SolicitudFondo:
-        """Valida que la solicitud exista, siga pendiente y que el rol pueda decidirla (RF05)."""
+    def _obtener_pendiente(self, solicitud_id: UUID, data: DecisionBase) -> Tuple[SolicitudFondo, Usuario]:
+        """Valida que la solicitud exista, siga pendiente y que el usuario pueda decidirla (RF05).
+
+        Devuelve la solicitud y el usuario autorizador; su rol sale de su registro, no de la petición.
+        """
         solicitud = self.obtener_por_id(solicitud_id)
         if not solicitud:
             raise SolicitudNoEncontradaError(f"Solicitud con ID {solicitud_id} no encontrada.")
@@ -268,12 +280,22 @@ class SolicitudFondoService:
                 f"La solicitud {solicitud.folio} ya está en estado {solicitud.estado.value} y no puede decidirse de nuevo."
             )
 
+        autorizador = self._usuarios.exigir(data.autorizador_id, ROLES_AUTORIZADORES, "decidir solicitudes de fondo")
+
         # Dirección puede decidir cualquier nivel; Administración solo los de su límite
-        if solicitud.nivel_autorizacion == RolAutorizador.DIRECCION.value and data.rol_autorizador != RolAutorizador.DIRECCION:
+        if solicitud.nivel_autorizacion == RolAutorizador.DIRECCION.value and autorizador.rol != RolUsuario.DIRECCION:
             raise AutorizadorNoPermitidoError(
                 f"La solicitud {solicitud.folio} excede el límite de Administración y solo puede decidirla Dirección."
             )
-        return solicitud
+        return solicitud, autorizador
+
+    @staticmethod
+    def _datos_autorizador(autorizador: Usuario) -> dict:
+        return {
+            "autorizador_id": autorizador.usuario,
+            "autorizador_nombre": autorizador.nombre,
+            "rol_autorizador": RolAutorizador(autorizador.rol.value),
+        }
 
     def _registrar_decision(
         self,
@@ -288,7 +310,12 @@ class SolicitudFondoService:
 
     def aprobar_solicitud(self, solicitud_id: UUID, data: AprobacionCreate) -> SolicitudFondo:
         """Aprueba la solicitud registrando autorizador, fecha y monto final (HU05 criterio 1)."""
-        solicitud = self._obtener_pendiente(solicitud_id, data)
+        solicitud, autorizador = self._obtener_pendiente(solicitud_id, data)
+
+        # RF04: no se autoriza un fondo nuevo mientras el residente tenga comprobaciones vencidas
+        bloqueo = self.bloqueo_de(solicitud.solicitante_id)
+        if bloqueo.bloqueada:
+            raise SolicitudBloqueadaError(f"No se puede aprobar {solicitud.folio}. {bloqueo.mensaje}")
 
         # RF04: no se autoriza un fondo nuevo mientras el residente tenga comprobaciones vencidas
         bloqueo = self.bloqueo_de(solicitud.solicitante_id)
@@ -301,23 +328,20 @@ class SolicitudFondoService:
 
         autorizacion = Autorizacion(
             decision=DecisionAutorizacion.APROBADA,
-            autorizador_id=data.autorizador_id,
-            autorizador_nombre=data.autorizador_nombre,
-            rol_autorizador=data.rol_autorizador,
+            **self._datos_autorizador(autorizador),
             monto_autorizado=monto_autorizado,
+            clasificacion=data.clasificacion,
             comentario=data.comentario or None,
         )
         return self._registrar_decision(solicitud, EstadoSolicitud.APROBADO, autorizacion)
 
     def rechazar_solicitud(self, solicitud_id: UUID, data: RechazoCreate) -> SolicitudFondo:
         """Rechaza la solicitud; el comentario justificativo es obligatorio (HU05 criterio 2)."""
-        solicitud = self._obtener_pendiente(solicitud_id, data)
+        solicitud, autorizador = self._obtener_pendiente(solicitud_id, data)
 
         autorizacion = Autorizacion(
             decision=DecisionAutorizacion.RECHAZADA,
-            autorizador_id=data.autorizador_id,
-            autorizador_nombre=data.autorizador_nombre,
-            rol_autorizador=data.rol_autorizador,
+            **self._datos_autorizador(autorizador),
             comentario=data.comentario,
         )
         return self._registrar_decision(solicitud, EstadoSolicitud.RECHAZADO, autorizacion)

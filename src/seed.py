@@ -1,7 +1,8 @@
 """Carga datos de ejemplo para la demostración del prototipo.
 
 Uso: python -m src.seed [--reset]
-Sin --reset no hace nada si la base de datos ya tiene solicitudes.
+Siempre crea los usuarios de demostración que falten, con la contraseña de CONTRASENA_DEMO (.env).
+Sin --reset no carga solicitudes ni comprobantes si la base de datos ya tiene solicitudes.
 Reglas de codificación: UTF-8, LF, 4 espacios de indentación.
 """
 
@@ -16,8 +17,37 @@ from uuid import uuid4
 from src.database import crear_tablas, reiniciar_tablas
 from src.models.comprobante import ComprobanteDatos
 from src.models.solicitud import AprobacionCreate, EntregaCreate, RechazoCreate, SolicitudFondoCreate
+from src.models.usuario import LONGITUD_MINIMA_CONTRASENA, RolUsuario, UsuarioCreate
 from src.services.comprobante_service import comprobante_service
 from src.services.solicitud_service import solicitud_service
+from src.services.usuario_service import usuario_service
+
+# Usuarios de demostración, uno o más por rol; la contraseña nunca se escribe en el código (AGENTS.md §11)
+USUARIOS_DEMO = [
+    {"usuario": "RESIDENTE-PAU", "nombre": "Paula Rivas", "email": "paula.rivas@cimas.example",
+     "rol": RolUsuario.RESIDENTE, "obra_id": "OBRA-NORTE-01"},
+    {"usuario": "RESIDENTE-JP", "nombre": "Juan Pablo Ortiz", "email": "juanpablo.ortiz@cimas.example",
+     "rol": RolUsuario.RESIDENTE, "obra_id": "OBRA-SUR-02"},
+    {"usuario": "RESIDENTE-LUIS", "nombre": "Luis Torres", "email": "luis.torres@cimas.example",
+     "rol": RolUsuario.RESIDENTE, "obra_id": "OBRA-NORTE-01"},
+    {"usuario": "ADMIN-LAURA", "nombre": "Laura Méndez", "email": "laura.mendez@cimas.example",
+     "rol": RolUsuario.ADMINISTRACION},
+    {"usuario": "DIR-CARLOS", "nombre": "Carlos Ruiz", "email": "carlos.ruiz@cimas.example",
+     "rol": RolUsuario.DIRECCION},
+    {"usuario": "CONT-SOFIA", "nombre": "Sofía Navarro", "email": "sofia.navarro@cimas.example",
+     "rol": RolUsuario.CONTABILIDAD},
+]
+
+
+def crear_usuarios_demo(contrasena: str) -> int:
+    """Crea los usuarios de demostración que falten; devuelve cuántos creó."""
+    creados = 0
+    for datos in USUARIOS_DEMO:
+        if usuario_service.obtener_por_usuario(datos["usuario"]):
+            continue
+        usuario_service.crear(UsuarioCreate(**datos, contrasena=contrasena))
+        creados += 1
+    return creados
 
 
 def _png(ancho: int, alto: int, pixel) -> bytes:
@@ -78,13 +108,12 @@ def solicitar(obra, residente, etapa, partida, concepto, monto, costo, urgencia,
     ).solicitud
 
 
-def aprobar(solicitud, nombre, rol, comentario=None, monto=None):
+def aprobar(solicitud, autorizador, clasificacion, comentario=None, monto=None):
     solicitud_service.aprobar_solicitud(
         solicitud.id,
         AprobacionCreate(
-            autorizador_id=f"{rol[:3].upper()}-{nombre.split()[0].upper()}",
-            autorizador_nombre=nombre,
-            rol_autorizador=rol,
+            autorizador_id=autorizador,
+            clasificacion=clasificacion,
             comentario=comentario,
             monto_autorizado=Decimal(monto) if monto else None,
         ),
@@ -96,7 +125,7 @@ def entregar(solicitud, forma, referencia=None):
     solicitud_service.registrar_entrega(
         solicitud.id,
         EntregaCreate(
-            entregado_por_id="ADM-LAURA", entregado_por_nombre="Laura Méndez", rol_entrega="Administración",
+            entregado_por_id="ADMIN-LAURA", entregado_por_nombre="Laura Méndez", rol_entrega="Administración",
             forma_entrega=forma, fecha_entrega=date.today(), referencia=referencia,
         ),
     )
@@ -122,7 +151,7 @@ def cargar() -> None:
         "OBRA-NORTE-01", "RESIDENTE-PAU", "cimentación", "Renta de Maquinaria",
         "Renta de retroexcavadora para sondeo", "3500.00", "4000.00", "urgente", "fuga_tubo_01.jpg",
     )
-    aprobar(maquinaria, "Laura Méndez", "Administración", "Se autoriza el monto cotizado.")
+    aprobar(maquinaria, "ADMIN-LAURA", "cobrable_cliente", "Se autoriza el monto cotizado.")
     entregar(maquinaria, "Transferencia", "SPEI-20261127-0381")
     comprobar("RESIDENTE-PAU", ComprobanteDatos(
         tipo="nota_simple", monto_comprobado=Decimal("3200.00"), fecha_gasto=hoy - timedelta(days=1),
@@ -135,7 +164,8 @@ def cargar() -> None:
         "Compra de pintura y selladores para fachada", "18000.00", "18500.00", "alta", "fachada_02.jpg",
         firma="FIRMA-DIR-001",
     )
-    aprobar(pintura, "Carlos Ruiz", "Dirección", "Aprobado dentro del presupuesto de acabados.")
+    # Se repinta la fachada por un error de color propio: no se le cobra al cliente
+    aprobar(pintura, "DIR-CARLOS", "fondo_contingencia", "Repintado por error de color en obra.")
     entregar(pintura, "Efectivo")
     comprobar("RESIDENTE-JP", ComprobanteDatos(
         tipo="factura", monto_comprobado=Decimal("12400.00"), fecha_gasto=hoy - timedelta(days=2),
@@ -149,7 +179,7 @@ def cargar() -> None:
         "OBRA-NORTE-01", "RESIDENTE-PAU", "instalaciones", "Materiales",
         "Tubería y conexiones de PVC para la línea hidráulica", "2400.00", "2600.00", "alta", "tuberia_06.jpg",
     )
-    aprobar(tuberia, "Laura Méndez", "Administración")
+    aprobar(tuberia, "ADMIN-LAURA", "cobrable_cliente")
 
     # Esperando decisión: una de Administración y una de Dirección
     solicitar(
@@ -170,7 +200,7 @@ def cargar() -> None:
     solicitud_service.rechazar_solicitud(
         equipo.id,
         RechazoCreate(
-            autorizador_id="ADM-LAURA", autorizador_nombre="Laura Méndez", rol_autorizador="Administración",
+            autorizador_id="ADMIN-LAURA",
             comentario="La herramienta ya está en el almacén de la obra.",
         ),
     )
@@ -180,14 +210,23 @@ def cargar() -> None:
         tipo="ticket", monto_comprobado=Decimal("850.00"), fecha_gasto=hoy,
         proveedor="Ferretería La Obra", concepto="Cemento y varilla urgentes",
         obra_id="OBRA-SUR-02", etapa_construccion="estructura", partida_categoria="Materiales",
+        clasificacion="cobrable_cliente",
     ))
 
 
 def main() -> None:
+    contrasena = os.getenv("CONTRASENA_DEMO", "").strip()
+    if len(contrasena) < LONGITUD_MINIMA_CONTRASENA:
+        sys.exit(
+            f"Define CONTRASENA_DEMO en .env (al menos {LONGITUD_MINIMA_CONTRASENA} caracteres) "
+            "para crear los usuarios de demostración."
+        )
     if "--reset" in sys.argv:
         reiniciar_tablas()
     else:
         crear_tablas()
+    creados = crear_usuarios_demo(contrasena)
+    print(f"Usuarios de demostración creados: {creados} de {len(USUARIOS_DEMO)}.")
     if solicitud_service.listar_solicitudes_activas():
         print("La base de datos ya tiene solicitudes; no se cargaron datos de ejemplo (usa --reset).")
         return

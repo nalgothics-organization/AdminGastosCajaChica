@@ -25,7 +25,7 @@ from tests.test_hu05_autorizacion import DIRECCION
 from tests.test_hu16_captura_rapida import RESIDENTE, crear_solicitud_aprobada
 
 QUIEN_ENTREGA = {
-    "entregado_por_id": "ADM-LAURA",
+    "entregado_por_id": "ADMIN-LAURA",
     "entregado_por_nombre": "Laura Méndez",
     "rol_entrega": "Administración",
 }
@@ -120,7 +120,7 @@ class TestHU06RegistroDeEntrega(BaseEntregaTestCase):
 
         for solicitud in (consultada, en_lista):
             self.assertEqual(solicitud["entrega"]["entregado_por_nombre"], "Laura Méndez")
-            self.assertEqual(solicitud["entrega"]["entregado_por_id"], "ADM-LAURA")
+            self.assertEqual(solicitud["entrega"]["entregado_por_id"], "ADMIN-LAURA")
             self.assertEqual(solicitud["entrega"]["rol_entrega"], "Administración")
 
     def test_criterio_3_solicitud_recien_aprobada_queda_lista_para_entregar(self):
@@ -155,8 +155,8 @@ class TestHU06RegistroDeEntrega(BaseEntregaTestCase):
 
         response = self.entregar(
             solicitud_id,
-            entregado_por_id=DIRECCION["autorizador_id"],
-            entregado_por_nombre=DIRECCION["autorizador_nombre"],
+            entregado_por_id="DIR-CARLOS",
+            entregado_por_nombre="Carlos Ruiz",
             rol_entrega="Dirección",
         )
 

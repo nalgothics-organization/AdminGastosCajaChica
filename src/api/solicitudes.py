@@ -22,6 +22,7 @@ from src.services.solicitud_service import (
     SolicitudNoPendienteError,
     solicitud_service,
 )
+from src.services.usuario_service import RolNoPermitidoError, UsuarioNoEncontradoError
 
 router = APIRouter()
 
@@ -41,7 +42,9 @@ RESPUESTAS_DECISION = {
     **RESPUESTA_404,
     status.HTTP_403_FORBIDDEN: {
         "model": ErrorResponse,
-        "description": "El rol del autorizador no alcanza el nivel que exige el monto de la solicitud.",
+        "description": (
+            "El usuario no es de Administración o Dirección, o su rol no alcanza el nivel que exige el monto."
+        ),
     },
     status.HTTP_409_CONFLICT: {
         "model": ErrorResponse,
@@ -52,7 +55,7 @@ RESPUESTAS_DECISION = {
         "description": "El solicitante tiene comprobaciones vencidas; no se autoriza un fondo nuevo (RF04).",
     },
     status.HTTP_422_UNPROCESSABLE_ENTITY: {
-        "description": "Datos inválidos: rol desconocido, monto fuera de rango o falta el comentario del rechazo.",
+        "description": "Datos inválidos: usuario inexistente, monto fuera de rango o falta el comentario del rechazo.",
     },
 }
 
@@ -79,8 +82,10 @@ def _ejecutar(operacion, *args):
         return operacion(*args)
     except SolicitudNoEncontradaError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except AutorizadorNoPermitidoError as e:
+    except (AutorizadorNoPermitidoError, RolNoPermitidoError) as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    except UsuarioNoEncontradoError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     except (SolicitudNoPendienteError, EntregaNoPermitidaError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
     except SolicitudBloqueadaError as e:
@@ -102,19 +107,20 @@ def _ejecutar(operacion, *args):
     ),
     response_description="Solicitud registrada y notificación emitida.",
     responses={
+        status.HTTP_403_FORBIDDEN: {
+            "model": ErrorResponse,
+            "description": "El solicitante no es un residente de obra.",
+        },
         status.HTTP_422_UNPROCESSABLE_ENTITY: {
-            "description": "Datos inválidos: falta evidencia, montos no positivos o falta la firma de Dirección.",
+            "description": (
+                "Datos inválidos: solicitante inexistente, falta evidencia, montos no positivos "
+                "o falta la firma de Dirección."
+            ),
         },
     },
 )
 def registrar_solicitud(data: SolicitudFondoCreate):
-    try:
-        return solicitud_service.crear_solicitud(data)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(e),
-        )
+    return _ejecutar(solicitud_service.crear_solicitud, data)
 
 
 @router.get(
